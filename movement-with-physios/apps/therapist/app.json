@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "MWP Therapist",
+    "slug": "mwp-therapist",
+    "version": "1.0.0",
+    "sdkVersion": "54.0.0",
+    "orientation": "portrait",
+    "splash": {
+      "backgroundColor": "#1A6B55"
+    },
+    "ios": {
+      "bundleIdentifier": "com.mwp.therapist",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "We need access to your photos to upload your government ID."
+      }
+    },
+    "android": {
+      "package": "com.mwp.therapist",
+      "adaptiveIcon": {
+        "backgroundColor": "#1A6B55"
+      }
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "We need access to your photos to upload your government ID."
+        }
+      ]
+    ]
+  }
+}
