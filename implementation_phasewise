@@ -1,0 +1,316 @@
+# MWP Backend — Phase-Wise Implementation Plan
+
+
+## Phase 1 — Foundation & Core Infrastructure
+
+**Goal:** Scaffold the project, wire up all providers, auth, models, middleware, and admin module. The API should boot, authenticate requests, and serve basic CRUD.
+
+### 1.1 Project Scaffold
+- [ ] `package.json` — init with all dependencies (express, mongoose, ioredis, joi, helmet, cors, winston, etc.)
+- [ ] `.env.example`, `.env.development`, `.env.local` — all env vars documented
+- [ ] `docker-compose.yml` — MongoDB + Redis containers
+- [ ] `Makefile` — `make dev`, `make seed`, `make test`
+- [ ] `Dockerfile` (placeholder, finalized in Phase 5)
+
+### 1.2 Config Layer (`src/config/`)
+- [ ] `env.js` — Joi validation for all env vars (incl. `ALLOWED_ORIGINS`, email keys)
+- [ ] `database.js` — Mongoose connection with retry logic
+- [ ] `redis.js` — ioredis client singleton
+- [ ] `cors.js` — Per-environment CORS whitelist (Express + Socket.IO)
+- [ ] `providers.js` — Provider selection from env vars
+- [ ] `featureFlags.js` — Redis-backed feature flags
+- [ ] `swagger.js` — OpenAPI 3.0 base spec + schemas
+
+### 1.3 Provider Interfaces & Adapters (`src/providers/`)
+- [ ] `interfaces/AuthProvider.js` — `verifyToken`, `getUser`
+- [ ] `interfaces/VideoProvider.js` — `getTurnCredentials`
+- [ ] `interfaces/MessagingProvider.js` — `emitToRoom`, `emitToUser`
+- [ ] `interfaces/StorageProvider.js` — `upload`, `streamUpload`, `getSignedUrl`
+- [ ] `interfaces/SMSProvider.js` — `sendSMS`
+- [ ] `interfaces/NotificationProvider.js` — `sendPush`
+- [ ] `interfaces/EmailProvider.js` — `sendTransactional`, `sendBulk`
+- [ ] `auth/ClerkAdapter.js` — Clerk session validation
+- [ ] `storage/S3Adapter.js` — S3 upload + streaming via `@aws-sdk/lib-storage`
+- [ ] `sms/MSG91Adapter.js`
+- [ ] `notification/FCMAdapter.js`
+- [ ] `email/ResendAdapter.js`
+
+### 1.4 DI Container (`src/container/index.js`)
+- [ ] Wire all providers, cache manager, job queue, circuit breakers
+
+### 1.5 Core Middleware (`src/core/middleware/`)
+- [ ] `correlationId.js` — UUID + `X-Correlation-ID` header
+- [ ] `authMiddleware.js` — Clerk session validation (HTTP)
+- [ ] `socketAuthMiddleware.js` — Socket.IO handshake auth
+- [ ] `rbac.js` — Role-based access control
+- [ ] `ownership.js` — Resource ownership check
+- [ ] `rateLimiter.js` — express-rate-limit + rate-limit-redis
+- [ ] `validate.js` — Joi schema validation
+- [ ] `fileUpload.js` — Multer + streaming to S3
+- [ ] `idempotency.js` — Redis-backed idempotency key check
+- [ ] `auditLog.js` — Audit trail middleware
+- [ ] `responseTimer.js` — Response time header
+- [ ] `errorHandler.js` — Centralized error handler (sanitized in prod)
+- [ ] `requestLogger.js` — Winston request logging
+
+### 1.6 Core Utilities (`src/core/utils/`)
+- [ ] `apiResponse.js` — Standardized `{ success, data, error }` format
+- [ ] `asyncHandler.js` — Async route wrapper
+- [ ] `constants.js` — App-wide constants
+- [ ] `logger.js` — Winston with `child({ correlationId })`
+- [ ] `paginator.js` — Cursor-based pagination helper
+- [ ] `softDelete.js` — Mongoose soft-delete plugin
+- [ ] `circuitBreaker.js` — Opossum wrapper
+
+### 1.7 Models (`src/models/`)
+- [ ] `User.model.js` — Shared user with `role`, `email` (unique), `fcmToken`, soft delete
+- [ ] `OTP.model.js` — Phone/identifier, code, expiresAt, TTL index
+- [ ] `OnboardingDraft.model.js` — Draft storage for interrupted onboarding
+- [ ] `AuditLog.model.js` — Action, resource, userId, timestamp
+- [ ] `Notification.model.js` — userId, title, body, type, read status
+- [ ] Field encryption on sensitive fields (mongoose-field-encryption)
+- [ ] Indexes: email unique, therapist search (specialty, rating, verified)
+
+### 1.8 Auth Module (`src/modules/auth/`)
+- [ ] `auth.routes.js` — 9 routes: send-otp, verify-otp, login, refresh, logout, me, webhook, draft CRUD
+- [ ] `auth.controller.js`
+- [ ] `auth.service.js` — OTP brute force protection (Redis lock after 5 attempts, 15-min lockout)
+- [ ] `auth.validation.js` — Joi schemas
+- [ ] `integrations/clerk.js` — Svix webhook signature verification
+
+### 1.9 Patient Module (`src/modules/patient/`)
+- [ ] `patient.routes.js` — 6 routes: onboarding, profile, dashboard, assigned-therapist, account deletion
+- [ ] `patient.controller.js`, `patient.service.js`, `patient.validation.js`
+
+### 1.10 Therapist Module (`src/modules/therapist/`)
+- [ ] `therapist.routes.js` — 13 routes: onboarding, profile, clients, availability, dashboard, deletion, search
+- [ ] `therapist.controller.js`, `therapist.service.js`, `therapist.validation.js`
+- [ ] `TherapistSearchService.js` — Filter by specialty, rating, verified status
+
+### 1.11 Admin Module (`src/modules/admin/`)
+- [ ] `admin.routes.js` — 7 routes: verify therapist, pending, users, stats, audit logs
+- [ ] `admin.controller.js`, `admin.service.js`
+- [ ] `scripts/seedAdmin.js` — Seed initial admin user
+
+### 1.12 App Bootstrap
+- [ ] `app.js` — Express app with full middleware pipeline, Swagger mount (non-prod)
+- [ ] `server.js` — HTTP server creation, DI init, graceful shutdown stub
+- [ ] Health check at `GET /health` (bypasses auth)
+- [ ] All routes under `/api/v1/`
+
+### Phase 1 Acceptance Criteria
+- `make dev` boots API on `localhost:3000`
+- `/health` → 200
+- `/api/v1/docs` → Swagger UI (dev only)
+- Auth flow works (send OTP → verify → get profile)
+- OTP brute force locks after 5 attempts
+- RBAC blocks unauthorized roles
+- CORS blocks unlisted origins
+- File upload streams to S3
+
+---
+
+## Phase 2 — Business Logic & Data Modules
+
+**Goal:** Booking with safety guards, assessments, exercises, notifications with email fallback, caching, pagination.
+
+### 2.1 Plugin System (`src/core/plugins/`)
+- [ ] `PluginBase.js` — Abstract base class with `register(app, container)` lifecycle
+- [ ] `PluginManager.js` — Auto-discover + load plugins from `src/plugins/`
+
+### 2.2 Booking Module (`src/modules/booking/`)
+- [ ] `booking.routes.js` — 7 routes: list slots, create (idempotency), read, update, cancel, complete
+- [ ] `booking.controller.js`, `booking.service.js`, `booking.validation.js`
+- [ ] `Booking.model.js` — therapistId, patientId, slot, status, timezone
+- [ ] Double-booking prevention — Redis `SETNX` lock (`lock:slot:{therapistId}:{date}:{slot}`, 5s TTL)
+- [ ] Idempotency middleware applied to `POST /api/v1/bookings`
+- [ ] Timezone handling — Store UTC, convert on slot calculation via `date-fns-tz`
+
+### 2.3 Assessment Module (`src/modules/assessment/`)
+- [ ] `assessment.routes.js` — 11 routes: body-parts, questions, session CRUD, respond, complete, history, tracking
+- [ ] `assessment.controller.js`, `assessment.service.js`, `assessment.validation.js`
+- [ ] `Assessment.model.js`, `TrackingSession.model.js`
+
+### 2.4 Exercise Plugin (`src/plugins/exercise/`)
+- [ ] 9 REST routes — CRUD, by body part, assign, complete
+- [ ] `Exercise.model.js` — name, body part, video key, difficulty
+- [ ] S3 adapter integration — 12hr signed URLs with refresh endpoint
+- [ ] `scripts/seed-exercises.js`
+- [ ] Redis caching (`exercise:{id}` 1hr, `exercises:bodyPart:{part}` 1hr)
+
+### 2.5 Notification Plugin (`src/plugins/notification/`)
+- [ ] 4 REST routes — list, mark read, preferences, unread count
+- [ ] `Notification.model.js` — userId, title, body, type, read, createdAt
+- [ ] FCM push via `NotificationProvider`
+- [ ] Email fallback: on FCM failure for critical types → `EmailProvider.sendTransactional`
+- [ ] Critical types: `booking_confirmed`, `booking_cancelled`, `session_reminder`, `therapist_verified`, `account_deleted`
+
+### 2.6 Redis Caching (`src/core/cache/cacheManager.js`)
+- [ ] Generic `get/set/invalidate` with pattern support
+- [ ] Wire cache into therapist search, exercise, slot queries, dashboard
+
+### 2.7 Pagination
+- [ ] Cursor-based pagination on all list endpoints
+- [ ] Standard response: `{ data, pagination: { hasNext, cursor } }`
+
+### Phase 2 Acceptance Criteria
+- Booking create → one 201, concurrent same-slot → 409
+- Same idempotency key → cached response, no duplicate
+- Exercise list → cached, cache invalidated on create/update
+- Notification on booking → FCM push; FCM fails → email sent
+- All lists paginated with cursor
+
+---
+
+## Phase 3 — Real-Time (Chat, Video, WebSocket)
+
+**Goal:** Socket.IO chat with ordering, WebRTC video calls, job queue for async work.
+
+### 3.1 Socket.IO Setup
+- [ ] `providers/messaging/SocketIOAdapter.js` — Socket.IO server + Redis adapter
+- [ ] Socket.IO CORS uses same `ALLOWED_ORIGINS` whitelist
+- [ ] `socketAuthMiddleware` enforced on all connections
+- [ ] Namespace routing: `/chat`, `/video`
+
+### 3.2 Chat Plugin (`src/plugins/chat/`)
+- [ ] 7 REST routes — rooms list, create room, messages (afterSeq cursor pagination), room details
+- [ ] Socket events: `send_message`, `typing`, `mark_read`, `join_room`
+- [ ] `Message.model.js` — roomId, sender, text, sequenceNumber, createdAt
+- [ ] `ChatRoom.model.js` — participants, lastMessage, lastSeq
+- [ ] Sequence numbers: atomic Redis `INCR` on `chat:seq:{roomId}`
+- [ ] Index: `{ roomId, sequenceNumber }`
+
+### 3.3 Video Plugin (`src/plugins/video/`)
+- [ ] 4 REST routes — create call, get call, end call, TURN credentials
+- [ ] Socket events: `offer`, `answer`, `ice_candidate`, `join_call`, `end_call`
+- [ ] `providers/video/WebRTCAdapter.js` — TURN/STUN credential generation
+- [ ] `VideoCall.model.js` — participants, status, startedAt, endedAt
+
+### 3.4 Job Queue (`src/core/jobs/`)
+- [ ] `jobQueue.js` — BullMQ setup with Redis
+- [ ] `workers/notificationWorker.js` — Push + email fallback
+- [ ] `workers/auditWorker.js` — Async audit log writes
+- [ ] Push triggers: new chat message → push to offline participants
+
+### Phase 3 Acceptance Criteria
+- Socket connection without token → rejected
+- Socket connection with valid token → `socket.data.user` set
+- Two rapid messages → sequential `sequenceNumber` values
+- `afterSeq` pagination returns correct page
+- Video: offer → answer → ICE → call established
+- TURN credentials returned and valid
+- Chat message → push notification to offline user
+
+---
+
+## Phase 4 — Analytics, Privacy & Polish
+
+**Goal:** Session notes, progress tracking, audit trail, feature flags, account deletion.
+
+### 4.1 Session Plugin (`src/plugins/session/`)
+- [ ] 3 REST routes — create session notes, get notes, update notes
+- [ ] `SessionNote.model.js` — bookingId, therapistId, notes, createdAt
+- [ ] Push trigger on session note creation
+
+### 4.2 Progress Plugin (`src/plugins/progress/`)
+- [ ] 4 REST routes — patient progress, exercise completion stats, trends, export
+- [ ] Aggregation queries for progress visualization data
+
+### 4.3 Audit Logging
+- [ ] `auditLog.js` middleware applied to all mutation routes
+- [ ] `AuditLog.model.js` — action, resource, resourceId, userId, changes, timestamp
+- [ ] Admin route to query audit logs with filters
+
+### 4.4 Response Timer
+- [ ] `responseTimer.js` — `X-Response-Time` header on all responses
+- [ ] Log slow requests (>500ms) as warnings
+
+### 4.5 Seeds & Feature Flags
+- [ ] `scripts/seed-exercises.js` — Seed exercise library
+- [ ] `config/featureFlags.js` — Redis-backed flags with 10-min cache
+- [ ] Feature flag checks in relevant services
+
+### 4.6 Cache Warming
+- [ ] On server start, pre-warm frequently accessed caches (exercises, questionnaires)
+
+### 4.7 Data Privacy (`src/core/privacy/dataPrivacyService.js`)
+- [ ] Account deletion: replace PII with `[DELETED]`, retain medical records
+- [ ] Cascade: clear FCM tokens, invalidate sessions, anonymize audit logs
+- [ ] Patient + Therapist deletion routes wired to this service
+
+### Phase 4 Acceptance Criteria
+- Session notes CRUD works, push sent on creation
+- Progress endpoint returns aggregated stats
+- Audit logs recorded for all mutations, queryable by admin
+- Feature flags toggle behavior without redeploy
+- Account deletion → PII gone, medical data retained
+- `X-Response-Time` header present on all responses
+
+---
+
+## Phase 5 — Deployment & Operations
+
+**Goal:** Production-ready Docker image, AWS deployment, monitoring, backup, security audit.
+
+### 5.1 Docker
+- [ ] `Dockerfile` — Multi-stage build (build → production)
+- [ ] `docker-compose.yml` finalized — API + MongoDB + Redis + optional Coturn
+- [ ] `make dev` → full local env in <60s
+
+### 5.2 AWS ECS Deployment
+- [ ] ECS Fargate task definition + service
+- [ ] ALB configuration — HTTP + WebSocket routing, health check
+- [ ] `core/shutdown.js` — Graceful shutdown on `SIGTERM` (drain connections, close DB)
+
+### 5.3 TURN Server
+- [ ] EC2 instance with Coturn OR managed TURN service
+- [ ] `WebRTCAdapter` configured with TURN server credentials
+
+### 5.4 Storage & CDN
+- [ ] S3 bucket configuration (exercise videos)
+- [ ] CloudFront distribution for S3 assets
+
+### 5.5 Secrets & Config
+- [ ] AWS Secrets Manager — all API keys, DB credentials, Firebase service account
+- [ ] `env.js` updated to pull from Secrets Manager in production
+
+### 5.6 Monitoring
+- [ ] CloudWatch log groups with correlation ID indexing
+- [ ] p95 latency alarms
+- [ ] Error rate alarms
+
+### 5.7 Database Operations
+- [ ] DocumentDB/Atlas daily backups, 30-day retention, PITR
+- [ ] `docs/runbooks/restore.md` — Step-by-step restore procedure
+- [ ] Backup restore drill documented
+
+### 5.8 Security Audit
+- [ ] Review all middleware ordering
+- [ ] Verify rate limiting under load
+- [ ] Confirm CORS blocks in production
+- [ ] Validate field encryption on sensitive data
+- [ ] Pen-test checklist
+
+### Phase 5 Acceptance Criteria
+- `SIGTERM` → in-flight requests complete → exit 0
+- Kill container → no dropped requests
+- CloudWatch logs searchable by correlation ID
+- Backup snapshot exists, restore drill passes
+- Response times <200ms under load
+- Security audit checklist all-green
+
+---
+
+## Phase Dependencies
+
+```mermaid
+graph LR
+    P1[Phase 1: Foundation] --> P2[Phase 2: Business Logic]
+    P1 --> P3[Phase 3: Real-Time]
+    P2 --> P3
+    P2 --> P4[Phase 4: Analytics & Privacy]
+    P3 --> P4
+    P4 --> P5[Phase 5: Deployment]
+```
+
+> **Phase 1** is a prerequisite for everything. **Phases 2 & 3** can partially overlap. **Phase 4** depends on 2 + 3. **Phase 5** is last.
