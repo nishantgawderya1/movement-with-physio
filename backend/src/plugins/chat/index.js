@@ -6,6 +6,7 @@ const authMiddleware = require('../../../core/middleware/authMiddleware');
 const validate = require('../../../core/middleware/validate');
 const chatValidation = require('./chat.validation');
 const PluginBase = require('../../../core/plugins/PluginBase');
+const auditLog = require('../../../core/middleware/auditLog');
 const logger = require('../../../core/utils/logger');
 
 class ChatPlugin extends PluginBase {
@@ -19,7 +20,9 @@ class ChatPlugin extends PluginBase {
 
     // REST Routes
     router.get('/rooms', authMiddleware, controller.getMyRooms);
-    router.post('/rooms', authMiddleware, validate(chatValidation.createRoom), controller.createRoom);
+    router.post('/rooms', authMiddleware, auditLog('CREATE_CHAT_ROOM', 'chat'), validate(chatValidation.createRoom), controller.createRoom);
+    router.get('/rooms/:roomId', authMiddleware, controller.getRoom);
+    router.delete('/rooms/:roomId', authMiddleware, auditLog('DELETE_CHAT_ROOM', 'chat'), controller.deleteRoom);
     router.get('/rooms/:roomId/messages', authMiddleware, validate(chatValidation.getMessages), controller.getMessages);
     router.post('/rooms/:roomId/messages', authMiddleware, validate(chatValidation.sendMessage), controller.sendMessage);
     router.post('/rooms/:roomId/read', authMiddleware, controller.markRead);

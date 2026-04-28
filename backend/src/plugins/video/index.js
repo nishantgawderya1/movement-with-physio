@@ -6,6 +6,7 @@ const authMiddleware = require('../../../core/middleware/authMiddleware');
 const validate = require('../../../core/middleware/validate');
 const videoValidation = require('./video.validation');
 const PluginBase = require('../../../core/plugins/PluginBase');
+const auditLog = require('../../../core/middleware/auditLog');
 const logger = require('../../../core/utils/logger');
 
 class VideoPlugin extends PluginBase {
@@ -18,9 +19,9 @@ class VideoPlugin extends PluginBase {
     const router = Router();
 
     // REST Routes
-    router.post('/calls', authMiddleware, validate(videoValidation.createCall), controller.createCall);
+    router.post('/calls', authMiddleware, auditLog('CREATE_VIDEO_CALL', 'video'), validate(videoValidation.createCall), controller.createCall);
     router.get('/calls/:callId', authMiddleware, validate(videoValidation.getCall), controller.getCall);
-    router.post('/calls/:callId/end', authMiddleware, controller.endCall);
+    router.post('/calls/:callId/end', authMiddleware, auditLog('END_VIDEO_CALL', 'video'), controller.endCall);
     router.get('/turn-credentials', authMiddleware, controller.getTurnCredentials);
 
     app.use('/api/v1/video', router);

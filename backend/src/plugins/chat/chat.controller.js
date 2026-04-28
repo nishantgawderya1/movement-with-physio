@@ -12,6 +12,16 @@ const createController = (container) => {
     res.send(responseHelper.success(rooms));
   });
 
+  const getRoom = catchAsync(async (req, res) => {
+    const room = await chatService.getRoom(req.params.roomId, req.user.id);
+    res.send(responseHelper.success(room));
+  });
+
+  const deleteRoom = catchAsync(async (req, res) => {
+    await chatService.deleteRoom(req.params.roomId, req.user.id);
+    res.send(responseHelper.success({ message: 'Room deleted' }));
+  });
+
   const createRoom = catchAsync(async (req, res) => {
     const { participantIds } = req.body;
     // Always include current user in participants
@@ -42,6 +52,8 @@ const createController = (container) => {
 
   return {
     getMyRooms,
+    getRoom,
+    deleteRoom,
     createRoom,
     getMessages,
     sendMessage,

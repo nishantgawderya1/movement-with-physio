@@ -43,6 +43,37 @@ class ChatService {
   }
 
   /**
+   * Get details of a single chat room.
+   * @param {string} roomId
+   * @param {string} userId
+   * @returns {Promise<ChatRoom>}
+   */
+  async getRoom(roomId, userId) {
+    const room = await ChatRoom.findOne({ _id: roomId, participants: userId, isActive: true })
+      .populate('participants', 'name email role');
+    if (!room) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Chat room not found');
+    }
+    return room;
+  }
+
+  /**
+   * Soft-delete a chat room.
+   * @param {string} roomId
+   * @param {string} userId
+   */
+  async deleteRoom(roomId, userId) {
+    const room = await ChatRoom.findOneAndUpdate(
+      { _id: roomId, participants: userId },
+      { isActive: false },
+      { new: true }
+    );
+    if (!room) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Chat room not found or unauthorized');
+    }
+  }
+
+  /**
    * Send a message in a room.
    * @param {string} roomId
    * @param {string} senderId
