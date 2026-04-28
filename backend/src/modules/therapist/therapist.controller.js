@@ -6,6 +6,7 @@ const apiResponse = require('../../core/utils/apiResponse');
 const asyncHandler = require('../../core/utils/asyncHandler');
 const { NOTIFICATION_TYPES } = require('../../core/utils/constants');
 const { addJob } = require('../../core/jobs/jobQueue');
+const { deleteAccount } = require('../../core/privacy/dataPrivacyService');
 
 const getProfile = asyncHandler(async (req, res) => {
   const user = await therapistService.getProfile(req.user.id);
@@ -49,4 +50,9 @@ const verifyTherapist = asyncHandler(async (req, res) => {
   return apiResponse.success(res, { verified: true, therapistId: therapist._id });
 });
 
-module.exports = { getProfile, updateProfile, listTherapists, getTherapistById, verifyTherapist };
+const deleteTherapistAccount = asyncHandler(async (req, res) => {
+  await deleteAccount(req.user.id, 'therapist', container);
+  return apiResponse.success(res, { message: 'Account deleted successfully.' });
+});
+
+module.exports = { getProfile, updateProfile, listTherapists, getTherapistById, verifyTherapist, deleteTherapistAccount };

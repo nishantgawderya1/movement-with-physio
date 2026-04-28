@@ -5,6 +5,7 @@ const controller = require('./therapist.controller');
 const authMiddleware = require('../../core/middleware/authMiddleware');
 const rbac = require('../../core/middleware/rbac');
 const { defaultLimiter } = require('../../core/middleware/rateLimiter');
+const auditLog = require('../../core/middleware/auditLog');
 
 const router = Router();
 
@@ -39,7 +40,30 @@ router.get('/:id', defaultLimiter, controller.getTherapistById);
 
 // Authenticated therapist routes
 router.get('/me/profile', authMiddleware, rbac('therapist'), controller.getProfile);
-router.patch('/me/profile', authMiddleware, rbac('therapist'), controller.updateProfile);
+router.patch(
+  '/me/profile',
+  authMiddleware,
+  rbac('therapist'),
+  auditLog('UPDATE_THERAPIST_PROFILE', 'therapist'),
+  controller.updateProfile
+);
+
+/**
+ * @openapi
+ * /api/v1/therapists/me/account:
+ *   delete:
+ *     tags: [Therapist]
+ *     summary: Delete therapist account (DPDP — anonymizes PII, retains medical records)
+ *     security:
+ *       - BearerAuth: []
+ */
+router.delete(
+  '/me/account',
+  authMiddleware,
+  rbac('therapist'),
+  auditLog('DELETE_THERAPIST_ACCOUNT', 'therapist'),
+  controller.deleteTherapistAccount
+);
 
 // Admin route
 /**

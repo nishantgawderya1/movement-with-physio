@@ -15,11 +15,42 @@ const { startNotificationWorker } = require('./core/jobs/workers/notificationWor
 const { startAuditWorker } = require('./core/jobs/workers/auditWorker');
 const corsOptions = require('./config/cors');
 const logger = require('./core/utils/logger');
+const cacheManager = require('./core/cache/cacheManager');
+const { REDIS_TTL } = require('./core/utils/constants');
 
 const PORT = process.env.PORT || 3000;
 
 let server;
 const workers = [];
+
+/**
+ * Pre-warm frequently accessed Redis caches on startup.
+ * Runs after plugins are registered so models are available.
+ */
+async function warmCaches() {
+  const Exercise = require('./models/Exercise.model');
+  const BODY_PARTS = ['knee', 'shoulder', 'lower_back', 'hip', 'neck', 'core', 'full_body'];
+
+  logger.info({ event: 'CACHE_WARM_START' });
+
+  // Warm exercise lists by body part
+  for (const part of BODY_PARTS) {
+    try {
+      const cacheKey = `exercises:bodyPart:${part}`;
+      const cached = await cacheManager.get(cacheKey);
+      if (!cached) {
+        const paginate = require('./core/utils/paginator');
+        const result = await paginate(Exercise, { bodyPart: part, isPublic: true }, { limit: 50, sort: { name: 1 } });
+        await cacheManager.set(cacheKey, result, REDIS_TTL.EXERCISE_LIST);
+        logger.info({ event: 'CACHE_WARM_EXERCISE', bodyPart: part });
+      }
+    } catch (err) {
+      logger.warn({ event: 'CACHE_WARM_EXERCISE_FAILED', bodyPart: part, err: err.message });
+    }
+  }
+
+  logger.info({ event: 'CACHE_WARM_DONE' });
+}
 
 async function bootstrap() {
   // 1. Connect DB
@@ -71,11 +102,16 @@ async function bootstrap() {
   // 7. Register plugins (async)
   await app._pluginManager.registerAll(app, container);
 
-  // 8. Start background workers
+  // 8. Cache warming — pre-populate frequently accessed caches
+  await warmCaches().catch((err) =>
+    logger.warn({ event: 'CACHE_WARM_FAILED', err: err.message })
+  );
+
+  // 9. Start background workers
   workers.push(startNotificationWorker(redis));
   workers.push(startAuditWorker(redis));
 
-  // 9. Start listening
+  // 10. Start listening
   server.listen(PORT, () => {
     logger.info({
       event: 'SERVER_STARTED',

@@ -3,6 +3,8 @@
 const patientService = require('./patient.service');
 const apiResponse = require('../../core/utils/apiResponse');
 const asyncHandler = require('../../core/utils/asyncHandler');
+const { deleteAccount } = require('../../core/privacy/dataPrivacyService');
+const { container } = require('../../container');
 
 /**
  * GET /api/v1/patient/profile
@@ -30,4 +32,13 @@ const completeOnboarding = asyncHandler(async (req, res) => {
   return apiResponse.success(res, user, 201);
 });
 
-module.exports = { getProfile, updateProfile, completeOnboarding };
+/**
+ * DELETE /api/v1/patient/account
+ * DPDP-compliant account deletion — anonymizes PII, retains medical records.
+ */
+const deletePatientAccount = asyncHandler(async (req, res) => {
+  await deleteAccount(req.user.id, 'patient', container);
+  return apiResponse.success(res, { message: 'Account deleted successfully.' });
+});
+
+module.exports = { getProfile, updateProfile, completeOnboarding, deletePatientAccount };

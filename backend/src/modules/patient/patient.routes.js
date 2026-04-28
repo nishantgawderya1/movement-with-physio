@@ -5,6 +5,7 @@ const controller = require('./patient.controller');
 const authMiddleware = require('../../core/middleware/authMiddleware');
 const rbac = require('../../core/middleware/rbac');
 const { defaultLimiter } = require('../../core/middleware/rateLimiter');
+const auditLog = require('../../core/middleware/auditLog');
 
 const router = Router();
 
@@ -31,7 +32,7 @@ router.get('/profile', controller.getProfile);
  *     security:
  *       - BearerAuth: []
  */
-router.patch('/profile', controller.updateProfile);
+router.patch('/profile', auditLog('UPDATE_PATIENT_PROFILE', 'patient'), controller.updateProfile);
 
 /**
  * @openapi
@@ -42,6 +43,17 @@ router.patch('/profile', controller.updateProfile);
  *     security:
  *       - BearerAuth: []
  */
-router.post('/onboarding', controller.completeOnboarding);
+router.post('/onboarding', auditLog('PATIENT_ONBOARDING', 'patient'), controller.completeOnboarding);
+
+/**
+ * @openapi
+ * /api/v1/patient/account:
+ *   delete:
+ *     tags: [Patient]
+ *     summary: Delete patient account (DPDP — anonymizes PII, retains medical records)
+ *     security:
+ *       - BearerAuth: []
+ */
+router.delete('/account', auditLog('DELETE_PATIENT_ACCOUNT', 'patient'), controller.deletePatientAccount);
 
 module.exports = router;

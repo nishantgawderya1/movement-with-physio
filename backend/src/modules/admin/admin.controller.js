@@ -23,11 +23,19 @@ const listUsers = asyncHandler(async (req, res) => {
 /**
  * GET /api/v1/admin/audit-logs
  * List audit log entries with cursor pagination.
+ * Supports filters: userId, action, resource, from (ISO date), to (ISO date)
  */
 const listAuditLogs = asyncHandler(async (req, res) => {
-  const { cursor, limit, userId } = req.query;
+  const { cursor, limit, userId, action, resource, from, to } = req.query;
   const query = {};
   if (userId) query.userId = userId;
+  if (action) query.action = action;
+  if (resource) query.resource = resource;
+  if (from || to) {
+    query.createdAt = {};
+    if (from) query.createdAt.$gte = new Date(from);
+    if (to) query.createdAt.$lte = new Date(to);
+  }
   const result = await paginate(AuditLog, query, {
     cursor,
     limit: Number(limit) || 50,
@@ -35,6 +43,7 @@ const listAuditLogs = asyncHandler(async (req, res) => {
   });
   return apiResponse.paginated(res, result.data, result.pagination);
 });
+
 
 /**
  * GET /api/v1/admin/flags
