@@ -24,6 +24,7 @@ const NOTIFICATION_TYPES = Object.freeze({
   THERAPIST_VERIFIED: 'therapist_verified',
   ACCOUNT_DELETED: 'account_deleted',
   NEW_MESSAGE: 'new_message',
+  VIDEO_CALL: 'video_call',
   SESSION_NOTE_ADDED: 'session_note_added',
 });
 
