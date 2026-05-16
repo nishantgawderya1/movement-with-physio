@@ -22,7 +22,12 @@ function startAuditWorker(redis) {
         throw err; // trigger retry
       }
     },
-    { connection: redis, concurrency: 10 }
+    { connection: {
+        host: new URL(process.env.REDIS_URL || 'redis://redis:6379').hostname,
+        port: Number(new URL(process.env.REDIS_URL || 'redis://redis:6379').port) || 6379,
+        maxRetriesPerRequest: null,
+        enableReadyCheck: false,
+      }, concurrency: 10 }
   );
 
   worker.on('failed', (job, err) => {

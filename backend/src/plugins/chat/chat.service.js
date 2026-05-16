@@ -1,6 +1,7 @@
 'use strict';
 
 const ChatRoom = require('../../models/ChatRoom.model');
+const Message = require('../../models/Message.model');
 const { NOTIFICATION_TYPES } = require('../../core/utils/constants');
 const { addJob } = require('../../core/jobs/jobQueue');
 
@@ -9,6 +10,18 @@ class ChatService {
     this.redis = container.redis;
     this.messaging = container.messaging;
     this.notification = container.notification;
+    // Set later by the chat plugin once io.of('/chat') exists. Until then we
+    // fall back to messaging.emitToRoom (default namespace) so the service
+    // still works in isolation / tests.
+    this.namespace = null;
+  }
+
+  /**
+   * Inject the Socket.IO namespace (`/chat`) used for live message delivery.
+   * @param {import('socket.io').Namespace} ns
+   */
+  setNamespace(ns) {
+    this.namespace = ns;
   }
 
   /**
@@ -52,7 +65,7 @@ class ChatService {
     const room = await ChatRoom.findOne({ _id: roomId, participants: userId, isActive: true })
       .populate('participants', 'name email role');
     if (!room) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'Chat room not found');
+      const err = new Error('Chat room not found'); err.statusCode = 404; throw err;
     }
     return room;
   }
@@ -69,7 +82,7 @@ class ChatService {
       { new: true }
     );
     if (!room) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'Chat room not found or unauthorized');
+      const err = new Error('Chat room not found or unauthorized'); err.statusCode = 404; throw err;
     }
   }
 
@@ -83,11 +96,16 @@ class ChatService {
   async sendMessage(roomId, senderId, text) {
     const room = await ChatRoom.findById(roomId);
     if (!room) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'Chat room not found');
+      const err = new Error('Chat room not found'); err.statusCode = 404; throw err;
     }
 
-    if (!room.participants.includes(senderId)) {
-      throw new ApiError(httpStatus.FORBIDDEN, 'You are not a participant in this room');
+    // Compare ObjectIds via string form — Array#includes uses ===, which
+    // fails on Mongoose ObjectIds even when the values match.
+    const isParticipant = room.participants.some(
+      (p) => p.toString() === String(senderId)
+    );
+    if (!isParticipant) {
+      const err = new Error('You are not a participant in this room'); err.statusCode = 403; throw err;
     }
 
     // Atomic increment for sequence number
@@ -110,8 +128,14 @@ class ChatService {
     room.lastSeq = sequenceNumber;
     await room.save();
 
-    // Emit via socket
-    this.messaging.emitToRoom(roomId, 'new_message', message);
+    // Emit via socket on the `/chat` namespace (where clients connect).
+    // Falls back to the default namespace if the chat plugin hasn't wired
+    // setNamespace yet — keeps the path safe in startup races.
+    if (this.namespace) {
+      this.namespace.to(String(roomId)).emit('new_message', message);
+    } else {
+      this.messaging.emitToRoom(String(roomId), 'new_message', message);
+    }
 
     // Notify other participants (offline push) via job queue
     const otherParticipants = room.participants.filter(p => p.toString() !== senderId.toString());

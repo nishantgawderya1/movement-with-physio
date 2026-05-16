@@ -44,6 +44,65 @@ const verifyOTP = asyncHandler(async (req, res) => {
 });
 
 /**
+ * POST /api/v1/auth/me/init
+ * Provision (or fetch) the Mongo User doc for the signed-in Clerk identity.
+ * Each app calls this once after Clerk sign-in, passing its role.
+ * Idempotent.
+ */
+const initMe = asyncHandler(async (req, res) => {
+  const { role, name, onboardingCompleted } = req.body;
+  try {
+    const { user, isNew } = await authService.initUser({
+      clerkId: req.user.id,
+      role,
+      name,
+      onboardingCompleted,
+      authProvider: container.auth,
+    });
+    return apiResponse.success(res, {
+      user: {
+        _id: user._id,
+        clerkId: user.clerkId,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        onboardingCompleted: user.onboardingCompleted,
+      },
+      isNew,
+    });
+  } catch (err) {
+    return apiResponse.error(res, err.message, err.statusCode || 500, req.correlationId);
+  }
+});
+
+/**
+ * POST /api/v1/auth/email-status
+ * Public pre-flight check used by both apps before kicking off the Clerk OTP
+ * flow. Reports whether the given email is already registered AND whether the
+ * registered role conflicts with what the calling app expects.
+ *
+ * Returns { ok: true } when the email is either unregistered or registered
+ * with the expected role. Returns { ok: false, conflictRole } when the email
+ * exists under a different role — apps use this to block the OTP send before
+ * the user ever enters a Clerk session.
+ */
+const emailStatus = asyncHandler(async (req, res) => {
+  const { email, expectedRole } = req.body;
+  const existing = await User.findOne({ email: email.toLowerCase() })
+    .select('role')
+    .lean();
+  if (!existing) {
+    return apiResponse.success(res, { ok: true, registered: false });
+  }
+  const ok = existing.role === expectedRole;
+  return apiResponse.success(res, {
+    ok,
+    registered: true,
+    conflictRole: ok ? null : existing.role,
+  });
+});
+
+/**
  * GET /api/v1/auth/profile
  * Return the authenticated user's profile.
  */
@@ -108,6 +167,28 @@ const clerkWebhook = asyncHandler(async (req, res) => {
   const { type, data } = event;
   logger.info({ event: 'CLERK_WEBHOOK', type });
 
+  if (type === 'user.created') {
+    // Safety net for signups that bypass the apps (e.g. Clerk dashboard).
+    // Default role is 'patient' — the user can still re-init from the
+    // therapist app, which will trigger a 409 only if they truly mismatch.
+    const email = data.email_addresses?.[0]?.email_address;
+    if (email) {
+      await User.updateOne(
+        { clerkId: data.id },
+        {
+          $setOnInsert: {
+            clerkId: data.id,
+            email: email.toLowerCase(),
+            name: `${data.first_name || ''} ${data.last_name || ''}`.trim() || null,
+            role: 'patient',
+          },
+        },
+        { upsert: true }
+      );
+      logger.info({ event: 'CLERK_USER_CREATED', clerkId: data.id });
+    }
+  }
+
   if (type === 'user.deleted') {
     await User.softDelete({ clerkId: data.id });
     logger.info({ event: 'CLERK_USER_DELETED', clerkId: data.id });
@@ -123,4 +204,4 @@ const clerkWebhook = asyncHandler(async (req, res) => {
   return apiResponse.success(res, { received: true });
 });
 
-module.exports = { sendOTP, verifyOTP, getProfile, deleteAccount, clerkWebhook };
+module.exports = { sendOTP, verifyOTP, initMe, emailStatus, getProfile, deleteAccount, clerkWebhook };

@@ -32,6 +32,7 @@ const container = {
   video: null,
   cache: null,
   queue: null,
+  redis: null,
   breakers: {},
 };
 
@@ -99,6 +100,10 @@ async function init(redis) {
 
   // ── Cache ──────────────────────────────────────────────────
   container.cache = cacheManager.init(redis);
+  // Expose the raw ioredis client too — chat.service uses it for atomic INCR
+  // on per-room sequence numbers. Cache manager wraps a different concern
+  // (TTL/serialization) so we keep both.
+  container.redis = redis;
   logger.info({ event: 'DI_CACHE_READY' });
 
   // ── Job Queue ──────────────────────────────────────────────

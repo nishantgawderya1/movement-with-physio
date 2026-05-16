@@ -1,10 +1,10 @@
 'use strict';
 
-const Notification = require('../../../models/Notification.model');
-const User = require('../../../models/User.model');
-const paginate = require('../../../core/utils/paginator');
-const { CRITICAL_NOTIFICATION_TYPES } = require('../../../core/utils/constants');
-const logger = require('../../../core/utils/logger');
+const Notification = require('../../models/Notification.model');
+const User = require('../../models/User.model');
+const paginate = require('../../core/utils/paginator');
+const { CRITICAL_NOTIFICATION_TYPES } = require('../../core/utils/constants');
+const logger = require('../../core/utils/logger');
 
 /**
  * List notifications for a user with cursor pagination.

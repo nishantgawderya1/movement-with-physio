@@ -15,9 +15,14 @@ import {
 } from '@expo-google-fonts/nunito';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ClerkProvider } from '@clerk/clerk-expo';
+import { tokenCache } from './src/lib/tokenCache';
+import ClerkTokenBridge from './src/lib/ClerkTokenBridge';
 import AppNavigator from './src/navigation/AppNavigator';
 
 SplashScreen.preventAutoHideAsync();
+
+const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
@@ -40,12 +45,15 @@ export default function App() {
   }
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <SafeAreaProvider>
-        <AppNavigator />
-        <StatusBar style="auto" />
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+      <ClerkTokenBridge />
+      <GestureHandlerRootView style={styles.container}>
+        <SafeAreaProvider>
+          <AppNavigator />
+          <StatusBar style="auto" />
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ClerkProvider>
   );
 }
 

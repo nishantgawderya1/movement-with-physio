@@ -1,5 +1,4 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { TransitionPresets } from '@react-navigation/stack';
 import { OnboardingProvider } from '../context/OnboardingContext';
@@ -17,6 +16,7 @@ import TreatmentHistoryScreen from '../screens/auth/TreatmentHistoryScreen';
 import RecoveryGoalsScreen from '../screens/auth/RecoveryGoalsScreen';
 import AvailabilityScreen from '../screens/auth/AvailabilityScreen';
 import OnboardingCompleteScreen from '../screens/auth/OnboardingCompleteScreen';
+import ClerkAuthScreen from '../screens/auth/ClerkAuthScreen';
 
 const Stack = createStackNavigator();
 
@@ -35,16 +35,7 @@ const SPRING_TRANSITION = {
   },
 };
 
-/**
- * Placeholder screen for Clerk authentication (stub — not yet implemented).
- */
-function ClerkAuthScreen() {
-  return (
-    <View style={clerkStyles.container}>
-      <Text style={clerkStyles.label}>Login coming soon</Text>
-    </View>
-  );
-}
+// ClerkAuthScreen is now the real phone OTP screen — imported above
 
 /**
  * Auth + onboarding navigator.
@@ -85,15 +76,4 @@ export default function AuthNavigator() {
   );
 }
 
-var clerkStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-  label: {
-    fontSize: fonts.xl,
-    color: colors.textDark,
-  },
-});
+

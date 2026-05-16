@@ -1,381 +1,317 @@
 /**
- * chatService.js — Mock-first chat service for MWP Patient.
+ * chatService.js — Real backend implementation for MWP Patient chat.
  *
- * All methods return a Promise<{ success: boolean, data?: any, error?: string }>.
- * Swap the mock implementations for real REST/WebSocket calls with zero UI changes.
+ * Talks to:
+ *   REST     /api/v1/chat/*  (Clerk Bearer auth)
+ *   Socket   /chat namespace (Clerk auth in handshake)
  *
- * Message shape (matches therapist-side contract):
- *   {
- *     id: string,
- *     roomId: string,
- *     senderId: string,        // 'patient' | therapist userId
- *     senderRole: 'patient' | 'therapist',
- *     text: string,
- *     timestamp: ISO string,
- *     status: 'sent' | 'delivered' | 'read',
- *     replyTo: { id, text } | null
- *   }
+ * Exports the same method surface as the previous mock so MessagesScreen and
+ * ChatRoomScreen need no signature changes. Backend message/room shapes are
+ * normalized to the UI's existing contract (senderRole, isOnline, etc.).
  *
- * Conversation shape:
- *   {
- *     roomId: string,
- *     therapistId: string,
- *     therapistName: string,
- *     therapistAvatar: string | null,
- *     lastMessage: string,
- *     lastMessageTime: ISO string,
- *     unreadCount: number,
- *     isOnline: boolean
- *   }
+ * Conversation shape (returned to UI):
+ *   { roomId, therapistId, therapistName, therapistAvatar, lastMessage,
+ *     lastMessageTime, unreadCount, isOnline }
+ *
+ * Normalized message shape (returned to UI):
+ *   { id, roomId, senderId, senderRole: 'patient'|'therapist', text,
+ *     timestamp, status: 'sent'|'delivered'|'read', replyTo, sequenceNumber }
  */
 
-// ── Mock Data ──────────────────────────────────────────────────────────────
+import { apiClient } from '../lib/apiClient';
+import { chatSocket } from '../lib/chatSocket';
+import { tokenProvider } from '../lib/tokenProvider';
 
-var MOCK_CONVERSATIONS = [
-  {
-    roomId: 'room-001',
-    therapistId: 'therapist-sarah',
-    therapistName: 'Dr. Sarah Mitchell',
-    therapistAvatar: null,
-    lastMessage: 'Great progress on your knee exercises! Keep it up.',
-    lastMessageTime: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-    unreadCount: 2,
-    isOnline: true,
-  },
-  {
-    roomId: 'room-002',
-    therapistId: 'therapist-james',
-    therapistName: 'Dr. James Okafor',
-    therapistAvatar: null,
-    lastMessage: "I've updated your plan, please review when you get a chance.",
-    lastMessageTime: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-    unreadCount: 0,
-    isOnline: false,
-  },
-];
+// ── Helpers ────────────────────────────────────────────────────────────────
 
-var MOCK_MESSAGES = {
-  'room-001': [
-    {
-      id: 'msg-001-1',
-      roomId: 'room-001',
-      senderId: 'therapist-sarah',
-      senderRole: 'therapist',
-      text: 'Good morning! How is the pain level today compared to yesterday?',
-      timestamp: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
-      status: 'read',
-      replyTo: null,
-    },
-    {
-      id: 'msg-001-2',
-      roomId: 'room-001',
-      senderId: 'patient',
-      senderRole: 'patient',
-      text: "Morning Dr. Sarah! It's around a 4 today, down from 6 yesterday.",
-      timestamp: new Date(Date.now() - 32 * 60 * 1000).toISOString(),
-      status: 'read',
-      replyTo: null,
-    },
-    {
-      id: 'msg-001-3',
-      roomId: 'room-001',
-      senderId: 'therapist-sarah',
-      senderRole: 'therapist',
-      text: "That's wonderful improvement! The stretching routine is clearly helping.",
-      timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-      status: 'read',
-      replyTo: { id: 'msg-001-2', text: "It's around a 4 today, down from 6 yesterday." },
-    },
-    {
-      id: 'msg-001-4',
-      roomId: 'room-001',
-      senderId: 'patient',
-      senderRole: 'patient',
-      text: 'Yes! The hip flexor stretch especially. Should I increase the hold time?',
-      timestamp: new Date(Date.now() - 28 * 60 * 1000).toISOString(),
-      status: 'read',
-      replyTo: null,
-    },
-    {
-      id: 'msg-001-5',
-      roomId: 'room-001',
-      senderId: 'therapist-sarah',
-      senderRole: 'therapist',
-      text: 'Try holding for 45 seconds instead of 30. But listen to your body — if it feels too intense, go back to 30.',
-      timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
-      status: 'read',
-      replyTo: { id: 'msg-001-4', text: 'Should I increase the hold time?' },
-    },
-    {
-      id: 'msg-001-6',
-      roomId: 'room-001',
-      senderId: 'patient',
-      senderRole: 'patient',
-      text: 'Perfect, will do. Thanks for always being so responsive!',
-      timestamp: new Date(Date.now() - 22 * 60 * 1000).toISOString(),
-      status: 'read',
-      replyTo: null,
-    },
-    {
-      id: 'msg-001-7',
-      roomId: 'room-001',
-      senderId: 'therapist-sarah',
-      senderRole: 'therapist',
-      text: 'Great progress on your knee exercises! Keep it up.',
-      timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-      status: 'delivered',
-      replyTo: null,
-    },
-    {
-      id: 'msg-001-8',
-      roomId: 'room-001',
-      senderId: 'therapist-sarah',
-      senderRole: 'therapist',
-      text: "Don't forget your session tomorrow at 10am. See you then!",
-      timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
-      status: 'delivered',
-      replyTo: null,
-    },
-  ],
-  'room-002': [
-    {
-      id: 'msg-002-1',
-      roomId: 'room-002',
-      senderId: 'patient',
-      senderRole: 'patient',
-      text: 'Hi Dr. James! I completed all 3 sets today.',
-      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-      status: 'read',
-      replyTo: null,
-    },
-    {
-      id: 'msg-002-2',
-      roomId: 'room-002',
-      senderId: 'therapist-james',
-      senderRole: 'therapist',
-      text: 'Excellent work! How did the resistance band feel — too easy or just right?',
-      timestamp: new Date(Date.now() - 4.8 * 60 * 60 * 1000).toISOString(),
-      status: 'read',
-      replyTo: { id: 'msg-002-1', text: 'I completed all 3 sets today.' },
-    },
-    {
-      id: 'msg-002-3',
-      roomId: 'room-002',
-      senderId: 'patient',
-      senderRole: 'patient',
-      text: 'Honestly, by the third set it got pretty challenging. Is that normal?',
-      timestamp: new Date(Date.now() - 4.5 * 60 * 60 * 1000).toISOString(),
-      status: 'read',
-      replyTo: null,
-    },
-    {
-      id: 'msg-002-4',
-      roomId: 'room-002',
-      senderId: 'therapist-james',
-      senderRole: 'therapist',
-      text: "That's exactly where we want you — challenging but manageable. The muscle fatigue means it's working!",
-      timestamp: new Date(Date.now() - 4.3 * 60 * 60 * 1000).toISOString(),
-      status: 'read',
-      replyTo: { id: 'msg-002-3', text: 'By the third set it got pretty challenging.' },
-    },
-    {
-      id: 'msg-002-5',
-      roomId: 'room-002',
-      senderId: 'patient',
-      senderRole: 'patient',
-      text: 'Great to know! When should I progress to the blue band?',
-      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-      status: 'read',
-      replyTo: null,
-    },
-    {
-      id: 'msg-002-6',
-      roomId: 'room-002',
-      senderId: 'therapist-james',
-      senderRole: 'therapist',
-      text: "Once you can complete all 3 sets with the yellow band without difficulty for two consecutive sessions, we'll progress.",
-      timestamp: new Date(Date.now() - 3.8 * 60 * 60 * 1000).toISOString(),
-      status: 'read',
-      replyTo: null,
-    },
-    {
-      id: 'msg-002-7',
-      roomId: 'room-002',
-      senderId: 'patient',
-      senderRole: 'patient',
-      text: 'Makes sense! I will stick with yellow for now.',
-      timestamp: new Date(Date.now() - 3.5 * 60 * 60 * 1000).toISOString(),
-      status: 'read',
-      replyTo: null,
-    },
-    {
-      id: 'msg-002-8',
-      roomId: 'room-002',
-      senderId: 'therapist-james',
-      senderRole: 'therapist',
-      text: "I've updated your plan, please review when you get a chance.",
-      timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-      status: 'read',
-      replyTo: null,
-    },
-  ],
-};
-
-// In-memory message store for optimistic updates
-var _messages = JSON.parse(JSON.stringify(MOCK_MESSAGES));
-var _conversations = JSON.parse(JSON.stringify(MOCK_CONVERSATIONS));
-
-// ── Simulation helpers ─────────────────────────────────────────────────────
-
-function _delay(ms) {
-  return new Promise(function (resolve) { setTimeout(resolve, ms); });
+/**
+ * Identify the "other" participant in a direct chat for the patient view.
+ * Falls back to the first participant when myId is unknown.
+ * @param {Array} participants - populated User docs from backend
+ * @param {string|null} myId
+ * @returns {object|null}
+ */
+function pickTherapist(participants, myId) {
+  if (!Array.isArray(participants) || participants.length === 0) return null;
+  if (myId) {
+    var other = participants.find(function (p) {
+      return String(p && p._id) !== String(myId);
+    });
+    if (other) return other;
+  }
+  return participants[0];
 }
 
-function _formatTime(isoString) {
-  var d = new Date(isoString);
-  var now = new Date();
-  var diffMs = now - d;
-  var diffMins = Math.floor(diffMs / 60000);
+/**
+ * Map a backend ChatRoom into the UI's Conversation shape.
+ * @param {object} room
+ * @param {string|null} myId
+ * @returns {object|null}
+ */
+function normalizeRoom(room, myId) {
+  if (!room) return null;
+  var therapist = pickTherapist(room.participants, myId);
+  return {
+    roomId: String(room._id),
+    therapistId: therapist ? String(therapist._id) : '',
+    therapistName: therapist ? (therapist.name || therapist.email || 'Therapist') : 'Therapist',
+    therapistAvatar: therapist && therapist.avatarUrl ? therapist.avatarUrl : null,
+    lastMessage: room.lastMessage && room.lastMessage.text ? room.lastMessage.text : '',
+    lastMessageTime: room.lastMessage && room.lastMessage.sentAt
+      ? room.lastMessage.sentAt
+      : room.updatedAt || new Date().toISOString(),
+    unreadCount: 0, // backend doesn't expose this yet; recomputed client-side as messages arrive
+    isOnline: false, // presence not yet wired — leave false until backend supports it
+  };
+}
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return diffMins + 'm ago';
-  var diffHrs = Math.floor(diffMins / 60);
-  if (diffHrs < 24) return diffHrs + 'h ago';
-  return d.toLocaleDateString();
+/**
+ * Map a backend Message into the UI's normalized shape.
+ * @param {object} m
+ * @param {string|null} myId
+ * @returns {object}
+ */
+function normalizeMessage(m, myId) {
+  // sender can be a string id (raw insert) or a populated user object
+  var senderObj = (m && m.sender && typeof m.sender === 'object') ? m.sender : null;
+  var senderId = senderObj ? String(senderObj._id) : (m && m.sender ? String(m.sender) : '');
+  var isMine = !!(myId && senderId && senderId === String(myId));
+
+  // Read receipt status:
+  //   readBy contains any non-sender? → 'read'
+  //   otherwise treat persisted messages as 'delivered'
+  var status = 'delivered';
+  if (Array.isArray(m && m.readBy)) {
+    var seenByOther = m.readBy.some(function (r) {
+      return r && r.userId && String(r.userId) !== senderId;
+    });
+    if (seenByOther) status = 'read';
+  }
+
+  return {
+    id: String(m._id || m.id),
+    roomId: String(m.roomId),
+    senderId: senderId,
+    senderRole: isMine ? 'patient' : 'therapist',
+    text: m.text || '',
+    timestamp: m.createdAt || m.timestamp || new Date().toISOString(),
+    status: status,
+    replyTo: m.replyTo || null,
+    sequenceNumber: typeof m.sequenceNumber === 'number' ? m.sequenceNumber : 0,
+  };
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────
 
 /**
- * Returns a list of conversation threads for the current patient.
+ * Fetch the patient's conversation list.
  * @returns {Promise<{ success: boolean, data?: Array, error?: string }>}
  */
 async function getConversations() {
-  await _delay(300);
+  var res = await apiClient.get('/chat/rooms');
+  if (!res.success) return { success: false, error: res.error };
+  var myId = tokenProvider.getMyUserId();
+  var rooms = Array.isArray(res.data) ? res.data : [];
   return {
     success: true,
-    data: _conversations.map(function (c) {
-      return Object.assign({}, c);
-    }),
+    data: rooms.map(function (r) { return normalizeRoom(r, myId); }).filter(Boolean),
   };
 }
 
 /**
- * Returns paginated messages for a given room.
+ * Fetch paginated message history for a room.
+ * Backend uses sequence-number pagination; we expose `afterSeq` directly but
+ * also accept the older { page, limit } shape for back-compat.
+ *
  * @param {string} roomId
- * @param {{ page?: number, limit?: number }} options
+ * @param {{ afterSeq?: number, limit?: number, page?: number }} [options]
  * @returns {Promise<{ success: boolean, data?: { messages: Array, hasMore: boolean }, error?: string }>}
  */
 async function getMessages(roomId, options) {
-  await _delay(250);
   var opts = options || {};
-  var page = opts.page || 1;
-  var limit = opts.limit || 20;
+  var limit = opts.limit || 50;
+  var afterSeq = typeof opts.afterSeq === 'number' ? opts.afterSeq : 0;
 
-  var all = _messages[roomId] || [];
-  // Return in reverse chronological order for inverted FlatList
-  var sorted = all.slice().reverse();
-  var start = (page - 1) * limit;
-  var end = start + limit;
-  var slice = sorted.slice(start, end);
+  var res = await apiClient.get('/chat/rooms/' + roomId + '/messages', {
+    afterSeq: afterSeq,
+    limit: limit,
+  });
+  if (!res.success) return { success: false, error: res.error };
+
+  var myId = tokenProvider.getMyUserId();
+  var raw = Array.isArray(res.data) ? res.data : [];
+  var normalized = raw.map(function (m) { return normalizeMessage(m, myId); });
+
+  // UI uses an inverted FlatList — newest first.
+  normalized.sort(function (a, b) { return b.sequenceNumber - a.sequenceNumber; });
 
   return {
     success: true,
     data: {
-      messages: slice,
-      hasMore: end < sorted.length,
-      total: sorted.length,
+      messages: normalized,
+      hasMore: normalized.length === limit,
+      total: normalized.length,
     },
   };
 }
 
 /**
- * Sends a message to a room. Adds optimistically to local state.
+ * Send a message in a room. Uses REST for guaranteed persistence; the socket
+ * delivers the resulting message to other participants automatically.
+ *
  * @param {string} roomId
  * @param {string} text
- * @param {{ id: string, text: string } | null} replyTo
- * @returns {Promise<{ success: boolean, data?: Object, error?: string }>}
+ * @param {{ id: string, text: string } | null} [replyTo]
+ * @returns {Promise<{ success: boolean, data?: object, error?: string }>}
  */
 async function sendMessage(roomId, text, replyTo) {
-  await _delay(150);
+  var body = { text: text };
+  if (replyTo) body.replyTo = replyTo;
 
-  var msg = {
-    id: 'msg-' + Date.now(),
-    roomId: roomId,
-    senderId: 'patient',
-    senderRole: 'patient',
-    text: text.trim(),
-    timestamp: new Date().toISOString(),
-    status: 'sent',
-    replyTo: replyTo || null,
-  };
+  var res = await apiClient.post('/chat/rooms/' + roomId + '/messages', body);
+  if (!res.success) return { success: false, error: res.error };
 
-  // Persist in memory
-  if (!_messages[roomId]) {
-    _messages[roomId] = [];
-  }
-  _messages[roomId].push(msg);
-
-  // Update conversation lastMessage
-  var conv = _conversations.find(function (c) { return c.roomId === roomId; });
-  if (conv) {
-    conv.lastMessage = text.trim();
-    conv.lastMessageTime = msg.timestamp;
-  }
-
-  // Simulate delivery after 800ms
-  setTimeout(function () {
-    msg.status = 'delivered';
-  }, 800);
-
-  return { success: true, data: msg };
+  var myId = tokenProvider.getMyUserId();
+  return { success: true, data: normalizeMessage(res.data, myId) };
 }
 
 /**
- * Marks a specific message as read.
+ * Mark all messages in a room as read.
  * @param {string} roomId
- * @param {string} messageId
  * @returns {Promise<{ success: boolean, error?: string }>}
  */
-async function markAsRead(roomId, messageId) {
-  await _delay(100);
-
-  var msgs = _messages[roomId] || [];
-  msgs.forEach(function (m) {
-    if (m.id === messageId || !messageId) {
-      m.status = 'read';
-    }
-  });
-
-  // Clear unread badge for this room
-  var conv = _conversations.find(function (c) { return c.roomId === roomId; });
-  if (conv) {
-    conv.unreadCount = 0;
-  }
-
+async function markAsRead(roomId /*, messageId */) {
+  var res = await apiClient.post('/chat/rooms/' + roomId + '/read', {});
+  if (!res.success) return { success: false, error: res.error };
+  // Also notify peers in real-time when socket is up.
+  chatSocket.emit('mark_read', { roomId: roomId });
   return { success: true };
 }
 
 /**
- * Polls for typing status in a room.
- * Returns true ~25% of the time to simulate realistic typing.
- * @param {string} roomId
- * @returns {Promise<{ success: boolean, data?: { isTyping: boolean }, error?: string }>}
+ * Create (or look up) a direct room with a given therapist.
+ * @param {string} therapistUserId
+ * @returns {Promise<{ success: boolean, data?: object, error?: string }>}
  */
-async function getTypingStatus(roomId) {
-  await _delay(200);
-  // Simple mock: Dr. Sarah types occasionally
-  var isTyping = roomId === 'room-001' && Math.random() < 0.25;
+async function createRoom(therapistUserId) {
+  var res = await apiClient.post('/chat/rooms', { participantIds: [therapistUserId] });
+  if (!res.success) return { success: false, error: res.error };
+  var myId = tokenProvider.getMyUserId();
+  return { success: true, data: normalizeRoom(res.data, myId) };
+}
+
+/**
+ * List therapists the patient can start a chat with. Falls back to the full
+ * verified list while the booking-aware "my therapists" endpoint doesn't
+ * exist yet — includeUnverified=true matches Book tab's behavior so the
+ * picker is never empty in dev.
+ * @returns {Promise<{ success: boolean, data?: Array<{ id, name, email, specialty }>, error?: string }>}
+ */
+async function listAvailableTherapists() {
+  var res = await apiClient.get('/therapists', { limit: 50, includeUnverified: true });
+  if (!res.success) return { success: false, error: res.error };
+  var raw = res.data && Array.isArray(res.data.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
   return {
     success: true,
-    data: { isTyping: isTyping },
+    data: raw.map(function (t) {
+      return {
+        id: String(t._id),
+        name: t.name || t.email || 'Therapist',
+        email: t.email || '',
+        specialty: t.specialty || '',
+      };
+    }),
   };
 }
 
+// ── Real-time subscription helpers ─────────────────────────────────────────
+
+/**
+ * Subscribe to live events for a room. Returns an unsubscribe function that
+ * detaches every listener registered here.
+ *
+ * Callbacks receive normalized payloads where appropriate.
+ *
+ * @param {string} roomId
+ * @param {{
+ *   onMessage?: (msg: object) => void,
+ *   onTyping?: (info: { userId: string, isTyping: boolean }) => void,
+ *   onReadBy?: (info: { userId: string }) => void,
+ * }} handlers
+ * @returns {() => void}
+ */
+function subscribeToRoom(roomId, handlers) {
+  var unsubs = [];
+
+  // Ensure the socket is alive — connect() is idempotent.
+  chatSocket.connect().then(function () {
+    chatSocket.emit('join_room', { roomId: roomId });
+  });
+
+  if (handlers && handlers.onMessage) {
+    var msgHandler = function (msg) {
+      // Backend emits the raw Message — normalize for the UI.
+      if (!msg || String(msg.roomId) !== String(roomId)) return;
+      var myId = tokenProvider.getMyUserId();
+      handlers.onMessage(normalizeMessage(msg, myId));
+    };
+    unsubs.push(chatSocket.on('new_message', msgHandler));
+  }
+
+  if (handlers && handlers.onTyping) {
+    var typingHandler = function (info) {
+      if (!info || String(info.roomId) !== String(roomId)) return;
+      var myId = tokenProvider.getMyUserId();
+      // Ignore our own typing echoes.
+      if (myId && String(info.userId) === String(myId)) return;
+      handlers.onTyping({ userId: String(info.userId), isTyping: !!info.isTyping });
+    };
+    unsubs.push(chatSocket.on('typing', typingHandler));
+  }
+
+  if (handlers && handlers.onReadBy) {
+    var readHandler = function (info) {
+      if (!info || String(info.roomId) !== String(roomId)) return;
+      handlers.onReadBy({ userId: String(info.userId) });
+    };
+    unsubs.push(chatSocket.on('read_by', readHandler));
+  }
+
+  return function () {
+    unsubs.forEach(function (u) { try { u(); } catch (e) {} });
+  };
+}
+
+/**
+ * Emit a typing indicator for the current user.
+ * @param {string} roomId
+ * @param {boolean} isTyping
+ */
+function setTyping(roomId, isTyping) {
+  chatSocket.emit('typing', { roomId: roomId, isTyping: !!isTyping });
+}
+
+/**
+ * Legacy mock kept for compatibility — typing now arrives via socket events,
+ * so this resolves to a steady "not typing" reply. ChatRoomScreen has been
+ * updated to subscribe via subscribeToRoom() instead of polling.
+ * @returns {Promise<{ success: boolean, data: { isTyping: boolean } }>}
+ */
+async function getTypingStatus() {
+  return { success: true, data: { isTyping: false } };
+}
+
 export var chatService = {
+  // REST
   getConversations: getConversations,
   getMessages: getMessages,
   sendMessage: sendMessage,
   markAsRead: markAsRead,
+  createRoom: createRoom,
+  listAvailableTherapists: listAvailableTherapists,
+  // Real-time
+  subscribeToRoom: subscribeToRoom,
+  setTyping: setTyping,
+  // Legacy (no-op)
   getTypingStatus: getTypingStatus,
 };

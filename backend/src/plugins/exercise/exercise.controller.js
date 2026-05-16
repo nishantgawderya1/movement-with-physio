@@ -1,8 +1,8 @@
 'use strict';
 
 const exerciseService = require('./exercise.service');
-const apiResponse = require('../../../core/utils/apiResponse');
-const asyncHandler = require('../../../core/utils/asyncHandler');
+const apiResponse = require('../../core/utils/apiResponse');
+const asyncHandler = require('../../core/utils/asyncHandler');
 
 /**
  * Factory: creates controller bound to a storage provider from DI.

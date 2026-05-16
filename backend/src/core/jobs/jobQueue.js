@@ -1,19 +1,38 @@
 'use strict';
 
-const { Queue, Worker } = require('bullmq');
+const { Queue } = require('bullmq');
 const logger = require('../utils/logger');
 
 const QUEUE_NAME = 'mwp-jobs';
 let queue = null;
 
 /**
+ * Parse a Redis URL into a BullMQ-compatible connection options object.
+ * BullMQ requires maxRetriesPerRequest: null — it manages retries internally.
+ * @param {string} redisUrl
+ * @returns {object}
+ */
+function getBullMQConnection(redisUrl) {
+  const url = new URL(redisUrl || 'redis://redis:6379');
+  return {
+    host: url.hostname,
+    port: Number(url.port) || 6379,
+    password: url.password || undefined,
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
+  };
+}
+
+/**
  * Create and return the BullMQ queue.
- * @param {import('ioredis').Redis} redis
+ * @param {import('ioredis').Redis} redis - shared app redis (for reference, not passed to BullMQ)
  * @returns {import('bullmq').Queue}
  */
 function createQueue(redis) {
+  const connection = getBullMQConnection(process.env.REDIS_URL);
+
   queue = new Queue(QUEUE_NAME, {
-    connection: redis,
+    connection,
     defaultJobOptions: {
       attempts: 3,
       backoff: { type: 'exponential', delay: 2000 },
@@ -29,6 +48,7 @@ function createQueue(redis) {
   logger.info({ event: 'QUEUE_READY', name: QUEUE_NAME });
   return queue;
 }
+
 
 /**
  * Get the initialized queue instance.

@@ -21,6 +21,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { fonts, fontFamilies } from '../../constants/fonts';
+import { apiClient } from '../../lib/apiClient';
+import { tokenProvider } from '../../lib/tokenProvider';
 
 const PersonalInfoScreen = ({ navigation }) => {
 
@@ -62,9 +64,22 @@ const PersonalInfoScreen = ({ navigation }) => {
       return;
     }
     setErrorMessage('');
-    console.log('[MOCK] Full name saved:', fullName.trim());
-    // TODO: await TherapistService.savePersonalInfo({ fullName: fullName.trim() });
-    navigation.navigate('ProfessionalCredentials'); // placeholder — update when next screen is ready
+    const trimmed = fullName.trim();
+    // Backfill the name + mark basic profile complete on the backend User
+    // doc. This stops Bootstrap from sending the therapist back here on
+    // every sign-in. Verification (Professional Credentials → ID → photo)
+    // is a separate flag (isVerified) and unaffected.
+    (async () => {
+      const res = await apiClient.post('/auth/me/init', {
+        role: 'therapist',
+        name: trimmed,
+        onboardingCompleted: true,
+      });
+      if (res.success && res.data && res.data.user) {
+        tokenProvider.setOnboardingCompleted(!!res.data.user.onboardingCompleted);
+      }
+    })();
+    navigation.navigate('ProfessionalCredentials');
   };
 
   return (
@@ -81,12 +96,20 @@ const PersonalInfoScreen = ({ navigation }) => {
 
           {/* ── Top Bar ─────────────────────────────────────────────── */}
           <View style={styles.topBar}>
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.backBtn}
-            >
-              <Ionicons name="arrow-back" size={22} color={colors.textDark} />
-            </TouchableOpacity>
+            {/* Back arrow only when there's somewhere to pop to. When
+                Bootstrap navigates here via replace(), PersonalInfo is
+                the only screen in the stack — goBack() would throw
+                "GO_BACK was not handled by any navigator". */}
+            {navigation.canGoBack() ? (
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={styles.backBtn}
+              >
+                <Ionicons name="arrow-back" size={22} color={colors.textDark} />
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.backBtn} />
+            )}
             <View style={styles.brandRow}>
               <View style={styles.brandIcon}>
                 <Ionicons name="pulse" size={16} color={colors.white} />

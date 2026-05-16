@@ -20,4 +20,15 @@ const verifyOTPSchema = Joi.object({
   clerkId: Joi.string().required(),
 });
 
-module.exports = { sendOTPSchema, verifyOTPSchema };
+const initMeSchema = Joi.object({
+  role: Joi.string().valid('patient', 'therapist').required(),
+  name: Joi.string().trim().max(120).allow('', null),
+  onboardingCompleted: Joi.boolean(),
+});
+
+const emailStatusSchema = Joi.object({
+  email: Joi.string().email().lowercase().required(),
+  expectedRole: Joi.string().valid('patient', 'therapist').required(),
+});
+
+module.exports = { sendOTPSchema, verifyOTPSchema, initMeSchema, emailStatusSchema };

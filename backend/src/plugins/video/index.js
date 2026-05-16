@@ -2,12 +2,12 @@
 
 const { Router } = require('express');
 const { createController } = require('./video.controller');
-const authMiddleware = require('../../../core/middleware/authMiddleware');
-const validate = require('../../../core/middleware/validate');
+const authMiddleware = require('../../core/middleware/authMiddleware');
+const validate = require('../../core/middleware/validate');
 const videoValidation = require('./video.validation');
-const PluginBase = require('../../../core/plugins/PluginBase');
-const auditLog = require('../../../core/middleware/auditLog');
-const logger = require('../../../core/utils/logger');
+const PluginBase = require('../../core/plugins/PluginBase');
+const auditLog = require('../../core/middleware/auditLog');
+const logger = require('../../core/utils/logger');
 
 class VideoPlugin extends PluginBase {
   get name() { return 'video'; }

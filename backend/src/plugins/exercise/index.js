@@ -2,11 +2,11 @@
 
 const { Router } = require('express');
 const { createController } = require('./exercise.controller');
-const authMiddleware = require('../../../core/middleware/authMiddleware');
-const rbac = require('../../../core/middleware/rbac');
-const { defaultLimiter } = require('../../../core/middleware/rateLimiter');
-const auditLog = require('../../../core/middleware/auditLog');
-const PluginBase = require('../../../core/plugins/PluginBase');
+const authMiddleware = require('../../core/middleware/authMiddleware');
+const rbac = require('../../core/middleware/rbac');
+const { defaultLimiter } = require('../../core/middleware/rateLimiter');
+const auditLog = require('../../core/middleware/auditLog');
+const PluginBase = require('../../core/plugins/PluginBase');
 
 /**
  * ExercisePlugin — auto-registered by PluginManager.

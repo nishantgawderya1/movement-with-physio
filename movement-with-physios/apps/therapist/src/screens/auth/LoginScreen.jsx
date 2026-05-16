@@ -101,7 +101,7 @@ const LoginScreen = ({ navigation }) => {
           <TouchableOpacity
             style={styles.buttonOutline}
             activeOpacity={0.85}
-            onPress={() => navigation.navigate('TherapistPortal')}
+            onPress={() => navigation.navigate('ClerkAuth')}
           >
             <Text style={styles.buttonOutlineText}>Login</Text>
           </TouchableOpacity>

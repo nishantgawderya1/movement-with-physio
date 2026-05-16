@@ -15,7 +15,12 @@ function responseTimer(req, res, next) {
   res.on('finish', () => {
     const elapsed = Number(process.hrtime.bigint() - start) / 1e6; // ms
     const ms = elapsed.toFixed(2);
-    res.setHeader('X-Response-Time', `${ms}ms`);
+
+    // Headers are already sent at this point — use writeHead workaround or skip
+    // setHeader() throws ERR_HTTP_HEADERS_SENT after finish, so guard it
+    if (!res.headersSent) {
+      res.setHeader('X-Response-Time', `${ms}ms`);
+    }
 
     if (elapsed > SLOW_REQUEST_THRESHOLD_MS) {
       logger.warn({

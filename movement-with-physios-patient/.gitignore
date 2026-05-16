@@ -2,3 +2,5 @@ node_modules
 
 .gitignore
 backend/.agent
+graphify-out/.graphify_python
+.env

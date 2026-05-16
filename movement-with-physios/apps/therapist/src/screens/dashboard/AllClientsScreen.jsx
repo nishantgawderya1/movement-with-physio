@@ -4,99 +4,28 @@
 // Backend dev: replace MOCK_CLIENTS with real API call.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   SafeAreaView,
-  ScrollView,
   TouchableOpacity,
   TextInput,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { fonts, fontFamilies } from '../../constants/fonts';
 import BottomTabBar from '../../components/BottomTabBar';
 import { ROUTES } from '../../constants/routes';
+import { apiClient } from '../../lib/apiClient';
 
-// ── Mock data — replace with API calls ───────────────────────────────────────
-const MOCK_CLIENTS = [
-  {
-    id: 1,
-    name: 'Priya Sharma',
-    age: 34,
-    condition: 'Lower Back Pain',
-    status: 'Excellent',
-    adherence: 85,
-    adherenceUp: true,
-    pain: 42,
-    days: 42,
-    lastSession: '2 hours ago',
-    avatarBg: '#FDE68A',
-    avatarIcon: 'person',
-  },
-  {
-    id: 2,
-    name: 'Rahul Patel',
-    age: 45,
-    condition: 'Post-Knee Surgery',
-    status: 'Needs Attention',
-    adherence: 65,
-    adherenceUp: false,
-    pain: 28,
-    days: 18,
-    lastSession: '1 day ago',
-    avatarBg: '#BFDBFE',
-    avatarIcon: 'person',
-  },
-  {
-    id: 3,
-    name: 'Meera Singh',
-    age: 62,
-    condition: 'Shoulder Impingement',
-    status: 'Excellent',
-    adherence: 92,
-    adherenceUp: true,
-    pain: 42,
-    days: 32,
-    lastSession: '5 hours ago',
-    avatarBg: '#FCA5A5',
-    avatarIcon: 'person',
-  },
-  {
-    id: 4,
-    name: 'Vikram Mehta',
-    age: 51,
-    condition: 'Hip Replacement Recovery',
-    status: 'Critical',
-    adherence: 85,
-    adherenceUp: true,
-    pain: 42,
-    days: 42,
-    lastSession: '5 days ago',
-    avatarBg: '#A7F3D0',
-    avatarIcon: 'person',
-  },
-  {
-    id: 5,
-    name: 'Anjali Kumar',
-    age: 29,
-    condition: 'Rotator Cuff Tear',
-    status: 'Excellent',
-    adherence: 78,
-    adherenceUp: true,
-    pain: 35,
-    days: 22,
-    lastSession: '3 hours ago',
-    avatarBg: '#DDD6FE',
-    avatarIcon: 'person',
-  },
-];
-
-const FILTER_TABS = ['All Clients', 'Excellent', 'Good', 'Needs Attention', 'Critical'];
-
+// Backend exposes only the basics for a client (User doc fields). Stats like
+// adherence, pain reduction, days-since-start, and last-session are not
+// tracked server-side yet — surfacing `—` / 0 here is honest until those
+// metrics ship, instead of fabricating numbers.
 const STATUS_CONFIG = {
   Excellent:        { bg: '#D1FAE5', text: '#059669' },
   Good:             { bg: '#DBEAFE', text: '#2563EB' },
@@ -104,31 +33,79 @@ const STATUS_CONFIG = {
   Critical:         { bg: '#FEE2E2', text: '#DC2626' },
 };
 
+const AVATAR_PALETTE = ['#FDE68A', '#BFDBFE', '#FCA5A5', '#A7F3D0', '#DDD6FE', '#FBCFE8'];
+
+function avatarBgFor(id) {
+  let h = 0;
+  const s = String(id || '');
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i);
+  return AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length];
+}
+
+/**
+ * Map a backend patient User doc into the row shape this screen renders.
+ * @param {object} u
+ * @returns {object}
+ */
+function normalizeClient(u) {
+  return {
+    id: String(u._id),
+    name: u.name || u.email || 'Patient',
+    age: null,
+    condition: '',
+    status: 'Good',
+    adherence: 0,
+    adherenceUp: true,
+    pain: 0,
+    days: 0,
+    lastSession: '—',
+    avatarBg: avatarBgFor(u._id),
+  };
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 const AllClientsScreen = ({ navigation }) => {
-  const [searchText,   setSearchText]   = useState('');
-  const [activeFilter, setActiveFilter] = useState('All Clients');
+  const [searchText, setSearchText] = useState('');
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(12)).current;
+
+  // Pulls the real client list from /therapists/me/clients. Uses the same
+  // includeAll=true escape hatch the Messages picker uses so therapists
+  // can see all patients during dev (production should drop this flag).
+  const loadClients = useCallback(() => {
+    setLoading(true);
+    apiClient.get('/therapists/me/clients', { limit: 50, includeAll: true }).then((res) => {
+      if (res.success) {
+        const arr = Array.isArray(res.data) ? res.data : [];
+        setClients(arr.map(normalizeClient));
+        setError(null);
+      } else {
+        setError(res.error || 'Could not load clients');
+        setClients([]);
+      }
+      setLoading(false);
+    });
+  }, []);
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim,  { toValue: 1, duration: 300, useNativeDriver: true }),
       Animated.timing(slideAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
     ]).start();
-  }, []);
+    loadClients();
+    const unsub = navigation.addListener('focus', loadClients);
+    return unsub;
+  }, [loadClients, navigation]);
 
-  const filteredClients = MOCK_CLIENTS.filter((c) => {
+  const filteredClients = clients.filter((c) => {
     const matchSearch =
       searchText.trim() === '' ||
-      c.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      c.condition.toLowerCase().includes(searchText.toLowerCase());
-
-    const matchFilter =
-      activeFilter === 'All Clients' || c.status === activeFilter;
-
-    return matchSearch && matchFilter;
+      c.name.toLowerCase().includes(searchText.toLowerCase());
+    return matchSearch;
   });
 
   const handleTabPress = (tabId) => {
@@ -151,7 +128,9 @@ const AllClientsScreen = ({ navigation }) => {
         </TouchableOpacity>
         <View style={styles.headerText}>
           <Text style={styles.title}>All Clients</Text>
-          <Text style={styles.subtitle}>{MOCK_CLIENTS.length} active patients</Text>
+          <Text style={styles.subtitle}>
+            {loading ? 'Loading…' : `${clients.length} active patient${clients.length === 1 ? '' : 's'}`}
+          </Text>
         </View>
       </View>
 
@@ -173,33 +152,10 @@ const AllClientsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* ── Status Filter Tabs ──────────────────────────────────────── */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterTabsContainer}
-        style={styles.filterTabsScroll}
-      >
-        {FILTER_TABS.map((tab) => {
-          const isActive = activeFilter === tab;
-          const count = tab === 'All Clients'
-            ? MOCK_CLIENTS.length
-            : MOCK_CLIENTS.filter((c) => c.status === tab).length;
-          if (count === 0 && tab !== 'All Clients') return null;
-          return (
-            <TouchableOpacity
-              key={tab}
-              style={[styles.filterTab, isActive && styles.filterTabActive]}
-              onPress={() => setActiveFilter(tab)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.filterTabText, isActive && styles.filterTabTextActive]}>
-                {tab === 'All Clients' ? `All Clients (${count})` : `${tab} (${count})`}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      {/* Status filter tabs removed — backend doesn't yet track client
+          health status (Excellent / Needs Attention / etc.). When that
+          field ships, restore the horizontal filter scroller and bind to
+          the real status values. */}
 
       {/* ── Client Cards ────────────────────────────────────────────── */}
       <Animated.ScrollView
@@ -207,7 +163,20 @@ const AllClientsScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
       >
-        {filteredClients.map((client) => {
+        {loading ? (
+          <View style={styles.emptyWrap}>
+            <ActivityIndicator size="small" color={colors.primary} />
+          </View>
+        ) : filteredClients.length === 0 ? (
+          <View style={styles.emptyWrap}>
+            <Text style={styles.emptyTitle}>
+              {error ? 'Could not load clients' : 'No clients yet'}
+            </Text>
+            <Text style={styles.emptySubtitle}>
+              {error || 'Patients who book sessions with you will show up here.'}
+            </Text>
+          </View>
+        ) : filteredClients.map((client) => {
           const statusCfg = STATUS_CONFIG[client.status] ?? { bg: '#F3F4F6', text: '#6B7280' };
           return (
             <TouchableOpacity key={client.id} style={styles.clientCard} activeOpacity={0.85}>
@@ -219,43 +188,19 @@ const AllClientsScreen = ({ navigation }) => {
                 </View>
                 <View style={styles.clientInfo}>
                   <Text style={styles.clientName}>{client.name}</Text>
-                  <Text style={styles.clientMeta}>{client.age} years • {client.condition}</Text>
+                  {/* age + condition not yet tracked server-side; hide row
+                      until the patient profile schema includes them. */}
                 </View>
-                <View style={[styles.statusBadge, { backgroundColor: statusCfg.bg }]}>
-                  <Text style={[styles.statusBadgeText, { color: statusCfg.text }]}>{client.status}</Text>
-                </View>
-              </View>
-
-              {/* Stats row: Adherence | Pain | Days */}
-              <View style={styles.statsRow}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Adherence</Text>
-                  <View style={styles.statValueRow}>
-                    <Text style={[styles.statValue, { color: client.adherenceUp ? '#10B981' : '#EF4444' }]}>
-                      {client.adherence}%
-                    </Text>
-                    <Ionicons
-                      name={client.adherenceUp ? 'trending-up' : 'trending-down'}
-                      size={14}
-                      color={client.adherenceUp ? '#10B981' : '#EF4444'}
-                      style={{ marginLeft: 3 }}
-                    />
+                {client.status ? (
+                  <View style={[styles.statusBadge, { backgroundColor: statusCfg.bg }]}>
+                    <Text style={[styles.statusBadgeText, { color: statusCfg.text }]}>{client.status}</Text>
                   </View>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Pain ↓</Text>
-                  <Text style={[styles.statValue, { color: '#10B981' }]}>{client.pain}%</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Days</Text>
-                  <Text style={[styles.statValue, { color: colors.textDark }]}>{client.days}</Text>
-                </View>
+                ) : null}
               </View>
 
-              {/* Last session */}
-              <Text style={styles.lastSession}>Last session: {client.lastSession}</Text>
+              {/* Stats row removed — adherence/pain/days have no backing
+                  data yet. Restore once the patient progress endpoint
+                  exists; for now we don't want to display fake numbers. */}
 
             </TouchableOpacity>
           );
@@ -410,6 +355,26 @@ const styles = StyleSheet.create({
   statDivider: { width: 1, height: 32, backgroundColor: colors.cardBorder },
 
   lastSession: { fontSize: fonts.xs, color: colors.textLight },
+
+  // Empty / loading / error
+  emptyWrap: {
+    paddingVertical: 60,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    gap: 8,
+  },
+  emptyTitle: {
+    fontFamily: fontFamilies.instrumentSerif,
+    fontSize: fonts.lg,
+    color: colors.textDark,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: fonts.sm,
+    color: colors.textMedium,
+    textAlign: 'center',
+    lineHeight: fonts.sm * 1.5,
+  },
 });
 
 export default AllClientsScreen;

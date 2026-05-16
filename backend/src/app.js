@@ -79,6 +79,66 @@ function createApp(container) {
     app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   }
 
+  // ── Integration diagnostics (dev only) ───────────────────────
+  if (['development', 'staging'].includes(process.env.NODE_ENV)) {
+    app.get('/api/v1/diag', async (req, res) => {
+      const { createClerkClient } = require('@clerk/express');
+      const adminSdk = require('firebase-admin');
+      const { Resend } = require('resend');
+      const results = {};
+
+      // ── Clerk ────────────────────────────────────────────────
+      try {
+        const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+        const { totalCount } = await clerk.users.getUserList({ limit: 1 });
+        results.clerk = { ok: true, totalUsers: totalCount, key: process.env.CLERK_SECRET_KEY?.slice(0, 14) + '...' };
+      } catch (e) {
+        results.clerk = { ok: false, error: e.message };
+      }
+
+      // ── Firebase Admin SDK ───────────────────────────────────
+      try {
+        const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+        const sa = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        const appName = 'diag-' + Date.now();
+        const diagApp = adminSdk.initializeApp({ credential: adminSdk.credential.cert(sa) }, appName);
+        const auth = adminSdk.auth(diagApp);
+        // verifyIdToken on a garbage token → Firebase-specific error code means we reached Google
+        let fbStatus = 'connected';
+        try { await auth.verifyIdToken('test'); } catch (e2) {
+          fbStatus = e2.code || e2.message;
+        }
+        await diagApp.delete();
+        results.firebase = { ok: true, project: sa.project_id, status: fbStatus };
+      } catch (e) {
+        results.firebase = { ok: false, error: e.message };
+      }
+
+      // ── Resend ───────────────────────────────────────────────
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        const domains = await resend.domains.list();
+        const list = (domains?.data || []).map(d => ({ name: d.name, status: d.status }));
+        results.resend = {
+          ok: true,
+          key: process.env.RESEND_API_KEY?.slice(0, 8) + '...',
+          from: process.env.EMAIL_FROM,
+          domains: list,
+          fromDomainVerified: list.some(d => d.name === (process.env.EMAIL_FROM || '').split('@')[1] && d.status === 'verified'),
+        };
+      } catch (e) {
+        results.resend = { ok: false, error: e.message };
+      }
+
+      const allOk = Object.values(results).every(r => r.ok);
+      res.status(allOk ? 200 : 207).json({
+        summary: allOk ? 'ALL_OK' : 'SOME_FAILED',
+        ts: new Date().toISOString(),
+        results,
+      });
+    });
+  }
+
   // ── Module routes ────────────────────────────────────────────
   app.use('/api/v1/auth', authRoutes);
   app.use('/api/v1/patient', patientRoutes);
@@ -88,13 +148,25 @@ function createApp(container) {
   app.use('/api/v1/assessments', assessmentRoutes);
 
   // ── Plugin auto-discovery ────────────────────────────────────
+  // Routes are registered later via pluginManager.registerAll() in server.js
+  // (after Socket.IO + container are wired). The 404 and error handlers are
+  // intentionally NOT mounted here — mountFinalHandlers() does that AFTER
+  // plugin routes are in place, otherwise the catch-all 404 would shadow
+  // every plugin route.
   const pluginManager = new PluginManager();
   pluginManager.discover(path.join(__dirname, 'plugins'));
-  // Register is async; caller must await pluginManager.registerAll(app, container)
   app._pluginManager = pluginManager;
   app._container = container;
 
-  // ── 404 handler ──────────────────────────────────────────────
+  return app;
+}
+
+/**
+ * Mount the 404 catch-all and the error handler. MUST be called after
+ * pluginManager.registerAll() so plugin routes get a chance to match first.
+ * @param {import('express').Application} app
+ */
+function mountFinalHandlers(app) {
   app.use((req, res) => {
     res.status(404).json({
       success: false,
@@ -102,11 +174,8 @@ function createApp(container) {
       correlationId: req.correlationId,
     });
   });
-
-  // ── Error handler (must be last) ────────────────────────────
   app.use(errorHandler);
-
-  return app;
 }
 
 module.exports = createApp;
+module.exports.mountFinalHandlers = mountFinalHandlers;

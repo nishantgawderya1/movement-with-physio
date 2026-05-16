@@ -24,7 +24,7 @@ const { width } = Dimensions.get('window');
 // ─── DEV BYPASS ──────────────────────────────────────────────────────────────
 // Set to true to skip auth and jump straight to Dashboard during development.
 // Set back to false before committing / demoing to stakeholders.
-const DEV_BYPASS = true;
+const DEV_BYPASS = false;
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SplashScreen = ({ navigation }) => {

@@ -1,126 +1,163 @@
-# Graph Report - .  (2026-04-19)
+# Graph Report - .  (2026-05-16)
 
 ## Corpus Check
-- Corpus is ~27,633 words - fits in a single context window. You may not need a graph.
+- Corpus is ~41,119 words - fits in a single context window. You may not need a graph.
 
 ## Summary
-- 139 nodes · 275 edges · 16 communities detected
-- Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 32 edges (avg confidence: 0.83)
+- 144 nodes · 188 edges · 25 communities detected
+- Extraction: 88% EXTRACTED · 12% INFERRED · 1% AMBIGUOUS · INFERRED: 22 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
-- [[_COMMUNITY_Booking & Auth Screens|Booking & Auth Screens]]
-- [[_COMMUNITY_Onboarding Flow|Onboarding Flow]]
-- [[_COMMUNITY_Chat & Messaging Service|Chat & Messaging Service]]
-- [[_COMMUNITY_Tab Navigation & Icons|Tab Navigation & Icons]]
-- [[_COMMUNITY_Chat UI Components|Chat UI Components]]
-- [[_COMMUNITY_App Entry & Context|App Entry & Context]]
-- [[_COMMUNITY_Main Navigation Stacks|Main Navigation Stacks]]
-- [[_COMMUNITY_Button Components|Button Components]]
-- [[_COMMUNITY_Conversation List|Conversation List]]
-- [[_COMMUNITY_Therapist Card|Therapist Card]]
-- [[_COMMUNITY_Clerk Auth|Clerk Auth]]
-- [[_COMMUNITY_Profile Screen|Profile Screen]]
-- [[_COMMUNITY_Progress Screen|Progress Screen]]
-- [[_COMMUNITY_Font Constants|Font Constants]]
-- [[_COMMUNITY_Color Constants|Color Constants]]
-- [[_COMMUNITY_Route Constants|Route Constants]]
+- [[_COMMUNITY_Community 0|Community 0]]
+- [[_COMMUNITY_Community 1|Community 1]]
+- [[_COMMUNITY_Community 2|Community 2]]
+- [[_COMMUNITY_Community 3|Community 3]]
+- [[_COMMUNITY_Community 4|Community 4]]
+- [[_COMMUNITY_Community 5|Community 5]]
+- [[_COMMUNITY_Community 6|Community 6]]
+- [[_COMMUNITY_Community 7|Community 7]]
+- [[_COMMUNITY_Community 8|Community 8]]
+- [[_COMMUNITY_Community 9|Community 9]]
+- [[_COMMUNITY_Community 10|Community 10]]
+- [[_COMMUNITY_Community 11|Community 11]]
+- [[_COMMUNITY_Community 12|Community 12]]
+- [[_COMMUNITY_Community 13|Community 13]]
+- [[_COMMUNITY_Community 14|Community 14]]
+- [[_COMMUNITY_Community 15|Community 15]]
+- [[_COMMUNITY_Community 16|Community 16]]
+- [[_COMMUNITY_Community 17|Community 17]]
+- [[_COMMUNITY_Community 18|Community 18]]
+- [[_COMMUNITY_Community 19|Community 19]]
+- [[_COMMUNITY_Community 20|Community 20]]
+- [[_COMMUNITY_Community 21|Community 21]]
+- [[_COMMUNITY_Community 22|Community 22]]
+- [[_COMMUNITY_Community 23|Community 23]]
+- [[_COMMUNITY_Community 24|Community 24]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `fonts` - 21 edges
-2. `colors` - 21 edges
-3. `PATIENT_ROUTES` - 20 edges
-4. `OnboardingShell()` - 15 edges
-5. `ChatRoomScreen()` - 14 edges
-6. `HomeScreen()` - 14 edges
-7. `MainNavigator()` - 10 edges
-8. `MessagesScreen()` - 10 edges
-9. `chatService` - 10 edges
-10. `useOnboarding()` - 9 edges
+1. `PATIENT_ROUTES` - 14 edges
+2. `fonts` - 11 edges
+3. `colors` - 11 edges
+4. `MainNavigator()` - 9 edges
+5. `OnboardingShell()` - 9 edges
+6. `HomeScreen()` - 8 edges
+7. `AvailabilityScreen()` - 7 edges
+8. `PainSeverityScreen()` - 7 edges
+9. `RecoveryGoalsScreen()` - 6 edges
+10. `PainDurationScreen()` - 6 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `OnboardingShell()` --conceptually_related_to--> `OnboardingContextPattern`  [INFERRED]
-  src/components/auth/OnboardingShell.jsx → ONBOARDING_PLAN.md
-- `AnimatedTabBar()` --implements--> `TabBarAbsolutePositionPattern`  [INFERRED]
-  src/components/navigation/AnimatedTabBar.jsx → CLAUDE.md
-- `CLAUDEMdProjectReference` --references--> `AttachmentSheet()`  [EXTRACTED]
-  CLAUDE.md → src/components/chat/AttachmentSheet.jsx
-- `CLAUDEMdProjectReference` --references--> `OnboardingShell()`  [EXTRACTED]
-  CLAUDE.md → src/components/auth/OnboardingShell.jsx
-- `CLAUDEMdProjectReference` --references--> `chatService`  [EXTRACTED]
-  CLAUDE.md → src/services/chatService.js
-
-## Hyperedges (group relationships)
-- **Onboarding Screen Flow** — loginscreen_loginscreen, personalinfoscreen_personalinfoscreen, painlocationscreen_painlocationscreen, painseverityscreen_painseverityscreen, paindurationscreen_paindurationscreen, recoverygoalsscreen_recoverygoalsscreen, availabilityscreen_availabilityscreen, onboardingcompletescreen_onboardingcompletescreen [INFERRED]
-- **Booking Flow** — booktherapistscreen_booktherapistscreen, slotselectionscreen_slotselectionscreen, bookingconfirmedscreen_bookingconfirmedscreen [INFERRED]
-- **Main Tab Screens** — homescreen_homescreen, booktherapistscreen_booktherapistscreen, progressscreen_progressscreen, profilescreen_profilescreen [INFERRED]
-- **ChatFeatureComponents** —  [INFERRED]
-- **OnboardingUIComponents** —  [INFERRED]
-- **NavigationComponents** —  [INFERRED]
+- `PrimaryButton()` --conceptually_related_to--> `OnboardingShell()`  [INFERRED]
+  src/components/ui/PrimaryButton.jsx → src/components/auth/OnboardingShell.jsx
+- `SelectablePill()` --conceptually_related_to--> `OnboardingShell()`  [INFERRED]
+  src/components/auth/SelectablePill.jsx → src/components/auth/OnboardingShell.jsx
+- `TabScreenWrapper()` --conceptually_related_to--> `AnimatedTabBar()`  [INFERRED]
+  src/components/navigation/TabScreenWrapper.jsx → src/components/navigation/AnimatedTabBar.jsx
+- `SplashScreen()` --references--> `PATIENT_ROUTES`  [EXTRACTED]
+  src/screens/splash/SplashScreen.jsx → src/constants/routes.js
+- `TreatmentHistoryScreen()` --calls--> `OnboardingShell()`  [EXTRACTED]
+  src/screens/auth/TreatmentHistoryScreen.jsx → src/components/auth/OnboardingShell.jsx
 
 ## Communities
 
-### Community 0 - "Booking & Auth Screens"
-Cohesion: 0.13
-Nodes (20): AuthNavigator(), BookingConfirmedScreen(), BookScreen(), BookTherapistScreen(), ClerkAuthScreen(), colors, fonts, CircularRing() (+12 more)
+### Community 0 - "Community 0"
+Cohesion: 0.11
+Nodes (21): ChatRoomScreen(), getInitials(), createRoom(), getConversations(), getMessages(), getTypingStatus(), markAsRead(), normalizeMessage() (+13 more)
 
-### Community 1 - "Onboarding Flow"
-Cohesion: 0.13
-Nodes (15): AvailabilityScreen(), OnboardingContextPattern, submitOnboarding(), MWPOnboardingTaskSpec, OnboardingFlowPlan, OnboardingProvider(), useOnboarding(), OnboardingShell() (+7 more)
+### Community 1 - "Community 1"
+Cohesion: 0.14
+Nodes (11): BookingConfirmedScreen(), BookScreen(), colors, fonts, CircularRing(), HomeScreen(), ProgressScreen(), SlotSelectionScreen() (+3 more)
 
-### Community 2 - "Chat & Messaging Service"
+### Community 2 - "Community 2"
+Cohesion: 0.15
+Nodes (8): AvailabilityScreen(), submitOnboarding(), OnboardingShell(), PainDurationScreen(), PainLocationScreen(), PainSeverityScreen(), RecoveryGoalsScreen(), SelectablePill()
+
+### Community 3 - "Community 3"
 Cohesion: 0.2
-Nodes (13): ChatRoomScreen(), getInitials(), chatService, _delay(), getConversations(), getMessages(), getTypingStatus(), markAsRead() (+5 more)
+Nodes (8): AnimatedTabBar(), BookStack(), CenterTabButton(), HomeStack(), isTabBarHidden(), MainNavigator(), MessagesStack(), PATIENT_ROUTES
 
-### Community 3 - "Tab Navigation & Icons"
-Cohesion: 0.23
-Nodes (9): AchievementIcon(), FlameIcon(), StarIcon(), TrophyIcon(), AnimatedTabBar(), CenterTabButton(), CLAUDEMdProjectReference, TabBarAbsolutePositionPattern (+1 more)
+### Community 4 - "Community 4"
+Cohesion: 0.18
+Nodes (7): AppNavigator, OnboardingCompleteScreen(), PatientProvider(), usePatient(), getInitials(), ProfileScreen(), RootNavigator()
 
-### Community 4 - "Chat UI Components"
-Cohesion: 0.23
-Nodes (8): AnimatedSheet(), AttachmentSheet(), ComposerBar(), formatBubbleTime(), InlineReplyStrip(), MessageBubble(), ReadReceipt(), ReplyPreview()
+### Community 5 - "Community 5"
+Cohesion: 0.7
+Nodes (4): AchievementIcon(), FlameIcon(), StarIcon(), TrophyIcon()
 
-### Community 5 - "App Entry & Context"
-Cohesion: 0.31
-Nodes (5): App(), AppNavigator(), PatientProvider(), usePatient(), RootNavigator()
+### Community 6 - "Community 6"
+Cohesion: 0.7
+Nodes (4): formatBubbleTime(), InlineReplyStrip(), MessageBubble(), ReadReceipt()
 
-### Community 6 - "Main Navigation Stacks"
-Cohesion: 0.38
-Nodes (4): BookStack(), HomeStack(), isTabBarHidden(), MainNavigator()
-
-### Community 7 - "Button Components"
+### Community 7 - "Community 7"
 Cohesion: 0.5
 Nodes (2): OutlineButton(), PrimaryButton()
 
-### Community 8 - "Conversation List"
+### Community 8 - "Community 8"
 Cohesion: 0.83
 Nodes (3): ConversationRow(), formatTime(), getInitials()
 
-### Community 9 - "Therapist Card"
+### Community 9 - "Community 9"
+Cohesion: 0.5
+Nodes (3): OnboardingProvider, useOnboarding, PersonalInfoScreen()
+
+### Community 10 - "Community 10"
+Cohesion: 0.83
+Nodes (3): buildUrl(), request(), withQuery()
+
+### Community 11 - "Community 11"
+Cohesion: 1.0
+Nodes (2): AnimatedSheet(), AttachmentSheet()
+
+### Community 12 - "Community 12"
 Cohesion: 1.0
 Nodes (2): Star(), TherapistCard()
 
-### Community 10 - "Clerk Auth"
+### Community 13 - "Community 13"
+Cohesion: 0.67
+Nodes (3): CountdownRing, SessionCompleteView, SessionScreen
+
+### Community 14 - "Community 14"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 15 - "Community 15"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 11 - "Profile Screen"
+### Community 16 - "Community 16"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 12 - "Progress Screen"
+### Community 17 - "Community 17"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 13 - "Font Constants"
+### Community 18 - "Community 18"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 14 - "Color Constants"
+### Community 19 - "Community 19"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 15 - "Route Constants"
+### Community 20 - "Community 20"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 21 - "Community 21"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 22 - "Community 22"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 23 - "Community 23"
+Cohesion: 1.0
+Nodes (1): SelectableCard
+
+### Community 24 - "Community 24"
 Cohesion: 1.0
 Nodes (0): 
 
@@ -129,17 +166,27 @@ Nodes (0):
   src/navigation/MainNavigator.jsx · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **Thin community `Clerk Auth`** (2 nodes): `ClerkAuthScreen()`, `AuthNavigator.jsx`
+- **6 isolated node(s):** `OnboardingProvider`, `SessionCompleteView`, `CountdownRing`, `ReplyPreview`, `TypingIndicator` (+1 more)
+  These have ≤1 connection - possible missing edges or undocumented components.
+- **Thin community `Community 15`** (2 nodes): `App()`, `App.jsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Profile Screen`** (2 nodes): `MenuRow()`, `ProfileScreen.jsx`
+- **Thin community `Community 16`** (2 nodes): `AuthNavigator()`, `AuthNavigator.jsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Progress Screen`** (2 nodes): `DotLegendItem()`, `ProgressScreen.jsx`
+- **Thin community `Community 17`** (2 nodes): `ClerkAuthScreen()`, `ClerkAuthScreen.jsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Font Constants`** (1 nodes): `fonts.js`
+- **Thin community `Community 18`** (2 nodes): `LoginScreen()`, `LoginScreen.jsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Color Constants`** (1 nodes): `colors.js`
+- **Thin community `Community 19`** (1 nodes): `fonts.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Route Constants`** (1 nodes): `routes.js`
+- **Thin community `Community 20`** (1 nodes): `colors.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 21`** (1 nodes): `routes.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 22`** (1 nodes): `metro.config.js`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 23`** (1 nodes): `SelectableCard`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 24`** (1 nodes): `reactDomStub.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
@@ -147,15 +194,15 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **What is the exact relationship between `MainNavigator()` and `MainNavigator()`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `ChatRoomScreen()` connect `Chat & Messaging Service` to `Booking & Auth Screens`, `Chat UI Components`?**
-  _High betweenness centrality (0.216) - this node is a cross-community bridge._
-- **Why does `fonts` connect `Booking & Auth Screens` to `Onboarding Flow`, `Chat & Messaging Service`?**
-  _High betweenness centrality (0.181) - this node is a cross-community bridge._
-- **Why does `colors` connect `Booking & Auth Screens` to `Onboarding Flow`, `Chat & Messaging Service`?**
-  _High betweenness centrality (0.181) - this node is a cross-community bridge._
-- **Are the 4 inferred relationships involving `OnboardingShell()` (e.g. with `SelectablePill()` and `SelectableCard()`) actually correct?**
-  _`OnboardingShell()` has 4 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 4 inferred relationships involving `ChatRoomScreen()` (e.g. with `getMessages()` and `markAsRead()`) actually correct?**
-  _`ChatRoomScreen()` has 4 INFERRED edges - model-reasoned connections that need verification._
-- **Should `Booking & Auth Screens` be split into smaller, more focused modules?**
-  _Cohesion score 0.13 - nodes in this community are weakly interconnected._
+- **Why does `PATIENT_ROUTES` connect `Community 3` to `Community 1`, `Community 2`?**
+  _High betweenness centrality (0.066) - this node is a cross-community bridge._
+- **Why does `ProgressScreen()` connect `Community 1` to `Community 5`?**
+  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+- **Why does `OnboardingShell()` connect `Community 2` to `Community 1`, `Community 7`?**
+  _High betweenness centrality (0.040) - this node is a cross-community bridge._
+- **Are the 2 inferred relationships involving `OnboardingShell()` (e.g. with `PrimaryButton()` and `SelectablePill()`) actually correct?**
+  _`OnboardingShell()` has 2 INFERRED edges - model-reasoned connections that need verification._
+- **What connects `OnboardingProvider`, `SessionCompleteView`, `CountdownRing` to the rest of the system?**
+  _6 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Community 0` be split into smaller, more focused modules?**
+  _Cohesion score 0.11 - nodes in this community are weakly interconnected._

@@ -1,6 +1,8 @@
 'use strict';
 
 const User = require('../../models/User.model');
+const Booking = require('../../models/Booking.model');
+const TrackingSession = require('../../models/TrackingSession.model');
 const { container } = require('../../container');
 const cacheManager = require('../../core/cache/cacheManager');
 const paginate = require('../../core/utils/paginator');
@@ -60,4 +62,78 @@ async function completeOnboarding(clerkId, profileData) {
   return user;
 }
 
-module.exports = { getProfile, updateProfile, completeOnboarding };
+/**
+ * Get dashboard data for a patient.
+ * Includes upcoming bookings, recent sessions, and exercise stats.
+ * @param {string} clerkId
+ */
+async function getDashboard(clerkId) {
+  const cacheKey = `patient:dashboard:${clerkId}`;
+  const cached = await cacheManager.get(cacheKey);
+  if (cached) return cached;
+
+  const user = await User.findOne({ clerkId, role: 'patient' }).lean();
+  if (!user) return null;
+
+  const [upcomingBookings, recentSessions, activeSessions] = await Promise.all([
+    Booking.find({
+      patientId: user._id,
+      status: { $in: ['pending', 'confirmed'] },
+      'slot.start': { $gte: new Date() },
+    })
+      .sort({ 'slot.start': 1 })
+      .limit(5)
+      .populate('therapistId', 'name specialty')
+      .lean(),
+
+    Booking.find({
+      patientId: user._id,
+      status: 'completed',
+    })
+      .sort({ updatedAt: -1 })
+      .limit(5)
+      .lean(),
+
+    TrackingSession.countDocuments({
+      patientId: user._id,
+      status: 'active',
+    }),
+  ]);
+
+  const dashboard = {
+    upcomingBookings,
+    recentSessions,
+    activeSessions,
+    onboardingCompleted: user.onboardingCompleted,
+  };
+
+  await cacheManager.set(cacheKey, dashboard, REDIS_TTL.DASHBOARD);
+  return dashboard;
+}
+
+/**
+ * Get the therapist assigned to a patient (most recent confirmed booking's therapist).
+ * @param {string} clerkId
+ */
+async function getAssignedTherapist(clerkId) {
+  const user = await User.findOne({ clerkId, role: 'patient' }).lean();
+  if (!user) return null;
+
+  const latestBooking = await Booking.findOne({
+    patientId: user._id,
+    status: { $in: ['confirmed', 'completed'] },
+  })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  if (!latestBooking) return null;
+
+  const therapist = await User.findById(latestBooking.therapistId)
+    .select('name specialty rating isVerified')
+    .lean();
+
+  return therapist;
+}
+
+module.exports = { getProfile, updateProfile, completeOnboarding, getDashboard, getAssignedTherapist };
+

@@ -21,8 +21,25 @@ const updateProfile = asyncHandler(async (req, res) => {
 });
 
 const listTherapists = asyncHandler(async (req, res) => {
-  const { specialty, cursor, limit } = req.query;
-  const result = await therapistService.listTherapists({ specialty, cursor, limit: Number(limit) });
+  const { specialty, cursor, limit, includeUnverified } = req.query;
+  const result = await therapistService.listTherapists({
+    specialty,
+    cursor,
+    limit: Number(limit),
+    includeUnverified: includeUnverified === 'true',
+  });
+  return apiResponse.paginated(res, result.data, result.pagination);
+});
+
+const searchTherapists = asyncHandler(async (req, res) => {
+  const { specialty, minRating, verified, cursor, limit } = req.query;
+  const result = await therapistService.searchTherapists({
+    specialty,
+    minRating: minRating ? Number(minRating) : undefined,
+    verified: verified === 'true',
+    cursor,
+    limit: Number(limit) || 20,
+  });
   return apiResponse.paginated(res, result.data, result.pagination);
 });
 
@@ -33,6 +50,31 @@ const getTherapistById = asyncHandler(async (req, res) => {
     .lean();
   if (!therapist) return apiResponse.error(res, 'Therapist not found', 404, req.correlationId);
   return apiResponse.success(res, therapist);
+});
+
+const getMyClients = asyncHandler(async (req, res) => {
+  const { cursor, limit, includeAll } = req.query;
+  const result = await therapistService.getClients(req.user.id, {
+    cursor,
+    limit: Number(limit) || 20,
+    includeAll: includeAll === 'true',
+  });
+  return apiResponse.paginated(res, result.data, result.pagination);
+});
+
+const getAvailability = asyncHandler(async (req, res) => {
+  const availability = await therapistService.getAvailability(req.user.id);
+  return apiResponse.success(res, availability);
+});
+
+const updateAvailability = asyncHandler(async (req, res) => {
+  const availability = await therapistService.updateAvailability(req.user.id, req.body);
+  return apiResponse.success(res, availability);
+});
+
+const getDashboard = asyncHandler(async (req, res) => {
+  const dashboard = await therapistService.getDashboard(req.user.id);
+  return apiResponse.success(res, dashboard);
 });
 
 const verifyTherapist = asyncHandler(async (req, res) => {
@@ -55,4 +97,16 @@ const deleteTherapistAccount = asyncHandler(async (req, res) => {
   return apiResponse.success(res, { message: 'Account deleted successfully.' });
 });
 
-module.exports = { getProfile, updateProfile, listTherapists, getTherapistById, verifyTherapist, deleteTherapistAccount };
+module.exports = {
+  getProfile,
+  updateProfile,
+  listTherapists,
+  searchTherapists,
+  getTherapistById,
+  getMyClients,
+  getAvailability,
+  updateAvailability,
+  getDashboard,
+  verifyTherapist,
+  deleteTherapistAccount,
+};

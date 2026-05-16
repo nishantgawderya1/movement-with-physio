@@ -1,6 +1,5 @@
 'use strict';
 
-const httpStatus = require('http-status');
 const catchAsync = require('../../core/utils/asyncHandler');
 const responseHelper = require('../../core/utils/apiResponse');
 
@@ -10,7 +9,7 @@ const createController = (container) => {
   const createCall = catchAsync(async (req, res) => {
     const { participantIds, roomId } = req.body;
     const call = await videoService.createCall(req.user.id, participantIds, roomId);
-    res.status(httpStatus.CREATED).send(responseHelper.success(call));
+    res.status(201).send(responseHelper.success(call));
   });
 
   const getCall = catchAsync(async (req, res) => {

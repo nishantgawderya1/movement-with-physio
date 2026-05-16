@@ -65,7 +65,12 @@ function startNotificationWorker(redis) {
       }
     },
     {
-      connection: redis,
+      connection: {
+        host: new URL(process.env.REDIS_URL || 'redis://redis:6379').hostname,
+        port: Number(new URL(process.env.REDIS_URL || 'redis://redis:6379').port) || 6379,
+        maxRetriesPerRequest: null,
+        enableReadyCheck: false,
+      },
       concurrency: 5,
     }
   );

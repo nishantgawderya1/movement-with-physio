@@ -12,6 +12,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
+import { useClerk } from '@clerk/clerk-expo';
 import { usePatient } from '../../context/PatientContext';
 import TabScreenWrapper from '../../components/navigation/TabScreenWrapper';
 
@@ -52,9 +53,40 @@ var rowStyles = StyleSheet.create({
  * Profile tab screen.
  * Shows patient avatar, stats chips, menu rows, and a logout button.
  */
+/**
+ * Two-letter initials from a full name. Falls back to '?' when the user
+ * has no name on file yet (e.g. signed in but skipped PersonalInfo).
+ * @param {string} fullName
+ * @returns {string}
+ */
+function getInitials(fullName) {
+  if (!fullName || !fullName.trim()) return '?';
+  var parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
 export default function ProfileScreen({ navigation }) {
-  var { resetOnboarding } = usePatient();
+  const { signOut } = useClerk();
   var insets = useSafeAreaInsets();
+  var patient = usePatient();
+
+  async function handleLogout() {
+    Alert.alert('Log out', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Log out',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await signOut();
+          } catch (e) {
+            Alert.alert('Error', 'Could not sign out. Please try again.');
+          }
+        },
+      },
+    ]);
+  }
 
   function handleComingSoon() {
     Alert.alert('Coming soon', '', [{ text: 'OK' }]);
@@ -70,22 +102,15 @@ export default function ProfileScreen({ navigation }) {
         {/* ── HEADER ── */}
         <View style={styles.headerSection}>
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarInitials}>PS</Text>
+            <Text style={styles.avatarInitials}>{getInitials(patient.name || patient.email)}</Text>
           </View>
-          <Text style={styles.name}>Priya Sharma</Text>
-          <Text style={styles.email}>priya.sharma@gmail.com</Text>
+          <Text style={styles.name}>{patient.name || patient.email || 'Patient'}</Text>
+          {patient.email ? <Text style={styles.email}>{patient.email}</Text> : null}
 
-          {/* Stats chips */}
-          <View style={styles.statsRow}>
-            <View style={styles.statChip}>
-              <Text style={styles.statValue}>42 Days</Text>
-              <Text style={styles.statLabel}>Active</Text>
-            </View>
-            <View style={styles.statChip}>
-              <Text style={styles.statValue}>85%</Text>
-              <Text style={styles.statLabel}>Adherence</Text>
-            </View>
-          </View>
+          {/* Stats chips removed — "42 days" and "85% adherence" were
+              hardcoded mock numbers. Backend does not yet track activity
+              streaks or adherence percentages, so showing real zeros here
+              would be misleading. Restore once those metrics ship. */}
         </View>
 
         {/* ── MENU ── */}
@@ -115,7 +140,7 @@ export default function ProfileScreen({ navigation }) {
         {/* ── LOGOUT ── */}
         <TouchableOpacity
           style={styles.logoutBtn}
-          onPress={resetOnboarding}
+          onPress={handleLogout}
           activeOpacity={0.7}
         >
           <Ionicons name="log-out-outline" size={18} color={colors.danger} />

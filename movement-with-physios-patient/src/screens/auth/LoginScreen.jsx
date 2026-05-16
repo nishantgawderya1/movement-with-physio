@@ -39,11 +39,13 @@ const FEATURES = [
  */
 export default function LoginScreen({ navigation }) {
   function handleStartRecovery() {
-    navigation.navigate(PATIENT_ROUTES.PERSONAL_INFO);
+    // New user → sign up via Clerk, then onboarding flow
+    navigation.navigate(PATIENT_ROUTES.CLERK_AUTH, { mode: 'signup' });
   }
 
   function handleLogin() {
-    navigation.navigate(PATIENT_ROUTES.CLERK_AUTH);
+    // Existing user → sign in via Clerk, then straight to dashboard
+    navigation.navigate(PATIENT_ROUTES.CLERK_AUTH, { mode: 'signin' });
   }
 
   return (

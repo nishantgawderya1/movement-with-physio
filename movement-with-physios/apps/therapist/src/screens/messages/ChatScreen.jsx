@@ -28,12 +28,13 @@ import TypingIndicator from '../../components/chat/TypingIndicator';
 import ReactionPicker from '../../components/chat/ReactionPicker';
 import QuickRepliesSheet from '../../components/chat/QuickRepliesSheet';
 import ExerciseSelectModal from '../../components/chat/ExerciseSelectModal';
+import { chatService } from '../../services/chatService';
 
-// ── Unique ID helper ─────────────────────────────────────────────────────────
+// ── Unique ID helper (for local-only message types) ─────────────────────────
 let _id = 100;
-const uid = () => String(++_id);
+const uid = () => 'local-' + String(++_id);
 
-// ── Mock initial messages ────────────────────────────────────────────────────
+// ── Legacy mock seed (kept only as fallback when no roomId is provided) ─────
 const makeMockMessages = () => [
   {
     id: '1',
@@ -126,7 +127,12 @@ const ChatScreen = ({ navigation, route }) => {
     avatarEmoji: '👩',
   };
 
-  const [messages, setMessages] = useState(makeMockMessages);
+  // If we navigated with a real conversation (has roomId), start empty and
+  // load from backend. Legacy mock seed only fires when no roomId is present.
+  const roomId = conv?.roomId || conv?.id || null;
+  const isRealRoom = !!conv?.roomId;
+  const [messages, setMessages] = useState(isRealRoom ? [] : makeMockMessages);
+  const [loadingMessages, setLoadingMessages] = useState(isRealRoom);
   const [inputText, setInputText] = useState('');
   const [replyTo, setReplyTo] = useState(null);
   const [trayOpen, setTrayOpen] = useState(false);
@@ -140,6 +146,42 @@ const ChatScreen = ({ navigation, route }) => {
   const flatListRef = useRef(null);
   const typingTimerRef = useRef(null);
   const keyboardHeight = useRef(new Animated.Value(0)).current;
+
+  // ── Load real history + subscribe to live events ─────────────────────────
+  useEffect(() => {
+    if (!isRealRoom) return;
+    let cancelled = false;
+
+    chatService.getMessages(roomId).then((res) => {
+      if (cancelled) return;
+      if (res.success) {
+        setMessages(res.data.messages);
+        chatService.markAsRead(roomId);
+      }
+      setLoadingMessages(false);
+    });
+
+    const unsubscribe = chatService.subscribeToRoom(roomId, {
+      onMessage: (msg) => {
+        // Self-echo for our own sends is reconciled via the REST response
+        // below — skip it here to avoid duplicates from race conditions.
+        if (msg.sender === 'therapist') return;
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return [msg, ...prev];
+        });
+        chatService.markAsRead(roomId);
+      },
+      onTyping: (info) => setTypingVisible(!!info.isTyping),
+      onReadBy: () => {
+        setMessages((prev) => prev.map((m) => (
+          m.sender === 'therapist' ? { ...m, status: 'seen' } : m
+        )));
+      },
+    });
+
+    return () => { cancelled = true; unsubscribe(); };
+  }, [isRealRoom, roomId]);
 
   // ── Keyboard listeners — lifts composer in sync with keyboard ────────────
   useEffect(() => {
@@ -170,16 +212,15 @@ const ChatScreen = ({ navigation, route }) => {
     const text = inputText.trim();
     if (!text && !attachmentPreview) return;
 
+    const optimisticId = uid();
     const newMsg = {
-      id: uid(),
+      id: optimisticId,
       type: attachmentPreview ? 'image' : 'text',
       content: text,
       sender: 'therapist',
       timestamp: new Date(),
       status: 'sent',
-      replyTo: replyTo
-        ? { ...replyTo }
-        : null,
+      replyTo: replyTo ? { ...replyTo } : null,
       reactions: [],
       imageUri: attachmentPreview || null,
       voiceDuration: null,
@@ -192,28 +233,44 @@ const ChatScreen = ({ navigation, route }) => {
     setReplyTo(null);
     setTrayOpen(false);
 
-    // Scroll to bottom (index 0 on inverted list = newest message)
     setTimeout(() => {
       flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
     }, 100);
 
-    // Simulate status progression: sent → delivered → seen
+    // Real backend path: persist text via REST, reconcile optimistic entry
+    // with the server's canonical message. Image-only messages stay local
+    // because the backend doesn't support uploads yet.
+    if (isRealRoom && text) {
+      chatService.sendMessage(roomId, text).then((res) => {
+        if (!res.success) {
+          // Mark the optimistic entry as failed so the user can retry.
+          setMessages((prev) => prev.map((m) => (
+            m.id === optimisticId ? { ...m, status: 'failed' } : m
+          )));
+          return;
+        }
+        setMessages((prev) => prev.map((m) => (
+          m.id === optimisticId ? { ...res.data, replyTo: newMsg.replyTo } : m
+        )));
+      });
+      return;
+    }
+
+    // ── Legacy mock path (no real room) ────────────────────────────────────
     setTimeout(() => {
       setMessages((prev) =>
-        prev.map((m) => (m.id === newMsg.id ? { ...m, status: 'delivered' } : m))
+        prev.map((m) => (m.id === optimisticId ? { ...m, status: 'delivered' } : m))
       );
     }, 800);
     setTimeout(() => {
       setMessages((prev) =>
-        prev.map((m) => (m.id === newMsg.id ? { ...m, status: 'seen' } : m))
+        prev.map((m) => (m.id === optimisticId ? { ...m, status: 'seen' } : m))
       );
     }, 2000);
 
-    // Show typing indicator after 2s
     clearTimeout(typingTimerRef.current);
     typingTimerRef.current = setTimeout(() => {
       setTypingVisible(true);
-      // Auto-hide + mock reply after 3s
       setTimeout(() => {
         setTypingVisible(false);
         const replies = [
@@ -238,7 +295,7 @@ const ChatScreen = ({ navigation, route }) => {
         setMessages((prev) => [mockReply, ...prev]);
       }, 3000);
     }, 2000);
-  }, [inputText, attachmentPreview, replyTo]);
+  }, [inputText, attachmentPreview, replyTo, isRealRoom, roomId]);
 
   // ── Voice message send ────────────────────────────────────────────────────
   const handleVoiceSend = useCallback(({ uri, duration }) => {

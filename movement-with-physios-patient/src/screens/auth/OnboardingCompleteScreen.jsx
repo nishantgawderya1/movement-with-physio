@@ -51,23 +51,32 @@ export default function OnboardingCompleteScreen() {
     ]).start();
   }, []);
 
-  // ── Two-stage exit: content out → full screen white → state flip ──
-  function handleNavigate() {
+  // ── Two-stage exit: content out → full screen white → activate Clerk session ──
+  async function handleNavigate() {
     Animated.parallel([
       Animated.timing(textOpacity, { toValue: 0, duration: 250, useNativeDriver: true }),
       Animated.timing(btnOpacity,  { toValue: 0, duration: 250, useNativeDriver: true }),
       Animated.timing(ringScale,   { toValue: 0.85, duration: 250, useNativeDriver: true }),
     ]).start(function () {
-      // Fade the entire screen to white so MainNavigator mounts into white
       Animated.timing(screenOpacity, {
         toValue: 0,
         duration: 200,
         useNativeDriver: true,
-      }).start(function () {
-        completeOnboarding();
+      }).start(async function () {
+        // Activate Clerk session → RootNavigator detects isSignedIn=true
+        // and swaps AuthNavigator for MainNavigator automatically.
+        if (global.__pendingClerkSession) {
+          const { setActive, sessionId } = global.__pendingClerkSession;
+          global.__pendingClerkSession = null;
+          await setActive({ session: sessionId });
+        } else {
+          // Fallback for existing users who went through onboarding again
+          completeOnboarding();
+        }
       });
     });
   }
+
 
   return (
     <Animated.View style={[styles.screenWrap, { opacity: screenOpacity }]}>

@@ -61,7 +61,8 @@ export default function ChatRoomScreen({ navigation, route }) {
   var [keyboardHeight, setKeyboardHeight] = useState(0);
   var [isAttachmentOpen, setIsAttachmentOpen] = useState(false);
 
-  var typingInterval = useRef(null);
+  var typingTimeout = useRef(null);
+  var typingClearTimer = useRef(null);
   var flatListRef = useRef(null);
   var sendScale = useRef(new Animated.Value(1)).current;
 
@@ -129,23 +130,61 @@ export default function ChatRoomScreen({ navigation, route }) {
     };
   }, []);
 
-  // ── Typing indicator polling ───────────────────────────────────────────
+  // ── Live socket subscription (messages + typing + read receipts) ───────
 
   useEffect(function () {
-    typingInterval.current = setInterval(function () {
-      chatService.getTypingStatus(roomId).then(function (result) {
-        if (result.success) {
-          setIsTyping(result.data.isTyping);
+    var unsubscribe = chatService.subscribeToRoom(roomId, {
+      onMessage: function (msg) {
+        // Our own sends are reconciled via the REST response in handleSend.
+        // Skipping self-echoes here avoids the race where the socket frame
+        // arrives before the POST response resolves.
+        if (msg.senderRole === 'patient') return;
+
+        setMessages(function (prev) {
+          if (prev.some(function (m) { return m.id === msg.id; })) return prev;
+          return [msg].concat(prev);
+        });
+        chatService.markAsRead(roomId);
+      },
+      onTyping: function (info) {
+        setIsTyping(info.isTyping);
+        // Clear stale indicator if peer goes silent without sending stop.
+        if (typingClearTimer.current) clearTimeout(typingClearTimer.current);
+        if (info.isTyping) {
+          typingClearTimer.current = setTimeout(function () {
+            setIsTyping(false);
+          }, 4000);
         }
-      });
-    }, 3000);
+      },
+      onReadBy: function () {
+        setMessages(function (prev) {
+          return prev.map(function (m) {
+            return m.senderRole === 'patient' ? Object.assign({}, m, { status: 'read' }) : m;
+          });
+        });
+      },
+    });
 
     return function () {
-      if (typingInterval.current) {
-        clearInterval(typingInterval.current);
-      }
+      if (typingClearTimer.current) clearTimeout(typingClearTimer.current);
+      if (typingTimeout.current) clearTimeout(typingTimeout.current);
+      unsubscribe();
     };
   }, [roomId]);
+
+  // Emit a "stopped typing" event when the user pauses for >1.5s.
+  function notifyTyping(nextText) {
+    chatService.setTyping(roomId, nextText.trim().length > 0);
+    if (typingTimeout.current) clearTimeout(typingTimeout.current);
+    typingTimeout.current = setTimeout(function () {
+      chatService.setTyping(roomId, false);
+    }, 1500);
+  }
+
+  function handleChangeText(next) {
+    setInputText(next);
+    notifyTyping(next);
+  }
 
   // ── Send animation ─────────────────────────────────────────────────────
 
@@ -314,7 +353,7 @@ export default function ChatRoomScreen({ navigation, route }) {
           <TextInput
             style={styles.input}
             value={inputText}
-            onChangeText={setInputText}
+            onChangeText={handleChangeText}
             placeholder="Type a message..."
             placeholderTextColor={colors.textLight}
             multiline

@@ -5,6 +5,7 @@ import OnboardingShell from '../../components/auth/OnboardingShell';
 import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { PATIENT_ROUTES } from '../../constants/routes';
+import { apiClient } from '../../lib/apiClient';
 
 /**
  * Step 1 — Collect patient name and age.
@@ -25,7 +26,12 @@ export default function PersonalInfoScreen({ navigation }) {
     ageNum <= 120;
 
   function handleContinue() {
-    updateOnboardingData({ name: name.trim(), age: ageNum });
+    var trimmedName = name.trim();
+    updateOnboardingData({ name: trimmedName, age: ageNum });
+    // Backfill the name onto the backend User doc. /me/init is idempotent —
+    // it created the doc on sign-in; this call updates the name if missing.
+    // Fire-and-forget: we don't block onboarding on this.
+    apiClient.post('/auth/me/init', { role: 'patient', name: trimmedName }).catch(function () {});
     navigation.navigate(PATIENT_ROUTES.PAIN_LOCATION);
   }
 

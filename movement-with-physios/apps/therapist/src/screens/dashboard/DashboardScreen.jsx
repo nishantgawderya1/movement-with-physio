@@ -18,38 +18,89 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useClerk } from '@clerk/clerk-expo';
 import { colors } from '../../constants/colors';
 import { fonts, fontFamilies } from '../../constants/fonts';
 import BottomTabBar from '../../components/BottomTabBar';
 import { ROUTES } from '../../constants/routes';
+import { apiClient } from '../../lib/apiClient';
 
-// ── Mock data — replace with API calls ────────────────────────────────────────
-const THERAPIST_NAME = 'Dr. Ayush';
+/**
+ * Format a slot.start ISO timestamp into "10:00 AM" style.
+ * @param {string|Date} iso
+ * @returns {string}
+ */
+function formatSlotTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  let h = d.getHours();
+  const m = d.getMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${m < 10 ? '0' + m : m} ${ampm}`;
+}
 
-const MOCK_STATS = [
-  { id: 'clients',    label: 'Active Clients',  value: '47', trend: '+12%', icon: 'people-outline',     trendUp: true  },
-  { id: 'adherence',  label: 'Avg Adherence',   value: '89%',trend: '+8%',  icon: 'trending-up-outline', trendUp: true  },
-  { id: 'sessions',   label: 'Total Sessions',  value: '8',  trend: null,   icon: 'calendar-outline',   trendUp: null  },
-  { id: 'messages',   label: 'Unread Messages', value: '12', trend: null,   icon: 'chatbubble-outline',  trendUp: null, badge: true },
-];
-
-const MOCK_APPOINTMENTS = [
-  { id: 1, name: 'Priya Sharma',  type: 'Video Call',          time: '10:00 AM', status: 'Upcoming' },
-  { id: 2, name: 'Rahul Patel',   type: 'Follow-up',           time: '11:30 AM', status: 'Upcoming' },
-  { id: 3, name: 'Anjali Kumar',  type: 'Initial Assessment',  time: '2:00 PM',  status: 'Upcoming' },
-];
-
-const MOCK_ACTIVITY = [
-  { id: 1, name: 'Priya Sharma', note: 'Completed Morning Mobility session',  time: '2 hours ago',  icon: 'checkmark-circle',  iconColor: '#10B981' },
-  { id: 2, name: 'Rahul Patel',  note: 'Missed evening session',              time: '5 hours ago',  icon: 'alert-circle',       iconColor: '#F59E0B' },
-  { id: 3, name: 'Meera Singh',  note: 'Reported pain level: 3/10',           time: '1 day ago',    icon: 'trending-down',      iconColor: colors.primary },
-  { id: 4, name: 'Anjali Kumar', note: 'New message received',                time: '1 day ago',    icon: 'chatbubble-ellipses',iconColor: '#6366F1' },
-];
+/**
+ * Map a backend booking into the row shape the appointment list expects.
+ * @param {object} b
+ * @returns {{ id: string, name: string, type: string, time: string, status: string }}
+ */
+function normalizeBooking(b) {
+  return {
+    id: String(b._id),
+    name: (b.patientId && b.patientId.name) || 'Patient',
+    type: b.type || 'Session',
+    time: formatSlotTime(b.slot && b.slot.start),
+    status: b.status === 'confirmed' ? 'Upcoming' : (b.status || 'Pending'),
+  };
+}
 
 
 // ── Component ──────────────────────────────────────────────────────────────────
 const DashboardScreen = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
+  const [therapistName, setTherapistName] = useState('');
+  const [dashboard, setDashboard] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { signOut } = useClerk();
+
+  // Load profile + dashboard stats from the backend on mount + whenever the
+  // screen regains focus (so leaving Messages and coming back refreshes
+  // counts).
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const [prof, dash] = await Promise.all([
+        apiClient.get('/therapists/me/profile'),
+        apiClient.get('/therapists/me/dashboard'),
+      ]);
+      if (cancelled) return;
+      if (prof.success && prof.data) {
+        // Prefer the typed name; fall back to email so the header never
+        // says just "Welcome" for users who skipped PersonalInfo via DEV.
+        setTherapistName(prof.data.name || prof.data.email || '');
+      }
+      if (dash.success && dash.data) {
+        setDashboard(dash.data);
+      }
+      setLoading(false);
+    };
+    load();
+    const unsub = navigation.addListener('focus', load);
+    return () => { cancelled = true; unsub(); };
+  }, [navigation]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      // AppNavigator's useAuth() will flip isSignedIn to false and swap
+      // back to AuthNavigator automatically.
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('[Dashboard] sign-out failed:', err);
+    }
+  };
 
   const handleTabPress = (tabId) => {
     if (tabId === 'clients') {
@@ -80,7 +131,9 @@ const DashboardScreen = ({ navigation }) => {
         {/* ── Header ───────────────────────────────────────────────── */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.welcomeText}>Welcome, {THERAPIST_NAME}</Text>
+            <Text style={styles.welcomeText}>
+              {therapistName ? `Welcome, ${therapistName}` : 'Welcome'}
+            </Text>
             <Text style={styles.welcomeSub}>Here's your practice overview</Text>
           </View>
           <View style={styles.headerActions}>
@@ -90,7 +143,8 @@ const DashboardScreen = ({ navigation }) => {
               <View style={styles.notifDot} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.75}
-              onPress={() => navigation.replace('Login')}
+              onPress={handleLogout}
+              accessibilityLabel="Sign out"
             >
               <Ionicons name="log-out-outline" size={18} color={colors.white} />
             </TouchableOpacity>
@@ -111,27 +165,46 @@ const DashboardScreen = ({ navigation }) => {
 
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
 
-          {/* ── Stats Grid ───────────────────────────────────────── */}
+          {/* ── Stats Grid ─────────────────────────────────────────
+              Values pulled from /therapists/me/dashboard. Metrics the
+              backend doesn't yet track (Avg Adherence, Unread Messages)
+              show '—' / 0 instead of fake numbers. */}
           <View style={styles.statsGrid}>
-            {MOCK_STATS.map((stat) => (
+            {[
+              {
+                id: 'clients',
+                label: 'Active Clients',
+                value: dashboard ? String(dashboard.totalClients || 0) : '—',
+                icon: 'people-outline',
+              },
+              {
+                id: 'adherence',
+                label: 'Avg Adherence',
+                value: '—',
+                icon: 'trending-up-outline',
+              },
+              {
+                id: 'sessions',
+                label: 'Completed Sessions',
+                value: dashboard ? String(dashboard.completedSessions || 0) : '—',
+                icon: 'calendar-outline',
+              },
+              {
+                id: 'rating',
+                label: 'Your Rating',
+                value: dashboard && typeof dashboard.rating === 'number'
+                  ? dashboard.rating.toFixed(1)
+                  : '—',
+                icon: 'star-outline',
+              },
+            ].map((stat) => (
               <View key={stat.id} style={styles.statCard}>
                 <View style={styles.statTopRow}>
                   <View style={styles.statIconWrap}>
                     <Ionicons name={stat.icon} size={16} color={colors.primary} />
                   </View>
-                  {stat.trend ? (
-                    <View style={[styles.trendBadge, { backgroundColor: stat.trendUp ? '#D1FAE5' : '#FEE2E2' }]}>
-                      <Text style={[styles.trendText, { color: stat.trendUp ? '#059669' : '#DC2626' }]}>
-                        {stat.trend}
-                      </Text>
-                    </View>
-                  ) : stat.badge ? (
-                    <View style={styles.badgeDot}>
-                      <Text style={styles.badgeDotText}>{stat.value}</Text>
-                    </View>
-                  ) : null}
                 </View>
-                <Text style={styles.statValue}>{stat.badge ? null : stat.value}</Text>
+                <Text style={styles.statValue}>{stat.value}</Text>
                 <Text style={styles.statLabel}>{stat.label}</Text>
               </View>
             ))}
@@ -146,23 +219,42 @@ const DashboardScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.card}>
-            {MOCK_APPOINTMENTS.map((appt, idx) => (
-              <View key={appt.id}>
-                <View style={styles.apptRow}>
-                  <View style={styles.apptInfo}>
-                    <Text style={styles.apptName}>{appt.name}</Text>
-                    <Text style={styles.apptType}>{appt.type}</Text>
+            {(() => {
+              const bookings = (dashboard && Array.isArray(dashboard.upcomingBookings))
+                ? dashboard.upcomingBookings.map(normalizeBooking)
+                : [];
+              if (loading) {
+                return (
+                  <View style={styles.emptyRow}>
+                    <Text style={styles.emptyRowText}>Loading…</Text>
                   </View>
-                  <View style={styles.apptRight}>
-                    <Text style={styles.apptTime}>{appt.time}</Text>
-                    <View style={styles.statusPill}>
-                      <Text style={styles.statusPillText}>{appt.status}</Text>
+                );
+              }
+              if (bookings.length === 0) {
+                return (
+                  <View style={styles.emptyRow}>
+                    <Text style={styles.emptyRowText}>No upcoming appointments</Text>
+                  </View>
+                );
+              }
+              return bookings.map((appt, idx) => (
+                <View key={appt.id}>
+                  <View style={styles.apptRow}>
+                    <View style={styles.apptInfo}>
+                      <Text style={styles.apptName}>{appt.name}</Text>
+                      <Text style={styles.apptType}>{appt.type}</Text>
+                    </View>
+                    <View style={styles.apptRight}>
+                      <Text style={styles.apptTime}>{appt.time}</Text>
+                      <View style={styles.statusPill}>
+                        <Text style={styles.statusPillText}>{appt.status}</Text>
+                      </View>
                     </View>
                   </View>
+                  {idx < bookings.length - 1 && <View style={styles.divider} />}
                 </View>
-                {idx < MOCK_APPOINTMENTS.length - 1 && <View style={styles.divider} />}
-              </View>
-            ))}
+              ));
+            })()}
           </View>
 
           {/* ── Add New Appointment ─────────────────────────────── */}
@@ -180,23 +272,11 @@ const DashboardScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.card}>
-            {MOCK_ACTIVITY.map((item, idx) => (
-              <View key={item.id}>
-                <View style={styles.activityRow}>
-                  <View style={[styles.activityIconWrap, { backgroundColor: item.iconColor + '20' }]}>
-                    <Ionicons name={item.icon} size={18} color={item.iconColor} />
-                  </View>
-                  <View style={styles.activityInfo}>
-                    <View style={styles.activityTopRow}>
-                      <Text style={styles.activityName}>{item.name}</Text>
-                      <Text style={styles.activityTime}>{item.time}</Text>
-                    </View>
-                    <Text style={styles.activityNote}>{item.note}</Text>
-                  </View>
-                </View>
-                {idx < MOCK_ACTIVITY.length - 1 && <View style={styles.divider} />}
-              </View>
-            ))}
+            {/* Backend does not yet expose an activity feed — empty state
+                until a /therapists/me/activity endpoint exists. */}
+            <View style={styles.emptyRow}>
+              <Text style={styles.emptyRowText}>No recent activity yet</Text>
+            </View>
           </View>
 
           {/* Bottom spacing for tab bar */}
@@ -309,6 +389,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   badgeDotText: { fontSize: fonts.xs, fontWeight: fonts.bold, color: colors.white },
+
+  // Empty / loading states for the card rows
+  emptyRow: {
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyRowText: {
+    fontSize: fonts.sm,
+    color: colors.textMedium,
+  },
   statValue: {
     fontSize: fonts.xxl, fontWeight: fonts.bold,
     color: colors.textDark, marginBottom: 2,

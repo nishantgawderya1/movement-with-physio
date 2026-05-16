@@ -1,1249 +1,691 @@
 {
   "directed": false,
   "multigraph": false,
-  "graph": {
-    "hyperedges": [
-      {
-        "id": "hyperedge_onboarding_flow",
-        "label": "Onboarding Screen Flow",
-        "nodes": [
-          "loginscreen_loginscreen",
-          "personalinfoscreen_personalinfoscreen",
-          "painlocationscreen_painlocationscreen",
-          "painseverityscreen_painseverityscreen",
-          "paindurationscreen_paindurationscreen",
-          "recoverygoalsscreen_recoverygoalsscreen",
-          "availabilityscreen_availabilityscreen",
-          "onboardingcompletescreen_onboardingcompletescreen"
-        ],
-        "relation": "conceptually_related_to",
-        "note": "Sequential onboarding wizard; each screen navigates to the next via navigation.navigate(PATIENT_ROUTES.X); all screens share onboarding data via OnboardingContext"
-      },
-      {
-        "id": "hyperedge_booking_flow",
-        "label": "Booking Flow",
-        "nodes": [
-          "booktherapistscreen_booktherapistscreen",
-          "slotselectionscreen_slotselectionscreen",
-          "bookingconfirmedscreen_bookingconfirmedscreen"
-        ],
-        "relation": "conceptually_related_to",
-        "note": "Linear booking flow navigated via BookStack; therapist object passed as route param across all steps"
-      },
-      {
-        "id": "hyperedge_main_tab_screens",
-        "label": "Main Tab Screens",
-        "nodes": [
-          "homescreen_homescreen",
-          "booktherapistscreen_booktherapistscreen",
-          "progressscreen_progressscreen",
-          "profilescreen_profilescreen"
-        ],
-        "relation": "conceptually_related_to",
-        "note": "All root tab screens use TabScreenWrapper for entry animation and consume PatientContext"
-      },
-      {
-        "id": "hyperedge_chat_components",
-        "label": "ChatFeatureComponents",
-        "members": [
-          "conversationrow_conversationrow",
-          "messagebubble_messagebubble",
-          "composerbar_composerbar",
-          "attachmentsheet_attachmentsheet",
-          "replypreview_replypreview",
-          "typingindicator_typingindicator",
-          "centertabbutton_centertabbutton"
-        ],
-        "relation": "conceptually_related_to",
-        "note": "All components that together compose the chat feature of MWP Patient"
-      },
-      {
-        "id": "hyperedge_onboarding_components",
-        "label": "OnboardingUIComponents",
-        "members": [
-          "onboardingshell_onboardingshell",
-          "selectablecard_selectablecard",
-          "selectablepill_selectablepill",
-          "primarybutton_primarybutton",
-          "outlinebutton_outlinebutton"
-        ],
-        "relation": "conceptually_related_to",
-        "note": "All UI components that compose the onboarding flow screens"
-      },
-      {
-        "id": "hyperedge_navigation_components",
-        "label": "NavigationComponents",
-        "members": [
-          "animatedtabbar_animatedtabbar",
-          "tabscreenwrapper_tabscreenwrapper",
-          "centertabbutton_centertabbutton"
-        ],
-        "relation": "conceptually_related_to",
-        "note": "Components forming the custom bottom tab navigation system"
-      }
-    ]
-  },
+  "graph": {},
   "nodes": [
-    {
-      "label": "App.jsx",
-      "file_type": "code",
-      "source_file": "App.jsx",
-      "source_location": "L1",
-      "id": "app_jsx",
-      "community": 5,
-      "norm_label": "app.jsx"
-    },
-    {
-      "label": "App()",
-      "file_type": "code",
-      "source_file": "App.jsx",
-      "source_location": "L22",
-      "id": "app_app",
-      "community": 5,
-      "norm_label": "app()"
-    },
-    {
-      "label": "PatientContext.jsx",
-      "file_type": "code",
-      "source_file": "src/context/PatientContext.jsx",
-      "source_location": "L1",
-      "id": "src_context_patientcontext_jsx",
-      "community": 5,
-      "norm_label": "patientcontext.jsx"
-    },
-    {
-      "label": "PatientProvider()",
-      "file_type": "code",
-      "source_file": "src/context/PatientContext.jsx",
-      "source_location": "L19",
-      "id": "patientcontext_patientprovider",
-      "community": 5,
-      "norm_label": "patientprovider()"
-    },
-    {
-      "label": "usePatient()",
-      "file_type": "code",
-      "source_file": "src/context/PatientContext.jsx",
-      "source_location": "L52",
-      "id": "patientcontext_usepatient",
-      "community": 5,
-      "norm_label": "usepatient()"
-    },
-    {
-      "label": "OnboardingContext.jsx",
-      "file_type": "code",
-      "source_file": "src/context/OnboardingContext.jsx",
-      "source_location": "L1",
-      "id": "src_context_onboardingcontext_jsx",
-      "community": 1,
-      "norm_label": "onboardingcontext.jsx"
-    },
-    {
-      "label": "OnboardingProvider()",
-      "file_type": "code",
-      "source_file": "src/context/OnboardingContext.jsx",
-      "source_location": "L22",
-      "id": "onboardingcontext_onboardingprovider",
-      "community": 1,
-      "norm_label": "onboardingprovider()"
-    },
-    {
-      "label": "useOnboarding()",
-      "file_type": "code",
-      "source_file": "src/context/OnboardingContext.jsx",
-      "source_location": "L49",
-      "id": "onboardingcontext_useonboarding",
-      "community": 1,
-      "norm_label": "useonboarding()"
-    },
     {
       "label": "fonts.js",
       "file_type": "code",
       "source_file": "src/constants/fonts.js",
       "source_location": "L1",
-      "id": "src_constants_fonts_js",
-      "community": 13,
-      "norm_label": "fonts.js"
+      "community": 19,
+      "norm_label": "fonts.js",
+      "id": "src_constants_fonts_js"
     },
     {
       "label": "colors.js",
       "file_type": "code",
       "source_file": "src/constants/colors.js",
       "source_location": "L1",
-      "id": "src_constants_colors_js",
-      "community": 14,
-      "norm_label": "colors.js"
+      "community": 20,
+      "norm_label": "colors.js",
+      "id": "src_constants_colors_js"
     },
     {
       "label": "routes.js",
       "file_type": "code",
       "source_file": "src/constants/routes.js",
       "source_location": "L1",
-      "id": "src_constants_routes_js",
-      "community": 15,
-      "norm_label": "routes.js"
-    },
-    {
-      "label": "AuthNavigator.jsx",
-      "file_type": "code",
-      "source_file": "src/navigation/AuthNavigator.jsx",
-      "source_location": "L1",
-      "id": "src_navigation_authnavigator_jsx",
-      "community": 10,
-      "norm_label": "authnavigator.jsx"
-    },
-    {
-      "label": "ClerkAuthScreen()",
-      "file_type": "code",
-      "source_file": "src/navigation/AuthNavigator.jsx",
-      "source_location": "L41",
-      "id": "authnavigator_clerkauthscreen",
-      "community": 10,
-      "norm_label": "clerkauthscreen()"
-    },
-    {
-      "label": "AuthNavigator()",
-      "file_type": "code",
-      "source_file": "src/navigation/AuthNavigator.jsx",
-      "source_location": "L57",
-      "id": "authnavigator_authnavigator",
-      "community": 0,
-      "norm_label": "authnavigator()"
-    },
-    {
-      "label": "RootNavigator.jsx",
-      "file_type": "code",
-      "source_file": "src/navigation/RootNavigator.jsx",
-      "source_location": "L1",
-      "id": "src_navigation_rootnavigator_jsx",
-      "community": 5,
-      "norm_label": "rootnavigator.jsx"
-    },
-    {
-      "label": "RootNavigator()",
-      "file_type": "code",
-      "source_file": "src/navigation/RootNavigator.jsx",
-      "source_location": "L10",
-      "id": "rootnavigator_rootnavigator",
-      "community": 5,
-      "norm_label": "rootnavigator()"
+      "community": 21,
+      "norm_label": "routes.js",
+      "id": "src_constants_routes_js"
     },
     {
       "label": "MainNavigator.jsx",
       "file_type": "code",
       "source_file": "src/navigation/MainNavigator.jsx",
       "source_location": "L1",
-      "id": "src_navigation_mainnavigator_jsx",
-      "community": 6,
-      "norm_label": "mainnavigator.jsx"
+      "community": 3,
+      "norm_label": "mainnavigator.jsx",
+      "id": "src_navigation_mainnavigator_jsx"
     },
     {
       "label": "isTabBarHidden()",
       "file_type": "code",
       "source_file": "src/navigation/MainNavigator.jsx",
       "source_location": "L42",
-      "id": "mainnavigator_istabbarhidden",
-      "community": 6,
-      "norm_label": "istabbarhidden()"
+      "community": 3,
+      "norm_label": "istabbarhidden()",
+      "id": "mainnavigator_istabbarhidden"
     },
     {
       "label": "MainNavigator()",
       "file_type": "code",
       "source_file": "src/navigation/MainNavigator.jsx",
       "source_location": "L47",
-      "id": "mainnavigator_mainnavigator",
-      "community": 6,
-      "norm_label": "mainnavigator()"
-    },
-    {
-      "label": "AppNavigator.jsx",
-      "file_type": "code",
-      "source_file": "src/navigation/AppNavigator.jsx",
-      "source_location": "L1",
-      "id": "src_navigation_appnavigator_jsx",
-      "community": 5,
-      "norm_label": "appnavigator.jsx"
-    },
-    {
-      "label": "AppNavigator()",
-      "file_type": "code",
-      "source_file": "src/navigation/AppNavigator.jsx",
-      "source_location": "L18",
-      "id": "appnavigator_appnavigator",
-      "community": 5,
-      "norm_label": "appnavigator()"
+      "community": 3,
+      "norm_label": "mainnavigator()",
+      "id": "mainnavigator_mainnavigator"
     },
     {
       "label": "MessagesStack.jsx",
       "file_type": "code",
       "source_file": "src/navigation/stacks/MessagesStack.jsx",
       "source_location": "L1",
-      "id": "src_navigation_stacks_messagesstack_jsx",
-      "community": 2,
-      "norm_label": "messagesstack.jsx"
+      "community": 3,
+      "norm_label": "messagesstack.jsx",
+      "id": "src_navigation_stacks_messagesstack_jsx"
     },
     {
       "label": "MessagesStack()",
       "file_type": "code",
       "source_file": "src/navigation/stacks/MessagesStack.jsx",
       "source_location": "L31",
-      "id": "messagesstack_messagesstack",
-      "community": 2,
-      "norm_label": "messagesstack()"
+      "community": 3,
+      "norm_label": "messagesstack()",
+      "id": "messagesstack_messagesstack"
     },
     {
       "label": "HomeStack.jsx",
       "file_type": "code",
       "source_file": "src/navigation/stacks/HomeStack.jsx",
       "source_location": "L1",
-      "id": "src_navigation_stacks_homestack_jsx",
-      "community": 6,
-      "norm_label": "homestack.jsx"
+      "community": 3,
+      "norm_label": "homestack.jsx",
+      "id": "src_navigation_stacks_homestack_jsx"
     },
     {
       "label": "HomeStack()",
       "file_type": "code",
       "source_file": "src/navigation/stacks/HomeStack.jsx",
       "source_location": "L31",
-      "id": "homestack_homestack",
-      "community": 6,
-      "norm_label": "homestack()"
+      "community": 3,
+      "norm_label": "homestack()",
+      "id": "homestack_homestack"
     },
     {
       "label": "BookStack.jsx",
       "file_type": "code",
       "source_file": "src/navigation/stacks/BookStack.jsx",
       "source_location": "L1",
-      "id": "src_navigation_stacks_bookstack_jsx",
-      "community": 6,
-      "norm_label": "bookstack.jsx"
+      "community": 3,
+      "norm_label": "bookstack.jsx",
+      "id": "src_navigation_stacks_bookstack_jsx"
     },
     {
       "label": "BookStack()",
       "file_type": "code",
       "source_file": "src/navigation/stacks/BookStack.jsx",
       "source_location": "L33",
-      "id": "bookstack_bookstack",
-      "community": 6,
-      "norm_label": "bookstack()"
+      "community": 3,
+      "norm_label": "bookstack()",
+      "id": "bookstack_bookstack"
     },
     {
       "label": "SplashScreen.jsx",
       "file_type": "code",
       "source_file": "src/screens/splash/SplashScreen.jsx",
       "source_location": "L1",
-      "id": "src_screens_splash_splashscreen_jsx",
-      "community": 0,
-      "norm_label": "splashscreen.jsx"
+      "community": 1,
+      "norm_label": "splashscreen.jsx",
+      "id": "src_screens_splash_splashscreen_jsx"
     },
     {
       "label": "SplashScreen()",
       "file_type": "code",
       "source_file": "src/screens/splash/SplashScreen.jsx",
       "source_location": "L13",
-      "id": "splashscreen_splashscreen",
-      "community": 0,
-      "norm_label": "splashscreen()"
-    },
-    {
-      "label": "ChatRoomScreen.jsx",
-      "file_type": "code",
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": "L1",
-      "id": "src_screens_messages_chatroomscreen_jsx",
-      "community": 2,
-      "norm_label": "chatroomscreen.jsx"
-    },
-    {
-      "label": "getInitials()",
-      "file_type": "code",
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": "L29",
-      "id": "chatroomscreen_getinitials",
-      "community": 2,
-      "norm_label": "getinitials()"
-    },
-    {
-      "label": "ChatRoomScreen()",
-      "file_type": "code",
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": "L52",
-      "id": "chatroomscreen_chatroomscreen",
-      "community": 2,
-      "norm_label": "chatroomscreen()"
-    },
-    {
-      "label": "MessagesScreen.jsx",
-      "file_type": "code",
-      "source_file": "src/screens/messages/MessagesScreen.jsx",
-      "source_location": "L1",
-      "id": "src_screens_messages_messagesscreen_jsx",
-      "community": 2,
-      "norm_label": "messagesscreen.jsx"
-    },
-    {
-      "label": "MessagesScreen()",
-      "file_type": "code",
-      "source_file": "src/screens/messages/MessagesScreen.jsx",
-      "source_location": "L23",
-      "id": "messagesscreen_messagesscreen",
-      "community": 2,
-      "norm_label": "messagesscreen()"
+      "community": 1,
+      "norm_label": "splashscreen()",
+      "id": "splashscreen_splashscreen"
     },
     {
       "label": "TreatmentHistoryScreen.jsx",
       "file_type": "code",
       "source_file": "src/screens/auth/TreatmentHistoryScreen.jsx",
       "source_location": "L1",
-      "id": "src_screens_auth_treatmenthistoryscreen_jsx",
-      "community": 0,
-      "norm_label": "treatmenthistoryscreen.jsx"
+      "community": 1,
+      "norm_label": "treatmenthistoryscreen.jsx",
+      "id": "src_screens_auth_treatmenthistoryscreen_jsx"
     },
     {
       "label": "TreatmentHistoryScreen()",
       "file_type": "code",
       "source_file": "src/screens/auth/TreatmentHistoryScreen.jsx",
       "source_location": "L16",
-      "id": "treatmenthistoryscreen_treatmenthistoryscreen",
-      "community": 0,
-      "norm_label": "treatmenthistoryscreen()"
-    },
-    {
-      "label": "ClerkAuthScreen.jsx",
-      "file_type": "code",
-      "source_file": "src/screens/auth/ClerkAuthScreen.jsx",
-      "source_location": "L1",
-      "id": "src_screens_auth_clerkauthscreen_jsx",
-      "community": 0,
-      "norm_label": "clerkauthscreen.jsx"
-    },
-    {
-      "label": "ClerkAuthScreen()",
-      "file_type": "code",
-      "source_file": "src/screens/auth/ClerkAuthScreen.jsx",
-      "source_location": "L9",
-      "id": "clerkauthscreen_clerkauthscreen",
-      "community": 0,
-      "norm_label": "clerkauthscreen()"
+      "community": 1,
+      "norm_label": "treatmenthistoryscreen()",
+      "id": "treatmenthistoryscreen_treatmenthistoryscreen"
     },
     {
       "label": "PainLocationScreen.jsx",
       "file_type": "code",
       "source_file": "src/screens/auth/PainLocationScreen.jsx",
       "source_location": "L1",
-      "id": "src_screens_auth_painlocationscreen_jsx",
-      "community": 1,
-      "norm_label": "painlocationscreen.jsx"
+      "community": 2,
+      "norm_label": "painlocationscreen.jsx",
+      "id": "src_screens_auth_painlocationscreen_jsx"
     },
     {
       "label": "PainLocationScreen()",
       "file_type": "code",
       "source_file": "src/screens/auth/PainLocationScreen.jsx",
       "source_location": "L24",
-      "id": "painlocationscreen_painlocationscreen",
-      "community": 1,
-      "norm_label": "painlocationscreen()"
-    },
-    {
-      "label": "LoginScreen.jsx",
-      "file_type": "code",
-      "source_file": "src/screens/auth/LoginScreen.jsx",
-      "source_location": "L1",
-      "id": "src_screens_auth_loginscreen_jsx",
-      "community": 0,
-      "norm_label": "loginscreen.jsx"
-    },
-    {
-      "label": "LoginScreen()",
-      "file_type": "code",
-      "source_file": "src/screens/auth/LoginScreen.jsx",
-      "source_location": "L40",
-      "id": "loginscreen_loginscreen",
-      "community": 0,
-      "norm_label": "loginscreen()"
+      "community": 2,
+      "norm_label": "painlocationscreen()",
+      "id": "painlocationscreen_painlocationscreen"
     },
     {
       "label": "RecoveryGoalsScreen.jsx",
       "file_type": "code",
       "source_file": "src/screens/auth/RecoveryGoalsScreen.jsx",
       "source_location": "L1",
-      "id": "src_screens_auth_recoverygoalsscreen_jsx",
-      "community": 1,
-      "norm_label": "recoverygoalsscreen.jsx"
+      "community": 2,
+      "norm_label": "recoverygoalsscreen.jsx",
+      "id": "src_screens_auth_recoverygoalsscreen_jsx"
     },
     {
       "label": "RecoveryGoalsScreen()",
       "file_type": "code",
       "source_file": "src/screens/auth/RecoveryGoalsScreen.jsx",
       "source_location": "L33",
-      "id": "recoverygoalsscreen_recoverygoalsscreen",
-      "community": 1,
-      "norm_label": "recoverygoalsscreen()"
+      "community": 2,
+      "norm_label": "recoverygoalsscreen()",
+      "id": "recoverygoalsscreen_recoverygoalsscreen"
     },
     {
       "label": "PainDurationScreen.jsx",
       "file_type": "code",
       "source_file": "src/screens/auth/PainDurationScreen.jsx",
       "source_location": "L1",
-      "id": "src_screens_auth_paindurationscreen_jsx",
-      "community": 1,
-      "norm_label": "paindurationscreen.jsx"
+      "community": 2,
+      "norm_label": "paindurationscreen.jsx",
+      "id": "src_screens_auth_paindurationscreen_jsx"
     },
     {
       "label": "PainDurationScreen()",
       "file_type": "code",
       "source_file": "src/screens/auth/PainDurationScreen.jsx",
       "source_location": "L29",
-      "id": "paindurationscreen_paindurationscreen",
-      "community": 1,
-      "norm_label": "paindurationscreen()"
+      "community": 2,
+      "norm_label": "paindurationscreen()",
+      "id": "paindurationscreen_paindurationscreen"
     },
     {
       "label": "AvailabilityScreen.jsx",
       "file_type": "code",
       "source_file": "src/screens/auth/AvailabilityScreen.jsx",
       "source_location": "L1",
-      "id": "src_screens_auth_availabilityscreen_jsx",
-      "community": 1,
-      "norm_label": "availabilityscreen.jsx"
+      "community": 2,
+      "norm_label": "availabilityscreen.jsx",
+      "id": "src_screens_auth_availabilityscreen_jsx"
     },
     {
       "label": "AvailabilityScreen()",
       "file_type": "code",
       "source_file": "src/screens/auth/AvailabilityScreen.jsx",
       "source_location": "L38",
-      "id": "availabilityscreen_availabilityscreen",
-      "community": 1,
-      "norm_label": "availabilityscreen()"
+      "community": 2,
+      "norm_label": "availabilityscreen()",
+      "id": "availabilityscreen_availabilityscreen"
     },
     {
       "label": "PainSeverityScreen.jsx",
       "file_type": "code",
       "source_file": "src/screens/auth/PainSeverityScreen.jsx",
       "source_location": "L1",
-      "id": "src_screens_auth_painseverityscreen_jsx",
-      "community": 1,
-      "norm_label": "painseverityscreen.jsx"
+      "community": 2,
+      "norm_label": "painseverityscreen.jsx",
+      "id": "src_screens_auth_painseverityscreen_jsx"
     },
     {
       "label": "PainSeverityScreen()",
       "file_type": "code",
       "source_file": "src/screens/auth/PainSeverityScreen.jsx",
       "source_location": "L21",
-      "id": "painseverityscreen_painseverityscreen",
-      "community": 1,
-      "norm_label": "painseverityscreen()"
-    },
-    {
-      "label": "OnboardingCompleteScreen.jsx",
-      "file_type": "code",
-      "source_file": "src/screens/auth/OnboardingCompleteScreen.jsx",
-      "source_location": "L1",
-      "id": "src_screens_auth_onboardingcompletescreen_jsx",
-      "community": 0,
-      "norm_label": "onboardingcompletescreen.jsx"
-    },
-    {
-      "label": "OnboardingCompleteScreen()",
-      "file_type": "code",
-      "source_file": "src/screens/auth/OnboardingCompleteScreen.jsx",
-      "source_location": "L19",
-      "id": "onboardingcompletescreen_onboardingcompletescreen",
-      "community": 0,
-      "norm_label": "onboardingcompletescreen()"
-    },
-    {
-      "label": "PersonalInfoScreen.jsx",
-      "file_type": "code",
-      "source_file": "src/screens/auth/PersonalInfoScreen.jsx",
-      "source_location": "L1",
-      "id": "src_screens_auth_personalinfoscreen_jsx",
-      "community": 1,
-      "norm_label": "personalinfoscreen.jsx"
-    },
-    {
-      "label": "PersonalInfoScreen()",
-      "file_type": "code",
-      "source_file": "src/screens/auth/PersonalInfoScreen.jsx",
-      "source_location": "L14",
-      "id": "personalinfoscreen_personalinfoscreen",
-      "community": 1,
-      "norm_label": "personalinfoscreen()"
-    },
-    {
-      "label": "ProfileScreen.jsx",
-      "file_type": "code",
-      "source_file": "src/screens/main/ProfileScreen.jsx",
-      "source_location": "L1",
-      "id": "src_screens_main_profilescreen_jsx",
-      "community": 11,
-      "norm_label": "profilescreen.jsx"
-    },
-    {
-      "label": "MenuRow()",
-      "file_type": "code",
-      "source_file": "src/screens/main/ProfileScreen.jsx",
-      "source_location": "L23",
-      "id": "profilescreen_menurow",
-      "community": 11,
-      "norm_label": "menurow()"
-    },
-    {
-      "label": "ProfileScreen()",
-      "file_type": "code",
-      "source_file": "src/screens/main/ProfileScreen.jsx",
-      "source_location": "L55",
-      "id": "profilescreen_profilescreen",
-      "community": 0,
-      "norm_label": "profilescreen()"
+      "community": 2,
+      "norm_label": "painseverityscreen()",
+      "id": "painseverityscreen_painseverityscreen"
     },
     {
       "label": "BookingConfirmedScreen.jsx",
       "file_type": "code",
       "source_file": "src/screens/main/BookingConfirmedScreen.jsx",
       "source_location": "L1",
-      "id": "src_screens_main_bookingconfirmedscreen_jsx",
-      "community": 0,
-      "norm_label": "bookingconfirmedscreen.jsx"
+      "community": 1,
+      "norm_label": "bookingconfirmedscreen.jsx",
+      "id": "src_screens_main_bookingconfirmedscreen_jsx"
     },
     {
       "label": "DetailRow()",
       "file_type": "code",
       "source_file": "src/screens/main/BookingConfirmedScreen.jsx",
       "source_location": "L30",
-      "id": "bookingconfirmedscreen_detailrow",
-      "community": 0,
-      "norm_label": "detailrow()"
+      "community": 1,
+      "norm_label": "detailrow()",
+      "id": "bookingconfirmedscreen_detailrow"
     },
     {
       "label": "BookingConfirmedScreen()",
       "file_type": "code",
       "source_file": "src/screens/main/BookingConfirmedScreen.jsx",
       "source_location": "L73",
-      "id": "bookingconfirmedscreen_bookingconfirmedscreen",
-      "community": 0,
-      "norm_label": "bookingconfirmedscreen()"
+      "community": 1,
+      "norm_label": "bookingconfirmedscreen()",
+      "id": "bookingconfirmedscreen_bookingconfirmedscreen"
     },
     {
       "label": "ProgressScreen.jsx",
       "file_type": "code",
       "source_file": "src/screens/main/ProgressScreen.jsx",
       "source_location": "L1",
-      "id": "src_screens_main_progressscreen_jsx",
-      "community": 12,
-      "norm_label": "progressscreen.jsx"
+      "community": 1,
+      "norm_label": "progressscreen.jsx",
+      "id": "src_screens_main_progressscreen_jsx"
     },
     {
       "label": "ProgressScreen()",
       "file_type": "code",
       "source_file": "src/screens/main/ProgressScreen.jsx",
       "source_location": "L67",
-      "id": "progressscreen_progressscreen",
-      "community": 0,
-      "norm_label": "progressscreen()"
+      "community": 1,
+      "norm_label": "progressscreen()",
+      "id": "progressscreen_progressscreen"
     },
     {
       "label": "DotLegendItem()",
       "file_type": "code",
       "source_file": "src/screens/main/ProgressScreen.jsx",
       "source_location": "L237",
-      "id": "progressscreen_dotlegenditem",
-      "community": 12,
-      "norm_label": "dotlegenditem()"
+      "community": 1,
+      "norm_label": "dotlegenditem()",
+      "id": "progressscreen_dotlegenditem"
     },
     {
       "label": "HomeScreen.jsx",
       "file_type": "code",
       "source_file": "src/screens/main/HomeScreen.jsx",
       "source_location": "L1",
-      "id": "src_screens_main_homescreen_jsx",
-      "community": 0,
-      "norm_label": "homescreen.jsx"
+      "community": 1,
+      "norm_label": "homescreen.jsx",
+      "id": "src_screens_main_homescreen_jsx"
     },
     {
       "label": "CircularRing()",
       "file_type": "code",
       "source_file": "src/screens/main/HomeScreen.jsx",
       "source_location": "L35",
-      "id": "homescreen_circularring",
-      "community": 0,
-      "norm_label": "circularring()"
+      "community": 1,
+      "norm_label": "circularring()",
+      "id": "homescreen_circularring"
     },
     {
       "label": "HomeScreen()",
       "file_type": "code",
       "source_file": "src/screens/main/HomeScreen.jsx",
       "source_location": "L102",
-      "id": "homescreen_homescreen",
-      "community": 0,
-      "norm_label": "homescreen()"
+      "community": 1,
+      "norm_label": "homescreen()",
+      "id": "homescreen_homescreen"
     },
     {
       "label": "BookScreen.jsx",
       "file_type": "code",
       "source_file": "src/screens/main/BookScreen.jsx",
       "source_location": "L1",
-      "id": "src_screens_main_bookscreen_jsx",
-      "community": 0,
-      "norm_label": "bookscreen.jsx"
+      "community": 1,
+      "norm_label": "bookscreen.jsx",
+      "id": "src_screens_main_bookscreen_jsx"
     },
     {
       "label": "BookScreen()",
       "file_type": "code",
       "source_file": "src/screens/main/BookScreen.jsx",
       "source_location": "L10",
-      "id": "bookscreen_bookscreen",
-      "community": 0,
-      "norm_label": "bookscreen()"
+      "community": 1,
+      "norm_label": "bookscreen()",
+      "id": "bookscreen_bookscreen"
     },
     {
       "label": "SlotSelectionScreen.jsx",
       "file_type": "code",
       "source_file": "src/screens/main/SlotSelectionScreen.jsx",
       "source_location": "L1",
-      "id": "src_screens_main_slotselectionscreen_jsx",
-      "community": 0,
-      "norm_label": "slotselectionscreen.jsx"
+      "community": 1,
+      "norm_label": "slotselectionscreen.jsx",
+      "id": "src_screens_main_slotselectionscreen_jsx"
     },
     {
       "label": "SlotSelectionScreen()",
       "file_type": "code",
       "source_file": "src/screens/main/SlotSelectionScreen.jsx",
       "source_location": "L23",
-      "id": "slotselectionscreen_slotselectionscreen",
-      "community": 0,
-      "norm_label": "slotselectionscreen()"
+      "community": 1,
+      "norm_label": "slotselectionscreen()",
+      "id": "slotselectionscreen_slotselectionscreen"
     },
     {
       "label": "SummaryRow()",
       "file_type": "code",
       "source_file": "src/screens/main/SlotSelectionScreen.jsx",
       "source_location": "L115",
-      "id": "slotselectionscreen_summaryrow",
-      "community": 0,
-      "norm_label": "summaryrow()"
-    },
-    {
-      "label": "SessionScreen.jsx",
-      "file_type": "code",
-      "source_file": "src/screens/main/SessionScreen.jsx",
-      "source_location": "L1",
-      "id": "src_screens_main_sessionscreen_jsx",
-      "community": 0,
-      "norm_label": "sessionscreen.jsx"
-    },
-    {
-      "label": "CountdownRing()",
-      "file_type": "code",
-      "source_file": "src/screens/main/SessionScreen.jsx",
-      "source_location": "L97",
-      "id": "sessionscreen_countdownring",
-      "community": 0,
-      "norm_label": "countdownring()"
-    },
-    {
-      "label": "SessionCompleteView()",
-      "file_type": "code",
-      "source_file": "src/screens/main/SessionScreen.jsx",
-      "source_location": "L175",
-      "id": "sessionscreen_sessioncompleteview",
-      "community": 0,
-      "norm_label": "sessioncompleteview()"
-    },
-    {
-      "label": "SessionScreen()",
-      "file_type": "code",
-      "source_file": "src/screens/main/SessionScreen.jsx",
-      "source_location": "L392",
-      "id": "sessionscreen_sessionscreen",
-      "community": 0,
-      "norm_label": "sessionscreen()"
-    },
-    {
-      "label": "BookTherapistScreen.jsx",
-      "file_type": "code",
-      "source_file": "src/screens/main/BookTherapistScreen.jsx",
-      "source_location": "L1",
-      "id": "src_screens_main_booktherapistscreen_jsx",
-      "community": 0,
-      "norm_label": "booktherapistscreen.jsx"
-    },
-    {
-      "label": "BookTherapistScreen()",
-      "file_type": "code",
-      "source_file": "src/screens/main/BookTherapistScreen.jsx",
-      "source_location": "L49",
-      "id": "booktherapistscreen_booktherapistscreen",
-      "community": 0,
-      "norm_label": "booktherapistscreen()"
+      "community": 1,
+      "norm_label": "summaryrow()",
+      "id": "slotselectionscreen_summaryrow"
     },
     {
       "label": "AchievementIcon.jsx",
       "file_type": "code",
       "source_file": "src/components/ui/AchievementIcon.jsx",
       "source_location": "L1",
-      "id": "src_components_ui_achievementicon_jsx",
-      "community": 3,
-      "norm_label": "achievementicon.jsx"
+      "community": 5,
+      "norm_label": "achievementicon.jsx",
+      "id": "src_components_ui_achievementicon_jsx"
     },
     {
       "label": "FlameIcon()",
       "file_type": "code",
       "source_file": "src/components/ui/AchievementIcon.jsx",
       "source_location": "L5",
-      "id": "achievementicon_flameicon",
-      "community": 3,
-      "norm_label": "flameicon()"
+      "community": 5,
+      "norm_label": "flameicon()",
+      "id": "achievementicon_flameicon"
     },
     {
       "label": "StarIcon()",
       "file_type": "code",
       "source_file": "src/components/ui/AchievementIcon.jsx",
       "source_location": "L25",
-      "id": "achievementicon_staricon",
-      "community": 3,
-      "norm_label": "staricon()"
+      "community": 5,
+      "norm_label": "staricon()",
+      "id": "achievementicon_staricon"
     },
     {
       "label": "TrophyIcon()",
       "file_type": "code",
       "source_file": "src/components/ui/AchievementIcon.jsx",
       "source_location": "L47",
-      "id": "achievementicon_trophyicon",
-      "community": 3,
-      "norm_label": "trophyicon()"
+      "community": 5,
+      "norm_label": "trophyicon()",
+      "id": "achievementicon_trophyicon"
     },
     {
       "label": "AchievementIcon()",
       "file_type": "code",
       "source_file": "src/components/ui/AchievementIcon.jsx",
       "source_location": "L103",
-      "id": "achievementicon_achievementicon",
-      "community": 3,
-      "norm_label": "achievementicon()"
+      "community": 5,
+      "norm_label": "achievementicon()",
+      "id": "achievementicon_achievementicon"
     },
     {
       "label": "PrimaryButton.jsx",
       "file_type": "code",
       "source_file": "src/components/ui/PrimaryButton.jsx",
       "source_location": "L1",
-      "id": "src_components_ui_primarybutton_jsx",
       "community": 7,
-      "norm_label": "primarybutton.jsx"
+      "norm_label": "primarybutton.jsx",
+      "id": "src_components_ui_primarybutton_jsx"
     },
     {
       "label": "PrimaryButton()",
       "file_type": "code",
       "source_file": "src/components/ui/PrimaryButton.jsx",
       "source_location": "L11",
-      "id": "primarybutton_primarybutton",
       "community": 7,
-      "norm_label": "primarybutton()"
+      "norm_label": "primarybutton()",
+      "id": "primarybutton_primarybutton"
     },
     {
       "label": "OutlineButton.jsx",
       "file_type": "code",
       "source_file": "src/components/ui/OutlineButton.jsx",
       "source_location": "L1",
-      "id": "src_components_ui_outlinebutton_jsx",
       "community": 7,
-      "norm_label": "outlinebutton.jsx"
+      "norm_label": "outlinebutton.jsx",
+      "id": "src_components_ui_outlinebutton_jsx"
     },
     {
       "label": "OutlineButton()",
       "file_type": "code",
       "source_file": "src/components/ui/OutlineButton.jsx",
       "source_location": "L11",
-      "id": "outlinebutton_outlinebutton",
       "community": 7,
-      "norm_label": "outlinebutton()"
+      "norm_label": "outlinebutton()",
+      "id": "outlinebutton_outlinebutton"
     },
     {
       "label": "ConversationRow.jsx",
       "file_type": "code",
       "source_file": "src/components/chat/ConversationRow.jsx",
       "source_location": "L1",
-      "id": "src_components_chat_conversationrow_jsx",
       "community": 8,
-      "norm_label": "conversationrow.jsx"
+      "norm_label": "conversationrow.jsx",
+      "id": "src_components_chat_conversationrow_jsx"
     },
     {
       "label": "formatTime()",
       "file_type": "code",
       "source_file": "src/components/chat/ConversationRow.jsx",
       "source_location": "L16",
-      "id": "conversationrow_formattime",
       "community": 8,
-      "norm_label": "formattime()"
+      "norm_label": "formattime()",
+      "id": "conversationrow_formattime"
     },
     {
       "label": "getInitials()",
       "file_type": "code",
       "source_file": "src/components/chat/ConversationRow.jsx",
       "source_location": "L34",
-      "id": "conversationrow_getinitials",
       "community": 8,
-      "norm_label": "getinitials()"
+      "norm_label": "getinitials()",
+      "id": "conversationrow_getinitials"
     },
     {
       "label": "ConversationRow()",
       "file_type": "code",
       "source_file": "src/components/chat/ConversationRow.jsx",
       "source_location": "L57",
-      "id": "conversationrow_conversationrow",
       "community": 8,
-      "norm_label": "conversationrow()"
-    },
-    {
-      "label": "ComposerBar.jsx",
-      "file_type": "code",
-      "source_file": "src/components/chat/ComposerBar.jsx",
-      "source_location": "L1",
-      "id": "src_components_chat_composerbar_jsx",
-      "community": 4,
-      "norm_label": "composerbar.jsx"
-    },
-    {
-      "label": "ComposerBar()",
-      "file_type": "code",
-      "source_file": "src/components/chat/ComposerBar.jsx",
-      "source_location": "L29",
-      "id": "composerbar_composerbar",
-      "community": 4,
-      "norm_label": "composerbar()"
+      "norm_label": "conversationrow()",
+      "id": "conversationrow_conversationrow"
     },
     {
       "label": "MessageBubble.jsx",
       "file_type": "code",
       "source_file": "src/components/chat/MessageBubble.jsx",
       "source_location": "L1",
-      "id": "src_components_chat_messagebubble_jsx",
-      "community": 4,
-      "norm_label": "messagebubble.jsx"
+      "community": 6,
+      "norm_label": "messagebubble.jsx",
+      "id": "src_components_chat_messagebubble_jsx"
     },
     {
       "label": "formatBubbleTime()",
       "file_type": "code",
       "source_file": "src/components/chat/MessageBubble.jsx",
       "source_location": "L18",
-      "id": "messagebubble_formatbubbletime",
-      "community": 4,
-      "norm_label": "formatbubbletime()"
+      "community": 6,
+      "norm_label": "formatbubbletime()",
+      "id": "messagebubble_formatbubbletime"
     },
     {
       "label": "ReadReceipt()",
       "file_type": "code",
       "source_file": "src/components/chat/MessageBubble.jsx",
       "source_location": "L33",
-      "id": "messagebubble_readreceipt",
-      "community": 4,
-      "norm_label": "readreceipt()"
+      "community": 6,
+      "norm_label": "readreceipt()",
+      "id": "messagebubble_readreceipt"
     },
     {
       "label": "InlineReplyStrip()",
       "file_type": "code",
       "source_file": "src/components/chat/MessageBubble.jsx",
       "source_location": "L45",
-      "id": "messagebubble_inlinereplystrip",
-      "community": 4,
-      "norm_label": "inlinereplystrip()"
+      "community": 6,
+      "norm_label": "inlinereplystrip()",
+      "id": "messagebubble_inlinereplystrip"
     },
     {
       "label": "MessageBubble()",
       "file_type": "code",
       "source_file": "src/components/chat/MessageBubble.jsx",
       "source_location": "L80",
-      "id": "messagebubble_messagebubble",
-      "community": 4,
-      "norm_label": "messagebubble()"
+      "community": 6,
+      "norm_label": "messagebubble()",
+      "id": "messagebubble_messagebubble"
     },
     {
       "label": "AttachmentSheet.jsx",
       "file_type": "code",
       "source_file": "src/components/chat/AttachmentSheet.jsx",
       "source_location": "L1",
-      "id": "src_components_chat_attachmentsheet_jsx",
-      "community": 4,
-      "norm_label": "attachmentsheet.jsx"
+      "community": 11,
+      "norm_label": "attachmentsheet.jsx",
+      "id": "src_components_chat_attachmentsheet_jsx"
     },
     {
       "label": "AnimatedSheet()",
       "file_type": "code",
       "source_file": "src/components/chat/AttachmentSheet.jsx",
       "source_location": "L39",
-      "id": "attachmentsheet_animatedsheet",
-      "community": 4,
-      "norm_label": "animatedsheet()"
+      "community": 11,
+      "norm_label": "animatedsheet()",
+      "id": "attachmentsheet_animatedsheet"
     },
     {
       "label": "AttachmentSheet()",
       "file_type": "code",
       "source_file": "src/components/chat/AttachmentSheet.jsx",
       "source_location": "L123",
-      "id": "attachmentsheet_attachmentsheet",
-      "community": 4,
-      "norm_label": "attachmentsheet()"
+      "community": 11,
+      "norm_label": "attachmentsheet()",
+      "id": "attachmentsheet_attachmentsheet"
     },
     {
       "label": "CenterTabButton.jsx",
       "file_type": "code",
       "source_file": "src/components/chat/CenterTabButton.jsx",
       "source_location": "L1",
-      "id": "src_components_chat_centertabbutton_jsx",
       "community": 3,
-      "norm_label": "centertabbutton.jsx"
+      "norm_label": "centertabbutton.jsx",
+      "id": "src_components_chat_centertabbutton_jsx"
     },
     {
       "label": "CenterTabButton()",
       "file_type": "code",
       "source_file": "src/components/chat/CenterTabButton.jsx",
       "source_location": "L20",
-      "id": "centertabbutton_centertabbutton",
       "community": 3,
-      "norm_label": "centertabbutton()"
-    },
-    {
-      "label": "ReplyPreview.jsx",
-      "file_type": "code",
-      "source_file": "src/components/chat/ReplyPreview.jsx",
-      "source_location": "L1",
-      "id": "src_components_chat_replypreview_jsx",
-      "community": 4,
-      "norm_label": "replypreview.jsx"
-    },
-    {
-      "label": "ReplyPreview()",
-      "file_type": "code",
-      "source_file": "src/components/chat/ReplyPreview.jsx",
-      "source_location": "L18",
-      "id": "replypreview_replypreview",
-      "community": 4,
-      "norm_label": "replypreview()"
-    },
-    {
-      "label": "TypingIndicator.jsx",
-      "file_type": "code",
-      "source_file": "src/components/chat/TypingIndicator.jsx",
-      "source_location": "L1",
-      "id": "src_components_chat_typingindicator_jsx",
-      "community": 2,
-      "norm_label": "typingindicator.jsx"
-    },
-    {
-      "label": "TypingIndicator()",
-      "file_type": "code",
-      "source_file": "src/components/chat/TypingIndicator.jsx",
-      "source_location": "L16",
-      "id": "typingindicator_typingindicator",
-      "community": 2,
-      "norm_label": "typingindicator()"
+      "norm_label": "centertabbutton()",
+      "id": "centertabbutton_centertabbutton"
     },
     {
       "label": "SelectablePill.jsx",
       "file_type": "code",
       "source_file": "src/components/auth/SelectablePill.jsx",
       "source_location": "L1",
-      "id": "src_components_auth_selectablepill_jsx",
-      "community": 1,
-      "norm_label": "selectablepill.jsx"
+      "community": 2,
+      "norm_label": "selectablepill.jsx",
+      "id": "src_components_auth_selectablepill_jsx"
     },
     {
       "label": "SelectablePill()",
       "file_type": "code",
       "source_file": "src/components/auth/SelectablePill.jsx",
       "source_location": "L11",
-      "id": "selectablepill_selectablepill",
-      "community": 1,
-      "norm_label": "selectablepill()"
-    },
-    {
-      "label": "SelectableCard.jsx",
-      "file_type": "code",
-      "source_file": "src/components/auth/SelectableCard.jsx",
-      "source_location": "L1",
-      "id": "src_components_auth_selectablecard_jsx",
-      "community": 1,
-      "norm_label": "selectablecard.jsx"
-    },
-    {
-      "label": "SelectableCard()",
-      "file_type": "code",
-      "source_file": "src/components/auth/SelectableCard.jsx",
-      "source_location": "L19",
-      "id": "selectablecard_selectablecard",
-      "community": 1,
-      "norm_label": "selectablecard()"
+      "community": 2,
+      "norm_label": "selectablepill()",
+      "id": "selectablepill_selectablepill"
     },
     {
       "label": "OnboardingShell.jsx",
       "file_type": "code",
       "source_file": "src/components/auth/OnboardingShell.jsx",
       "source_location": "L1",
-      "id": "src_components_auth_onboardingshell_jsx",
-      "community": 1,
-      "norm_label": "onboardingshell.jsx"
+      "community": 2,
+      "norm_label": "onboardingshell.jsx",
+      "id": "src_components_auth_onboardingshell_jsx"
     },
     {
       "label": "OnboardingShell()",
       "file_type": "code",
       "source_file": "src/components/auth/OnboardingShell.jsx",
       "source_location": "L26",
-      "id": "onboardingshell_onboardingshell",
-      "community": 1,
-      "norm_label": "onboardingshell()"
+      "community": 2,
+      "norm_label": "onboardingshell()",
+      "id": "onboardingshell_onboardingshell"
     },
     {
       "label": "TherapistCard.jsx",
       "file_type": "code",
       "source_file": "src/components/booking/TherapistCard.jsx",
       "source_location": "L1",
-      "id": "src_components_booking_therapistcard_jsx",
-      "community": 9,
-      "norm_label": "therapistcard.jsx"
+      "community": 12,
+      "norm_label": "therapistcard.jsx",
+      "id": "src_components_booking_therapistcard_jsx"
     },
     {
       "label": "Star()",
       "file_type": "code",
       "source_file": "src/components/booking/TherapistCard.jsx",
       "source_location": "L11",
-      "id": "therapistcard_star",
-      "community": 9,
-      "norm_label": "star()"
+      "community": 12,
+      "norm_label": "star()",
+      "id": "therapistcard_star"
     },
     {
       "label": "TherapistCard()",
       "file_type": "code",
       "source_file": "src/components/booking/TherapistCard.jsx",
       "source_location": "L32",
-      "id": "therapistcard_therapistcard",
-      "community": 9,
-      "norm_label": "therapistcard()"
+      "community": 12,
+      "norm_label": "therapistcard()",
+      "id": "therapistcard_therapistcard"
     },
     {
       "label": "TabScreenWrapper.jsx",
       "file_type": "code",
       "source_file": "src/components/navigation/TabScreenWrapper.jsx",
       "source_location": "L1",
-      "id": "src_components_navigation_tabscreenwrapper_jsx",
-      "community": 3,
-      "norm_label": "tabscreenwrapper.jsx"
+      "community": 1,
+      "norm_label": "tabscreenwrapper.jsx",
+      "id": "src_components_navigation_tabscreenwrapper_jsx"
     },
     {
       "label": "TabScreenWrapper()",
       "file_type": "code",
       "source_file": "src/components/navigation/TabScreenWrapper.jsx",
       "source_location": "L15",
-      "id": "tabscreenwrapper_tabscreenwrapper",
-      "community": 3,
-      "norm_label": "tabscreenwrapper()"
+      "community": 1,
+      "norm_label": "tabscreenwrapper()",
+      "id": "tabscreenwrapper_tabscreenwrapper"
     },
     {
       "label": "AnimatedTabBar.jsx",
       "file_type": "code",
       "source_file": "src/components/navigation/AnimatedTabBar.jsx",
       "source_location": "L1",
-      "id": "src_components_navigation_animatedtabbar_jsx",
       "community": 3,
-      "norm_label": "animatedtabbar.jsx"
+      "norm_label": "animatedtabbar.jsx",
+      "id": "src_components_navigation_animatedtabbar_jsx"
     },
     {
       "label": "AnimatedTabBar()",
       "file_type": "code",
       "source_file": "src/components/navigation/AnimatedTabBar.jsx",
       "source_location": "L62",
-      "id": "animatedtabbar_animatedtabbar",
       "community": 3,
-      "norm_label": "animatedtabbar()"
-    },
-    {
-      "label": "chatService.js",
-      "file_type": "code",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L1",
-      "id": "src_services_chatservice_js",
-      "community": 2,
-      "norm_label": "chatservice.js"
-    },
-    {
-      "label": "_delay()",
-      "file_type": "code",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L230",
-      "id": "chatservice_delay",
-      "community": 2,
-      "norm_label": "_delay()"
-    },
-    {
-      "label": "_formatTime()",
-      "file_type": "code",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L234",
-      "id": "chatservice_formattime",
-      "community": 2,
-      "norm_label": "_formattime()"
-    },
-    {
-      "label": "getConversations()",
-      "file_type": "code",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L253",
-      "id": "chatservice_getconversations",
-      "community": 2,
-      "norm_label": "getconversations()"
-    },
-    {
-      "label": "getMessages()",
-      "file_type": "code",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L269",
-      "id": "chatservice_getmessages",
-      "community": 2,
-      "norm_label": "getmessages()"
-    },
-    {
-      "label": "sendMessage()",
-      "file_type": "code",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L299",
-      "id": "chatservice_sendmessage",
-      "community": 2,
-      "norm_label": "sendmessage()"
-    },
-    {
-      "label": "markAsRead()",
-      "file_type": "code",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L340",
-      "id": "chatservice_markasread",
-      "community": 2,
-      "norm_label": "markasread()"
-    },
-    {
-      "label": "getTypingStatus()",
-      "file_type": "code",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L365",
-      "id": "chatservice_gettypingstatus",
-      "community": 2,
-      "norm_label": "gettypingstatus()"
+      "norm_label": "animatedtabbar()",
+      "id": "animatedtabbar_animatedtabbar"
     },
     {
       "label": "mockOnboardingService.js",
       "file_type": "code",
       "source_file": "src/services/auth/mockOnboardingService.js",
       "source_location": "L1",
-      "id": "src_services_auth_mockonboardingservice_js",
-      "community": 1,
-      "norm_label": "mockonboardingservice.js"
+      "community": 2,
+      "norm_label": "mockonboardingservice.js",
+      "id": "src_services_auth_mockonboardingservice_js"
     },
     {
       "label": "submitOnboarding()",
       "file_type": "code",
       "source_file": "src/services/auth/mockOnboardingService.js",
       "source_location": "L18",
-      "id": "mockonboardingservice_submitonboarding",
-      "community": 1,
-      "norm_label": "submitonboarding()"
+      "community": 2,
+      "norm_label": "submitonboarding()",
+      "id": "mockonboardingservice_submitonboarding"
     },
     {
       "label": "fonts",
@@ -1254,9 +696,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "fonts_fonts",
-      "community": 0,
-      "norm_label": "fonts"
+      "community": 1,
+      "norm_label": "fonts",
+      "id": "fonts_fonts"
     },
     {
       "label": "colors",
@@ -1267,9 +709,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "colors_colors",
-      "community": 0,
-      "norm_label": "colors"
+      "community": 1,
+      "norm_label": "colors",
+      "id": "colors_colors"
     },
     {
       "label": "PATIENT_ROUTES",
@@ -1280,523 +722,637 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "routes_patient_routes",
-      "community": 0,
-      "norm_label": "patient_routes"
+      "community": 3,
+      "norm_label": "patient_routes",
+      "id": "routes_patient_routes"
     },
     {
-      "label": "chatService",
+      "label": "metro.config.js",
+      "file_type": "code",
+      "source_file": "metro.config.js",
+      "source_location": "L1",
+      "id": "metro_config_js",
+      "community": 22,
+      "norm_label": "metro.config.js"
+    },
+    {
+      "label": "App.jsx",
+      "file_type": "code",
+      "source_file": "App.jsx",
+      "source_location": "L1",
+      "id": "app_jsx",
+      "community": 15,
+      "norm_label": "app.jsx"
+    },
+    {
+      "label": "App()",
+      "file_type": "code",
+      "source_file": "App.jsx",
+      "source_location": "L27",
+      "id": "app_app",
+      "community": 15,
+      "norm_label": "app()"
+    },
+    {
+      "label": "PatientContext.jsx",
+      "file_type": "code",
+      "source_file": "src/context/PatientContext.jsx",
+      "source_location": "L1",
+      "id": "src_context_patientcontext_jsx",
+      "community": 4,
+      "norm_label": "patientcontext.jsx"
+    },
+    {
+      "label": "PatientProvider()",
+      "file_type": "code",
+      "source_file": "src/context/PatientContext.jsx",
+      "source_location": "L33",
+      "id": "patientcontext_patientprovider",
+      "community": 4,
+      "norm_label": "patientprovider()"
+    },
+    {
+      "label": "usePatient()",
+      "file_type": "code",
+      "source_file": "src/context/PatientContext.jsx",
+      "source_location": "L100",
+      "id": "patientcontext_usepatient",
+      "community": 4,
+      "norm_label": "usepatient()"
+    },
+    {
+      "label": "OnboardingProvider",
+      "file_type": "code",
+      "source_file": "src/context/OnboardingContext.jsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "onboardingcontext_onboardingprovider",
+      "community": 9,
+      "norm_label": "onboardingprovider"
+    },
+    {
+      "label": "useOnboarding",
+      "file_type": "code",
+      "source_file": "src/context/OnboardingContext.jsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "onboardingcontext_useonboarding",
+      "community": 9,
+      "norm_label": "useonboarding"
+    },
+    {
+      "label": "AuthNavigator.jsx",
+      "file_type": "code",
+      "source_file": "src/navigation/AuthNavigator.jsx",
+      "source_location": "L1",
+      "id": "src_navigation_authnavigator_jsx",
+      "community": 16,
+      "norm_label": "authnavigator.jsx"
+    },
+    {
+      "label": "AuthNavigator()",
+      "file_type": "code",
+      "source_file": "src/navigation/AuthNavigator.jsx",
+      "source_location": "L48",
+      "id": "authnavigator_authnavigator",
+      "community": 16,
+      "norm_label": "authnavigator()"
+    },
+    {
+      "label": "RootNavigator.jsx",
+      "file_type": "code",
+      "source_file": "src/navigation/RootNavigator.jsx",
+      "source_location": "L1",
+      "id": "src_navigation_rootnavigator_jsx",
+      "community": 4,
+      "norm_label": "rootnavigator.jsx"
+    },
+    {
+      "label": "RootNavigator()",
+      "file_type": "code",
+      "source_file": "src/navigation/RootNavigator.jsx",
+      "source_location": "L10",
+      "id": "rootnavigator_rootnavigator",
+      "community": 4,
+      "norm_label": "rootnavigator()"
+    },
+    {
+      "label": "AppNavigator",
+      "file_type": "code",
+      "source_file": "src/navigation/AppNavigator.jsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "appnavigator_appnavigator",
+      "community": 4,
+      "norm_label": "appnavigator"
+    },
+    {
+      "label": "ChatRoomScreen.jsx",
+      "file_type": "code",
+      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
+      "source_location": "L1",
+      "id": "src_screens_messages_chatroomscreen_jsx",
+      "community": 0,
+      "norm_label": "chatroomscreen.jsx"
+    },
+    {
+      "label": "getInitials()",
+      "file_type": "code",
+      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
+      "source_location": "L29",
+      "id": "chatroomscreen_getinitials",
+      "community": 0,
+      "norm_label": "getinitials()"
+    },
+    {
+      "label": "ChatRoomScreen()",
+      "file_type": "code",
+      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
+      "source_location": "L52",
+      "id": "chatroomscreen_chatroomscreen",
+      "community": 0,
+      "norm_label": "chatroomscreen()"
+    },
+    {
+      "label": "MessagesScreen.jsx",
+      "file_type": "code",
+      "source_file": "src/screens/messages/MessagesScreen.jsx",
+      "source_location": "L1",
+      "id": "src_screens_messages_messagesscreen_jsx",
+      "community": 0,
+      "norm_label": "messagesscreen.jsx"
+    },
+    {
+      "label": "MessagesScreen()",
+      "file_type": "code",
+      "source_file": "src/screens/messages/MessagesScreen.jsx",
+      "source_location": "L28",
+      "id": "messagesscreen_messagesscreen",
+      "community": 0,
+      "norm_label": "messagesscreen()"
+    },
+    {
+      "label": "ClerkAuthScreen.jsx",
+      "file_type": "code",
+      "source_file": "src/screens/auth/ClerkAuthScreen.jsx",
+      "source_location": "L1",
+      "id": "src_screens_auth_clerkauthscreen_jsx",
+      "community": 17,
+      "norm_label": "clerkauthscreen.jsx"
+    },
+    {
+      "label": "ClerkAuthScreen()",
+      "file_type": "code",
+      "source_file": "src/screens/auth/ClerkAuthScreen.jsx",
+      "source_location": "L34",
+      "id": "clerkauthscreen_clerkauthscreen",
+      "community": 17,
+      "norm_label": "clerkauthscreen()"
+    },
+    {
+      "label": "LoginScreen.jsx",
+      "file_type": "code",
+      "source_file": "src/screens/auth/LoginScreen.jsx",
+      "source_location": "L1",
+      "id": "src_screens_auth_loginscreen_jsx",
+      "community": 18,
+      "norm_label": "loginscreen.jsx"
+    },
+    {
+      "label": "LoginScreen()",
+      "file_type": "code",
+      "source_file": "src/screens/auth/LoginScreen.jsx",
+      "source_location": "L40",
+      "id": "loginscreen_loginscreen",
+      "community": 18,
+      "norm_label": "loginscreen()"
+    },
+    {
+      "label": "OnboardingCompleteScreen.jsx",
+      "file_type": "code",
+      "source_file": "src/screens/auth/OnboardingCompleteScreen.jsx",
+      "source_location": "L1",
+      "id": "src_screens_auth_onboardingcompletescreen_jsx",
+      "community": 4,
+      "norm_label": "onboardingcompletescreen.jsx"
+    },
+    {
+      "label": "OnboardingCompleteScreen()",
+      "file_type": "code",
+      "source_file": "src/screens/auth/OnboardingCompleteScreen.jsx",
+      "source_location": "L19",
+      "id": "onboardingcompletescreen_onboardingcompletescreen",
+      "community": 4,
+      "norm_label": "onboardingcompletescreen()"
+    },
+    {
+      "label": "PersonalInfoScreen.jsx",
+      "file_type": "code",
+      "source_file": "src/screens/auth/PersonalInfoScreen.jsx",
+      "source_location": "L1",
+      "id": "src_screens_auth_personalinfoscreen_jsx",
+      "community": 9,
+      "norm_label": "personalinfoscreen.jsx"
+    },
+    {
+      "label": "PersonalInfoScreen()",
+      "file_type": "code",
+      "source_file": "src/screens/auth/PersonalInfoScreen.jsx",
+      "source_location": "L15",
+      "id": "personalinfoscreen_personalinfoscreen",
+      "community": 9,
+      "norm_label": "personalinfoscreen()"
+    },
+    {
+      "label": "ProfileScreen.jsx",
+      "file_type": "code",
+      "source_file": "src/screens/main/ProfileScreen.jsx",
+      "source_location": "L1",
+      "id": "src_screens_main_profilescreen_jsx",
+      "community": 4,
+      "norm_label": "profilescreen.jsx"
+    },
+    {
+      "label": "MenuRow()",
+      "file_type": "code",
+      "source_file": "src/screens/main/ProfileScreen.jsx",
+      "source_location": "L24",
+      "id": "profilescreen_menurow",
+      "community": 4,
+      "norm_label": "menurow()"
+    },
+    {
+      "label": "getInitials()",
+      "file_type": "code",
+      "source_file": "src/screens/main/ProfileScreen.jsx",
+      "source_location": "L62",
+      "id": "profilescreen_getinitials",
+      "community": 4,
+      "norm_label": "getinitials()"
+    },
+    {
+      "label": "ProfileScreen()",
+      "file_type": "code",
+      "source_file": "src/screens/main/ProfileScreen.jsx",
+      "source_location": "L69",
+      "id": "profilescreen_profilescreen",
+      "community": 4,
+      "norm_label": "profilescreen()"
+    },
+    {
+      "label": "SessionScreen",
+      "file_type": "code",
+      "source_file": "src/screens/main/SessionScreen.jsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "sessionscreen_sessionscreen",
+      "community": 13,
+      "norm_label": "sessionscreen"
+    },
+    {
+      "label": "SessionCompleteView",
+      "file_type": "code",
+      "source_file": "src/screens/main/SessionScreen.jsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "sessionscreen_sessioncompleteview",
+      "community": 13,
+      "norm_label": "sessioncompleteview"
+    },
+    {
+      "label": "CountdownRing",
+      "file_type": "code",
+      "source_file": "src/screens/main/SessionScreen.jsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "sessionscreen_countdownring",
+      "community": 13,
+      "norm_label": "countdownring"
+    },
+    {
+      "label": "BookTherapistScreen.jsx",
+      "file_type": "code",
+      "source_file": "src/screens/main/BookTherapistScreen.jsx",
+      "source_location": "L1",
+      "id": "src_screens_main_booktherapistscreen_jsx",
+      "community": 14,
+      "norm_label": "booktherapistscreen.jsx"
+    },
+    {
+      "label": "normalizeTherapist()",
+      "file_type": "code",
+      "source_file": "src/screens/main/BookTherapistScreen.jsx",
+      "source_location": "L21",
+      "id": "booktherapistscreen_normalizetherapist",
+      "community": 14,
+      "norm_label": "normalizetherapist()"
+    },
+    {
+      "label": "BookTherapistScreen()",
+      "file_type": "code",
+      "source_file": "src/screens/main/BookTherapistScreen.jsx",
+      "source_location": "L39",
+      "id": "booktherapistscreen_booktherapistscreen",
+      "community": 14,
+      "norm_label": "booktherapistscreen()"
+    },
+    {
+      "label": "ComposerBar",
+      "file_type": "code",
+      "source_file": "src/components/chat/ComposerBar.jsx",
+      "source_location": "line 29",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "composerbar_composerbar",
+      "community": 0,
+      "norm_label": "composerbar"
+    },
+    {
+      "label": "ReplyPreview",
+      "file_type": "code",
+      "source_file": "src/components/chat/ReplyPreview.jsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "replypreview_replypreview",
+      "community": 0,
+      "norm_label": "replypreview"
+    },
+    {
+      "label": "TypingIndicator",
+      "file_type": "code",
+      "source_file": "src/components/chat/TypingIndicator.jsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "typingindicator_typingindicator",
+      "community": 0,
+      "norm_label": "typingindicator"
+    },
+    {
+      "label": "SelectableCard",
+      "file_type": "code",
+      "source_file": "src/components/auth/SelectableCard.jsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "selectablecard_selectablecard",
+      "community": 23,
+      "norm_label": "selectablecard"
+    },
+    {
+      "label": "apiClient.js",
+      "file_type": "code",
+      "source_file": "src/lib/apiClient.js",
+      "source_location": "L1",
+      "id": "src_lib_apiclient_js",
+      "community": 10,
+      "norm_label": "apiclient.js"
+    },
+    {
+      "label": "buildUrl()",
+      "file_type": "code",
+      "source_file": "src/lib/apiClient.js",
+      "source_location": "L28",
+      "id": "apiclient_buildurl",
+      "community": 10,
+      "norm_label": "buildurl()"
+    },
+    {
+      "label": "withQuery()",
+      "file_type": "code",
+      "source_file": "src/lib/apiClient.js",
+      "source_location": "L39",
+      "id": "apiclient_withquery",
+      "community": 10,
+      "norm_label": "withquery()"
+    },
+    {
+      "label": "request()",
+      "file_type": "code",
+      "source_file": "src/lib/apiClient.js",
+      "source_location": "L58",
+      "id": "apiclient_request",
+      "community": 10,
+      "norm_label": "request()"
+    },
+    {
+      "label": "reactDomStub.js",
+      "file_type": "code",
+      "source_file": "src/lib/reactDomStub.js",
+      "source_location": "L1",
+      "id": "src_lib_reactdomstub_js",
+      "community": 24,
+      "norm_label": "reactdomstub.js"
+    },
+    {
+      "label": "chatSocket.js",
+      "file_type": "code",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L1",
+      "id": "src_lib_chatsocket_js",
+      "community": 0,
+      "norm_label": "chatsocket.js"
+    },
+    {
+      "label": "connect()",
+      "file_type": "code",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L32",
+      "id": "chatsocket_connect",
+      "community": 0,
+      "norm_label": "connect()"
+    },
+    {
+      "label": "disconnect()",
+      "file_type": "code",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L81",
+      "id": "chatsocket_disconnect",
+      "community": 0,
+      "norm_label": "disconnect()"
+    },
+    {
+      "label": "on()",
+      "file_type": "code",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L98",
+      "id": "chatsocket_on",
+      "community": 0,
+      "norm_label": "on()"
+    },
+    {
+      "label": "off()",
+      "file_type": "code",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L111",
+      "id": "chatsocket_off",
+      "community": 0,
+      "norm_label": "off()"
+    },
+    {
+      "label": "emit()",
+      "file_type": "code",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L122",
+      "id": "chatsocket_emit",
+      "community": 0,
+      "norm_label": "emit()"
+    },
+    {
+      "label": "isConnected()",
+      "file_type": "code",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L131",
+      "id": "chatsocket_isconnected",
+      "community": 0,
+      "norm_label": "isconnected()"
+    },
+    {
+      "label": "chatService.js",
       "file_type": "code",
       "source_file": "src/services/chatService.js",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "chatservice_chatservice",
-      "community": 2,
-      "norm_label": "chatservice"
+      "source_location": "L1",
+      "id": "src_services_chatservice_js",
+      "community": 0,
+      "norm_label": "chatservice.js"
     },
     {
-      "label": "OnboardingFlowPlan",
-      "file_type": "doc",
-      "source_file": "ONBOARDING_PLAN.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "onboarding_plan_concept_onboardingflow",
-      "community": 1,
-      "norm_label": "onboardingflowplan"
-    },
-    {
-      "label": "MWPOnboardingTaskSpec",
-      "file_type": "doc",
-      "source_file": "MWP_PATIENT_ONBOARDING.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "mwp_patient_onboarding_concept_taskspec",
-      "community": 1,
-      "norm_label": "mwponboardingtaskspec"
-    },
-    {
-      "label": "CLAUDEMdProjectReference",
-      "file_type": "doc",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "claude_md_concept_projectreference",
-      "community": 3,
-      "norm_label": "claudemdprojectreference"
-    },
-    {
-      "label": "MockFirstServicePattern",
-      "file_type": "concept",
+      "label": "pickTherapist()",
+      "file_type": "code",
       "source_file": "src/services/chatService.js",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "concept_mock_first_service_pattern",
-      "community": 2,
-      "norm_label": "mockfirstservicepattern"
+      "source_location": "L34",
+      "id": "chatservice_picktherapist",
+      "community": 0,
+      "norm_label": "picktherapist()"
     },
     {
-      "label": "OnboardingContextPattern",
-      "file_type": "concept",
-      "source_file": "ONBOARDING_PLAN.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "concept_onboarding_context",
-      "community": 1,
-      "norm_label": "onboardingcontextpattern"
+      "label": "normalizeRoom()",
+      "file_type": "code",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L51",
+      "id": "chatservice_normalizeroom",
+      "community": 0,
+      "norm_label": "normalizeroom()"
     },
     {
-      "label": "TabBarAbsolutePositionPattern",
-      "file_type": "concept",
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "concept_tab_bar_absolute_position",
-      "community": 3,
-      "norm_label": "tabbarabsolutepositionpattern"
+      "label": "normalizeMessage()",
+      "file_type": "code",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L74",
+      "id": "chatservice_normalizemessage",
+      "community": 0,
+      "norm_label": "normalizemessage()"
+    },
+    {
+      "label": "getConversations()",
+      "file_type": "code",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L110",
+      "id": "chatservice_getconversations",
+      "community": 0,
+      "norm_label": "getconversations()"
+    },
+    {
+      "label": "getMessages()",
+      "file_type": "code",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L130",
+      "id": "chatservice_getmessages",
+      "community": 0,
+      "norm_label": "getmessages()"
+    },
+    {
+      "label": "sendMessage()",
+      "file_type": "code",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L167",
+      "id": "chatservice_sendmessage",
+      "community": 0,
+      "norm_label": "sendmessage()"
+    },
+    {
+      "label": "markAsRead()",
+      "file_type": "code",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L183",
+      "id": "chatservice_markasread",
+      "community": 0,
+      "norm_label": "markasread()"
+    },
+    {
+      "label": "createRoom()",
+      "file_type": "code",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L196",
+      "id": "chatservice_createroom",
+      "community": 0,
+      "norm_label": "createroom()"
+    },
+    {
+      "label": "listAvailableTherapists()",
+      "file_type": "code",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L210",
+      "id": "chatservice_listavailabletherapists",
+      "community": 0,
+      "norm_label": "listavailabletherapists()"
+    },
+    {
+      "label": "subscribeToRoom()",
+      "file_type": "code",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L243",
+      "id": "chatservice_subscribetoroom",
+      "community": 0,
+      "norm_label": "subscribetoroom()"
+    },
+    {
+      "label": "setTyping()",
+      "file_type": "code",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L290",
+      "id": "chatservice_settyping",
+      "community": 0,
+      "norm_label": "settyping()"
+    },
+    {
+      "label": "getTypingStatus()",
+      "file_type": "code",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L300",
+      "id": "chatservice_gettypingstatus",
+      "community": 0,
+      "norm_label": "gettypingstatus()"
     }
   ],
   "links": [
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "App.jsx",
-      "source_location": "L22",
-      "weight": 1.0,
-      "_src": "app_jsx",
-      "_tgt": "app_app",
-      "source": "app_jsx",
-      "target": "app_app",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "App.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "app_app",
-      "_tgt": "appnavigator_appnavigator",
-      "source": "app_app",
-      "target": "appnavigator_appnavigator"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/context/PatientContext.jsx",
-      "source_location": "L19",
-      "weight": 1.0,
-      "_src": "src_context_patientcontext_jsx",
-      "_tgt": "patientcontext_patientprovider",
-      "source": "src_context_patientcontext_jsx",
-      "target": "patientcontext_patientprovider",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/context/PatientContext.jsx",
-      "source_location": "L52",
-      "weight": 1.0,
-      "_src": "src_context_patientcontext_jsx",
-      "_tgt": "patientcontext_usepatient",
-      "source": "src_context_patientcontext_jsx",
-      "target": "patientcontext_usepatient",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/navigation/AppNavigator.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "appnavigator_appnavigator",
-      "_tgt": "patientcontext_patientprovider",
-      "source": "patientcontext_patientprovider",
-      "target": "appnavigator_appnavigator"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "INFERRED",
-      "confidence_score": 0.9,
-      "source_file": "src/context/PatientContext.jsx",
-      "source_location": null,
-      "weight": 0.9,
-      "_src": "patientcontext_patientprovider",
-      "_tgt": "rootnavigator_rootnavigator",
-      "source": "patientcontext_patientprovider",
-      "target": "rootnavigator_rootnavigator"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/context/PatientContext.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "patientcontext_patientprovider",
-      "_tgt": "patientcontext_usepatient",
-      "source": "patientcontext_patientprovider",
-      "target": "patientcontext_usepatient"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/navigation/RootNavigator.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "rootnavigator_rootnavigator",
-      "_tgt": "patientcontext_usepatient",
-      "source": "patientcontext_usepatient",
-      "target": "rootnavigator_rootnavigator"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/OnboardingCompleteScreen.jsx",
-      "source_location": "line 67",
-      "weight": 1.0,
-      "_src": "onboardingcompletescreen_onboardingcompletescreen",
-      "_tgt": "patientcontext_usepatient",
-      "source": "patientcontext_usepatient",
-      "target": "onboardingcompletescreen_onboardingcompletescreen"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/ProfileScreen.jsx",
-      "source_location": "line 56",
-      "weight": 1.0,
-      "_src": "profilescreen_profilescreen",
-      "_tgt": "patientcontext_usepatient",
-      "source": "patientcontext_usepatient",
-      "target": "profilescreen_profilescreen"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/HomeScreen.jsx",
-      "source_location": "line 103-107",
-      "weight": 1.0,
-      "_src": "homescreen_homescreen",
-      "_tgt": "patientcontext_usepatient",
-      "source": "patientcontext_usepatient",
-      "target": "homescreen_homescreen"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/context/OnboardingContext.jsx",
-      "source_location": "L22",
-      "weight": 1.0,
-      "_src": "src_context_onboardingcontext_jsx",
-      "_tgt": "onboardingcontext_onboardingprovider",
-      "source": "src_context_onboardingcontext_jsx",
-      "target": "onboardingcontext_onboardingprovider",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/context/OnboardingContext.jsx",
-      "source_location": "L49",
-      "weight": 1.0,
-      "_src": "src_context_onboardingcontext_jsx",
-      "_tgt": "onboardingcontext_useonboarding",
-      "source": "src_context_onboardingcontext_jsx",
-      "target": "onboardingcontext_useonboarding",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/navigation/AuthNavigator.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "authnavigator_authnavigator",
-      "_tgt": "onboardingcontext_onboardingprovider",
-      "source": "onboardingcontext_onboardingprovider",
-      "target": "authnavigator_authnavigator"
-    },
-    {
-      "relation": "implements",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/context/OnboardingContext.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "onboardingcontext_onboardingprovider",
-      "_tgt": "onboardingcontext_useonboarding",
-      "source": "onboardingcontext_onboardingprovider",
-      "target": "onboardingcontext_useonboarding"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "INFERRED",
-      "confidence_score": 0.9,
-      "source_file": "src/context/OnboardingContext.jsx",
-      "source_location": null,
-      "weight": 0.9,
-      "_src": "onboardingcontext_onboardingprovider",
-      "_tgt": "treatmenthistoryscreen_treatmenthistoryscreen",
-      "source": "onboardingcontext_onboardingprovider",
-      "target": "treatmenthistoryscreen_treatmenthistoryscreen"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/TreatmentHistoryScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "treatmenthistoryscreen_treatmenthistoryscreen",
-      "_tgt": "onboardingcontext_useonboarding",
-      "source": "onboardingcontext_useonboarding",
-      "target": "treatmenthistoryscreen_treatmenthistoryscreen"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/PainLocationScreen.jsx",
-      "source_location": "line 41",
-      "weight": 1.0,
-      "_src": "painlocationscreen_painlocationscreen",
-      "_tgt": "onboardingcontext_useonboarding",
-      "source": "onboardingcontext_useonboarding",
-      "target": "painlocationscreen_painlocationscreen"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/RecoveryGoalsScreen.jsx",
-      "source_location": "line 50",
-      "weight": 1.0,
-      "_src": "recoverygoalsscreen_recoverygoalsscreen",
-      "_tgt": "onboardingcontext_useonboarding",
-      "source": "onboardingcontext_useonboarding",
-      "target": "recoverygoalsscreen_recoverygoalsscreen"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/PainDurationScreen.jsx",
-      "source_location": "line 35",
-      "weight": 1.0,
-      "_src": "paindurationscreen_paindurationscreen",
-      "_tgt": "onboardingcontext_useonboarding",
-      "source": "onboardingcontext_useonboarding",
-      "target": "paindurationscreen_paindurationscreen"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/AvailabilityScreen.jsx",
-      "source_location": "line 63",
-      "weight": 1.0,
-      "_src": "availabilityscreen_availabilityscreen",
-      "_tgt": "onboardingcontext_useonboarding",
-      "source": "onboardingcontext_useonboarding",
-      "target": "availabilityscreen_availabilityscreen"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/PainSeverityScreen.jsx",
-      "source_location": "line 29",
-      "weight": 1.0,
-      "_src": "painseverityscreen_painseverityscreen",
-      "_tgt": "onboardingcontext_useonboarding",
-      "source": "onboardingcontext_useonboarding",
-      "target": "painseverityscreen_painseverityscreen"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/PersonalInfoScreen.jsx",
-      "source_location": "line 28",
-      "weight": 1.0,
-      "_src": "personalinfoscreen_personalinfoscreen",
-      "_tgt": "onboardingcontext_useonboarding",
-      "source": "onboardingcontext_useonboarding",
-      "target": "personalinfoscreen_personalinfoscreen"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/navigation/AuthNavigator.jsx",
-      "source_location": "L41",
-      "weight": 1.0,
-      "_src": "src_navigation_authnavigator_jsx",
-      "_tgt": "authnavigator_clerkauthscreen",
-      "source": "src_navigation_authnavigator_jsx",
-      "target": "authnavigator_clerkauthscreen",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/navigation/AuthNavigator.jsx",
-      "source_location": "L57",
-      "weight": 1.0,
-      "_src": "src_navigation_authnavigator_jsx",
-      "_tgt": "authnavigator_authnavigator",
-      "source": "src_navigation_authnavigator_jsx",
-      "target": "authnavigator_authnavigator",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/navigation/RootNavigator.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "rootnavigator_rootnavigator",
-      "_tgt": "authnavigator_authnavigator",
-      "source": "authnavigator_authnavigator",
-      "target": "rootnavigator_rootnavigator"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/screens/splash/SplashScreen.jsx",
-      "source_location": null,
-      "weight": 0.8,
-      "_src": "splashscreen_splashscreen",
-      "_tgt": "authnavigator_authnavigator",
-      "source": "authnavigator_authnavigator",
-      "target": "splashscreen_splashscreen"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/navigation/AuthNavigator.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "authnavigator_authnavigator",
-      "_tgt": "routes_patient_routes",
-      "source": "authnavigator_authnavigator",
-      "target": "routes_patient_routes"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/navigation/AuthNavigator.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "authnavigator_authnavigator",
-      "_tgt": "colors_colors",
-      "source": "authnavigator_authnavigator",
-      "target": "colors_colors"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/navigation/AuthNavigator.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "authnavigator_authnavigator",
-      "_tgt": "fonts_fonts",
-      "source": "authnavigator_authnavigator",
-      "target": "fonts_fonts"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/navigation/AuthNavigator.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "authnavigator_authnavigator",
-      "_tgt": "treatmenthistoryscreen_treatmenthistoryscreen",
-      "source": "authnavigator_authnavigator",
-      "target": "treatmenthistoryscreen_treatmenthistoryscreen"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/navigation/AuthNavigator.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "authnavigator_authnavigator",
-      "_tgt": "clerkauthscreen_clerkauthscreen",
-      "source": "authnavigator_authnavigator",
-      "target": "clerkauthscreen_clerkauthscreen"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/navigation/RootNavigator.jsx",
-      "source_location": "L10",
-      "weight": 1.0,
-      "_src": "src_navigation_rootnavigator_jsx",
-      "_tgt": "rootnavigator_rootnavigator",
-      "source": "src_navigation_rootnavigator_jsx",
-      "target": "rootnavigator_rootnavigator",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/navigation/AppNavigator.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "appnavigator_appnavigator",
-      "_tgt": "rootnavigator_rootnavigator",
-      "source": "rootnavigator_rootnavigator",
-      "target": "appnavigator_appnavigator"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/navigation/RootNavigator.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "rootnavigator_rootnavigator",
-      "_tgt": "mainnavigator_mainnavigator",
-      "source": "rootnavigator_rootnavigator",
-      "target": "mainnavigator_mainnavigator"
-    },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
@@ -1805,9 +1361,9 @@
       "weight": 1.0,
       "_src": "src_navigation_mainnavigator_jsx",
       "_tgt": "mainnavigator_istabbarhidden",
+      "confidence_score": 1.0,
       "source": "src_navigation_mainnavigator_jsx",
-      "target": "mainnavigator_istabbarhidden",
-      "confidence_score": 1.0
+      "target": "mainnavigator_istabbarhidden"
     },
     {
       "relation": "contains",
@@ -1817,9 +1373,9 @@
       "weight": 1.0,
       "_src": "src_navigation_mainnavigator_jsx",
       "_tgt": "mainnavigator_mainnavigator",
+      "confidence_score": 1.0,
       "source": "src_navigation_mainnavigator_jsx",
-      "target": "mainnavigator_mainnavigator",
-      "confidence_score": 1.0
+      "target": "mainnavigator_mainnavigator"
     },
     {
       "relation": "calls",
@@ -1827,11 +1383,11 @@
       "source_file": "src/navigation/MainNavigator.jsx",
       "source_location": "L69",
       "weight": 1.0,
-      "_src": "mainnavigator_mainnavigator",
-      "_tgt": "mainnavigator_istabbarhidden",
+      "_src": "mainnavigator_istabbarhidden",
+      "_tgt": "mainnavigator_mainnavigator",
+      "confidence_score": 1.0,
       "source": "mainnavigator_istabbarhidden",
-      "target": "mainnavigator_mainnavigator",
-      "confidence_score": 1.0
+      "target": "mainnavigator_mainnavigator"
     },
     {
       "relation": "calls",
@@ -1908,50 +1464,14 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/navigation/AppNavigator.jsx",
-      "source_location": "L18",
-      "weight": 1.0,
-      "_src": "src_navigation_appnavigator_jsx",
-      "_tgt": "appnavigator_appnavigator",
-      "source": "src_navigation_appnavigator_jsx",
-      "target": "appnavigator_appnavigator",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "src/navigation/stacks/MessagesStack.jsx",
       "source_location": "L31",
       "weight": 1.0,
       "_src": "src_navigation_stacks_messagesstack_jsx",
       "_tgt": "messagesstack_messagesstack",
-      "source": "src_navigation_stacks_messagesstack_jsx",
-      "target": "messagesstack_messagesstack",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "src/navigation/stacks/MessagesStack.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "messagesstack_messagesstack",
-      "_tgt": "messagesscreen_messagesscreen",
-      "source": "messagesstack_messagesstack",
-      "target": "messagesscreen_messagesscreen"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": null,
-      "weight": 0.8,
-      "_src": "chatroomscreen_chatroomscreen",
-      "_tgt": "messagesstack_messagesstack",
-      "source": "messagesstack_messagesstack",
-      "target": "chatroomscreen_chatroomscreen"
+      "source": "src_navigation_stacks_messagesstack_jsx",
+      "target": "messagesstack_messagesstack"
     },
     {
       "relation": "references",
@@ -1973,9 +1493,9 @@
       "weight": 1.0,
       "_src": "src_navigation_stacks_homestack_jsx",
       "_tgt": "homestack_homestack",
+      "confidence_score": 1.0,
       "source": "src_navigation_stacks_homestack_jsx",
-      "target": "homestack_homestack",
-      "confidence_score": 1.0
+      "target": "homestack_homestack"
     },
     {
       "relation": "references",
@@ -1997,9 +1517,9 @@
       "weight": 1.0,
       "_src": "src_navigation_stacks_bookstack_jsx",
       "_tgt": "bookstack_bookstack",
+      "confidence_score": 1.0,
       "source": "src_navigation_stacks_bookstack_jsx",
-      "target": "bookstack_bookstack",
-      "confidence_score": 1.0
+      "target": "bookstack_bookstack"
     },
     {
       "relation": "references",
@@ -2021,9 +1541,9 @@
       "weight": 1.0,
       "_src": "src_screens_splash_splashscreen_jsx",
       "_tgt": "splashscreen_splashscreen",
+      "confidence_score": 1.0,
       "source": "src_screens_splash_splashscreen_jsx",
-      "target": "splashscreen_splashscreen",
-      "confidence_score": 1.0
+      "target": "splashscreen_splashscreen"
     },
     {
       "relation": "references",
@@ -2059,270 +1579,6 @@
       "_src": "splashscreen_splashscreen",
       "_tgt": "routes_patient_routes",
       "source": "splashscreen_splashscreen",
-      "target": "routes_patient_routes"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": "L29",
-      "weight": 1.0,
-      "_src": "src_screens_messages_chatroomscreen_jsx",
-      "_tgt": "chatroomscreen_getinitials",
-      "source": "src_screens_messages_chatroomscreen_jsx",
-      "target": "chatroomscreen_getinitials",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": "L52",
-      "weight": 1.0,
-      "_src": "src_screens_messages_chatroomscreen_jsx",
-      "_tgt": "chatroomscreen_chatroomscreen",
-      "source": "src_screens_messages_chatroomscreen_jsx",
-      "target": "chatroomscreen_chatroomscreen",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": "L215",
-      "weight": 1.0,
-      "_src": "chatroomscreen_chatroomscreen",
-      "_tgt": "chatroomscreen_getinitials",
-      "source": "chatroomscreen_getinitials",
-      "target": "chatroomscreen_chatroomscreen",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": "L104",
-      "weight": 1.0,
-      "_src": "chatroomscreen_chatroomscreen",
-      "_tgt": "chatservice_getmessages",
-      "source": "chatroomscreen_chatroomscreen",
-      "target": "chatservice_getmessages"
-    },
-    {
-      "relation": "calls",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": "L107",
-      "weight": 1.0,
-      "_src": "chatroomscreen_chatroomscreen",
-      "_tgt": "chatservice_markasread",
-      "source": "chatroomscreen_chatroomscreen",
-      "target": "chatservice_markasread"
-    },
-    {
-      "relation": "calls",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": "L136",
-      "weight": 1.0,
-      "_src": "chatroomscreen_chatroomscreen",
-      "_tgt": "chatservice_gettypingstatus",
-      "source": "chatroomscreen_chatroomscreen",
-      "target": "chatservice_gettypingstatus"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "chatroomscreen_chatroomscreen",
-      "_tgt": "chatservice_chatservice",
-      "source": "chatroomscreen_chatroomscreen",
-      "target": "chatservice_chatservice"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "chatroomscreen_chatroomscreen",
-      "_tgt": "messagebubble_messagebubble",
-      "source": "chatroomscreen_chatroomscreen",
-      "target": "messagebubble_messagebubble"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "chatroomscreen_chatroomscreen",
-      "_tgt": "typingindicator_typingindicator",
-      "source": "chatroomscreen_chatroomscreen",
-      "target": "typingindicator_typingindicator"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "chatroomscreen_chatroomscreen",
-      "_tgt": "replypreview_replypreview",
-      "source": "chatroomscreen_chatroomscreen",
-      "target": "replypreview_replypreview"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "chatroomscreen_chatroomscreen",
-      "_tgt": "attachmentsheet_attachmentsheet",
-      "source": "chatroomscreen_chatroomscreen",
-      "target": "attachmentsheet_attachmentsheet"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "chatroomscreen_chatroomscreen",
-      "_tgt": "colors_colors",
-      "source": "chatroomscreen_chatroomscreen",
-      "target": "colors_colors"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "chatroomscreen_chatroomscreen",
-      "_tgt": "fonts_fonts",
-      "source": "chatroomscreen_chatroomscreen",
-      "target": "fonts_fonts"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/messages/MessagesScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "messagesscreen_messagesscreen",
-      "_tgt": "chatroomscreen_chatroomscreen",
-      "source": "chatroomscreen_chatroomscreen",
-      "target": "messagesscreen_messagesscreen"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/screens/messages/MessagesScreen.jsx",
-      "source_location": "L23",
-      "weight": 1.0,
-      "_src": "src_screens_messages_messagesscreen_jsx",
-      "_tgt": "messagesscreen_messagesscreen",
-      "source": "src_screens_messages_messagesscreen_jsx",
-      "target": "messagesscreen_messagesscreen",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/screens/messages/MessagesScreen.jsx",
-      "source_location": "L29",
-      "weight": 1.0,
-      "_src": "messagesscreen_messagesscreen",
-      "_tgt": "chatservice_getconversations",
-      "source": "messagesscreen_messagesscreen",
-      "target": "chatservice_getconversations"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/messages/MessagesScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "messagesscreen_messagesscreen",
-      "_tgt": "chatservice_chatservice",
-      "source": "messagesscreen_messagesscreen",
-      "target": "chatservice_chatservice"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/messages/MessagesScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "messagesscreen_messagesscreen",
-      "_tgt": "tabscreenwrapper_tabscreenwrapper",
-      "source": "messagesscreen_messagesscreen",
-      "target": "tabscreenwrapper_tabscreenwrapper"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/messages/MessagesScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "messagesscreen_messagesscreen",
-      "_tgt": "conversationrow_conversationrow",
-      "source": "messagesscreen_messagesscreen",
-      "target": "conversationrow_conversationrow"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/messages/MessagesScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "messagesscreen_messagesscreen",
-      "_tgt": "colors_colors",
-      "source": "messagesscreen_messagesscreen",
-      "target": "colors_colors"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/messages/MessagesScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "messagesscreen_messagesscreen",
-      "_tgt": "fonts_fonts",
-      "source": "messagesscreen_messagesscreen",
-      "target": "fonts_fonts"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/messages/MessagesScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "messagesscreen_messagesscreen",
-      "_tgt": "routes_patient_routes",
-      "source": "messagesscreen_messagesscreen",
       "target": "routes_patient_routes"
     },
     {
@@ -2333,9 +1589,9 @@
       "weight": 1.0,
       "_src": "src_screens_auth_treatmenthistoryscreen_jsx",
       "_tgt": "treatmenthistoryscreen_treatmenthistoryscreen",
+      "confidence_score": 1.0,
       "source": "src_screens_auth_treatmenthistoryscreen_jsx",
-      "target": "treatmenthistoryscreen_treatmenthistoryscreen",
-      "confidence_score": 1.0
+      "target": "treatmenthistoryscreen_treatmenthistoryscreen"
     },
     {
       "relation": "calls",
@@ -2388,50 +1644,14 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/screens/auth/ClerkAuthScreen.jsx",
-      "source_location": "L9",
-      "weight": 1.0,
-      "_src": "src_screens_auth_clerkauthscreen_jsx",
-      "_tgt": "clerkauthscreen_clerkauthscreen",
-      "source": "src_screens_auth_clerkauthscreen_jsx",
-      "target": "clerkauthscreen_clerkauthscreen",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/ClerkAuthScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "clerkauthscreen_clerkauthscreen",
-      "_tgt": "colors_colors",
-      "source": "clerkauthscreen_clerkauthscreen",
-      "target": "colors_colors"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/ClerkAuthScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "clerkauthscreen_clerkauthscreen",
-      "_tgt": "fonts_fonts",
-      "source": "clerkauthscreen_clerkauthscreen",
-      "target": "fonts_fonts"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "src/screens/auth/PainLocationScreen.jsx",
       "source_location": "L24",
       "weight": 1.0,
       "_src": "src_screens_auth_painlocationscreen_jsx",
       "_tgt": "painlocationscreen_painlocationscreen",
+      "confidence_score": 1.0,
       "source": "src_screens_auth_painlocationscreen_jsx",
-      "target": "painlocationscreen_painlocationscreen",
-      "confidence_score": 1.0
+      "target": "painlocationscreen_painlocationscreen"
     },
     {
       "relation": "references",
@@ -2444,18 +1664,6 @@
       "_tgt": "onboardingshell_onboardingshell",
       "source": "painlocationscreen_painlocationscreen",
       "target": "onboardingshell_onboardingshell"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/PainLocationScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "painlocationscreen_painlocationscreen",
-      "_tgt": "selectablecard_selectablecard",
-      "source": "painlocationscreen_painlocationscreen",
-      "target": "selectablecard_selectablecard"
     },
     {
       "relation": "references",
@@ -2482,78 +1690,6 @@
       "target": "painseverityscreen_painseverityscreen"
     },
     {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.9,
-      "source_file": "src/screens/auth/PersonalInfoScreen.jsx",
-      "source_location": null,
-      "weight": 0.9,
-      "_src": "personalinfoscreen_personalinfoscreen",
-      "_tgt": "painlocationscreen_painlocationscreen",
-      "source": "painlocationscreen_painlocationscreen",
-      "target": "personalinfoscreen_personalinfoscreen"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/screens/auth/LoginScreen.jsx",
-      "source_location": "L40",
-      "weight": 1.0,
-      "_src": "src_screens_auth_loginscreen_jsx",
-      "_tgt": "loginscreen_loginscreen",
-      "source": "src_screens_auth_loginscreen_jsx",
-      "target": "loginscreen_loginscreen",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/LoginScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "loginscreen_loginscreen",
-      "_tgt": "colors_colors",
-      "source": "loginscreen_loginscreen",
-      "target": "colors_colors"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/LoginScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "loginscreen_loginscreen",
-      "_tgt": "fonts_fonts",
-      "source": "loginscreen_loginscreen",
-      "target": "fonts_fonts"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/LoginScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "loginscreen_loginscreen",
-      "_tgt": "routes_patient_routes",
-      "source": "loginscreen_loginscreen",
-      "target": "routes_patient_routes"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/LoginScreen.jsx",
-      "source_location": "line 42",
-      "weight": 1.0,
-      "_src": "loginscreen_loginscreen",
-      "_tgt": "personalinfoscreen_personalinfoscreen",
-      "source": "loginscreen_loginscreen",
-      "target": "personalinfoscreen_personalinfoscreen"
-    },
-    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/screens/auth/RecoveryGoalsScreen.jsx",
@@ -2561,9 +1697,9 @@
       "weight": 1.0,
       "_src": "src_screens_auth_recoverygoalsscreen_jsx",
       "_tgt": "recoverygoalsscreen_recoverygoalsscreen",
+      "confidence_score": 1.0,
       "source": "src_screens_auth_recoverygoalsscreen_jsx",
-      "target": "recoverygoalsscreen_recoverygoalsscreen",
-      "confidence_score": 1.0
+      "target": "recoverygoalsscreen_recoverygoalsscreen"
     },
     {
       "relation": "references",
@@ -2633,9 +1769,9 @@
       "weight": 1.0,
       "_src": "src_screens_auth_paindurationscreen_jsx",
       "_tgt": "paindurationscreen_paindurationscreen",
+      "confidence_score": 1.0,
       "source": "src_screens_auth_paindurationscreen_jsx",
-      "target": "paindurationscreen_paindurationscreen",
-      "confidence_score": 1.0
+      "target": "paindurationscreen_paindurationscreen"
     },
     {
       "relation": "references",
@@ -2692,8 +1828,8 @@
       "source_file": "src/screens/auth/PainSeverityScreen.jsx",
       "source_location": null,
       "weight": 0.9,
-      "_src": "painseverityscreen_painseverityscreen",
-      "_tgt": "paindurationscreen_paindurationscreen",
+      "_src": "paindurationscreen_paindurationscreen",
+      "_tgt": "painseverityscreen_painseverityscreen",
       "source": "paindurationscreen_paindurationscreen",
       "target": "painseverityscreen_painseverityscreen"
     },
@@ -2705,9 +1841,9 @@
       "weight": 1.0,
       "_src": "src_screens_auth_availabilityscreen_jsx",
       "_tgt": "availabilityscreen_availabilityscreen",
+      "confidence_score": 1.0,
       "source": "src_screens_auth_availabilityscreen_jsx",
-      "target": "availabilityscreen_availabilityscreen",
-      "confidence_score": 1.0
+      "target": "availabilityscreen_availabilityscreen"
     },
     {
       "relation": "references",
@@ -2770,18 +1906,6 @@
       "target": "fonts_fonts"
     },
     {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/AvailabilityScreen.jsx",
-      "source_location": "line 76",
-      "weight": 1.0,
-      "_src": "availabilityscreen_availabilityscreen",
-      "_tgt": "onboardingcompletescreen_onboardingcompletescreen",
-      "source": "availabilityscreen_availabilityscreen",
-      "target": "onboardingcompletescreen_onboardingcompletescreen"
-    },
-    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/screens/auth/PainSeverityScreen.jsx",
@@ -2789,9 +1913,9 @@
       "weight": 1.0,
       "_src": "src_screens_auth_painseverityscreen_jsx",
       "_tgt": "painseverityscreen_painseverityscreen",
+      "confidence_score": 1.0,
       "source": "src_screens_auth_painseverityscreen_jsx",
-      "target": "painseverityscreen_painseverityscreen",
-      "confidence_score": 1.0
+      "target": "painseverityscreen_painseverityscreen"
     },
     {
       "relation": "references",
@@ -2840,186 +1964,6 @@
       "_tgt": "fonts_fonts",
       "source": "painseverityscreen_painseverityscreen",
       "target": "fonts_fonts"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/screens/auth/OnboardingCompleteScreen.jsx",
-      "source_location": "L19",
-      "weight": 1.0,
-      "_src": "src_screens_auth_onboardingcompletescreen_jsx",
-      "_tgt": "onboardingcompletescreen_onboardingcompletescreen",
-      "source": "src_screens_auth_onboardingcompletescreen_jsx",
-      "target": "onboardingcompletescreen_onboardingcompletescreen",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/OnboardingCompleteScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "onboardingcompletescreen_onboardingcompletescreen",
-      "_tgt": "colors_colors",
-      "source": "onboardingcompletescreen_onboardingcompletescreen",
-      "target": "colors_colors"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/OnboardingCompleteScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "onboardingcompletescreen_onboardingcompletescreen",
-      "_tgt": "fonts_fonts",
-      "source": "onboardingcompletescreen_onboardingcompletescreen",
-      "target": "fonts_fonts"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/screens/auth/OnboardingCompleteScreen.jsx",
-      "source_location": null,
-      "weight": 0.8,
-      "_src": "onboardingcompletescreen_onboardingcompletescreen",
-      "_tgt": "homescreen_homescreen",
-      "source": "onboardingcompletescreen_onboardingcompletescreen",
-      "target": "homescreen_homescreen"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/screens/auth/PersonalInfoScreen.jsx",
-      "source_location": "L14",
-      "weight": 1.0,
-      "_src": "src_screens_auth_personalinfoscreen_jsx",
-      "_tgt": "personalinfoscreen_personalinfoscreen",
-      "source": "src_screens_auth_personalinfoscreen_jsx",
-      "target": "personalinfoscreen_personalinfoscreen",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/PersonalInfoScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "personalinfoscreen_personalinfoscreen",
-      "_tgt": "onboardingshell_onboardingshell",
-      "source": "personalinfoscreen_personalinfoscreen",
-      "target": "onboardingshell_onboardingshell"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/PersonalInfoScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "personalinfoscreen_personalinfoscreen",
-      "_tgt": "routes_patient_routes",
-      "source": "personalinfoscreen_personalinfoscreen",
-      "target": "routes_patient_routes"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/PersonalInfoScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "personalinfoscreen_personalinfoscreen",
-      "_tgt": "colors_colors",
-      "source": "personalinfoscreen_personalinfoscreen",
-      "target": "colors_colors"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/auth/PersonalInfoScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "personalinfoscreen_personalinfoscreen",
-      "_tgt": "fonts_fonts",
-      "source": "personalinfoscreen_personalinfoscreen",
-      "target": "fonts_fonts"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/screens/main/ProfileScreen.jsx",
-      "source_location": "L23",
-      "weight": 1.0,
-      "_src": "src_screens_main_profilescreen_jsx",
-      "_tgt": "profilescreen_menurow",
-      "source": "src_screens_main_profilescreen_jsx",
-      "target": "profilescreen_menurow",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/screens/main/ProfileScreen.jsx",
-      "source_location": "L55",
-      "weight": 1.0,
-      "_src": "src_screens_main_profilescreen_jsx",
-      "_tgt": "profilescreen_profilescreen",
-      "source": "src_screens_main_profilescreen_jsx",
-      "target": "profilescreen_profilescreen",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/ProfileScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "profilescreen_profilescreen",
-      "_tgt": "tabscreenwrapper_tabscreenwrapper",
-      "source": "profilescreen_profilescreen",
-      "target": "tabscreenwrapper_tabscreenwrapper"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/ProfileScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "profilescreen_profilescreen",
-      "_tgt": "colors_colors",
-      "source": "profilescreen_profilescreen",
-      "target": "colors_colors"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/ProfileScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "profilescreen_profilescreen",
-      "_tgt": "fonts_fonts",
-      "source": "profilescreen_profilescreen",
-      "target": "fonts_fonts"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/HomeScreen.jsx",
-      "source_location": "line 128",
-      "weight": 1.0,
-      "_src": "homescreen_homescreen",
-      "_tgt": "profilescreen_profilescreen",
-      "source": "profilescreen_profilescreen",
-      "target": "homescreen_homescreen"
     },
     {
       "relation": "contains",
@@ -3029,9 +1973,9 @@
       "weight": 1.0,
       "_src": "src_screens_main_bookingconfirmedscreen_jsx",
       "_tgt": "bookingconfirmedscreen_detailrow",
+      "confidence_score": 1.0,
       "source": "src_screens_main_bookingconfirmedscreen_jsx",
-      "target": "bookingconfirmedscreen_detailrow",
-      "confidence_score": 1.0
+      "target": "bookingconfirmedscreen_detailrow"
     },
     {
       "relation": "contains",
@@ -3041,9 +1985,9 @@
       "weight": 1.0,
       "_src": "src_screens_main_bookingconfirmedscreen_jsx",
       "_tgt": "bookingconfirmedscreen_bookingconfirmedscreen",
+      "confidence_score": 1.0,
       "source": "src_screens_main_bookingconfirmedscreen_jsx",
-      "target": "bookingconfirmedscreen_bookingconfirmedscreen",
-      "confidence_score": 1.0
+      "target": "bookingconfirmedscreen_bookingconfirmedscreen"
     },
     {
       "relation": "references",
@@ -3094,26 +2038,14 @@
       "target": "homescreen_homescreen"
     },
     {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "src/screens/main/BookTherapistScreen.jsx",
-      "source_location": null,
-      "weight": 0.85,
-      "_src": "booktherapistscreen_booktherapistscreen",
-      "_tgt": "bookingconfirmedscreen_bookingconfirmedscreen",
-      "source": "bookingconfirmedscreen_bookingconfirmedscreen",
-      "target": "booktherapistscreen_booktherapistscreen"
-    },
-    {
       "relation": "calls",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/main/SlotSelectionScreen.jsx",
       "source_location": "line 28",
       "weight": 1.0,
-      "_src": "slotselectionscreen_slotselectionscreen",
-      "_tgt": "bookingconfirmedscreen_bookingconfirmedscreen",
+      "_src": "bookingconfirmedscreen_bookingconfirmedscreen",
+      "_tgt": "slotselectionscreen_slotselectionscreen",
       "source": "bookingconfirmedscreen_bookingconfirmedscreen",
       "target": "slotselectionscreen_slotselectionscreen"
     },
@@ -3125,9 +2057,9 @@
       "weight": 1.0,
       "_src": "src_screens_main_progressscreen_jsx",
       "_tgt": "progressscreen_progressscreen",
+      "confidence_score": 1.0,
       "source": "src_screens_main_progressscreen_jsx",
-      "target": "progressscreen_progressscreen",
-      "confidence_score": 1.0
+      "target": "progressscreen_progressscreen"
     },
     {
       "relation": "contains",
@@ -3137,9 +2069,9 @@
       "weight": 1.0,
       "_src": "src_screens_main_progressscreen_jsx",
       "_tgt": "progressscreen_dotlegenditem",
+      "confidence_score": 1.0,
       "source": "src_screens_main_progressscreen_jsx",
-      "target": "progressscreen_dotlegenditem",
-      "confidence_score": 1.0
+      "target": "progressscreen_dotlegenditem"
     },
     {
       "relation": "references",
@@ -3196,8 +2128,8 @@
       "source_file": "src/screens/main/HomeScreen.jsx",
       "source_location": null,
       "weight": 0.85,
-      "_src": "homescreen_homescreen",
-      "_tgt": "progressscreen_progressscreen",
+      "_src": "progressscreen_progressscreen",
+      "_tgt": "homescreen_homescreen",
       "source": "progressscreen_progressscreen",
       "target": "homescreen_homescreen"
     },
@@ -3209,9 +2141,9 @@
       "weight": 1.0,
       "_src": "src_screens_main_homescreen_jsx",
       "_tgt": "homescreen_circularring",
+      "confidence_score": 1.0,
       "source": "src_screens_main_homescreen_jsx",
-      "target": "homescreen_circularring",
-      "confidence_score": 1.0
+      "target": "homescreen_circularring"
     },
     {
       "relation": "contains",
@@ -3221,9 +2153,9 @@
       "weight": 1.0,
       "_src": "src_screens_main_homescreen_jsx",
       "_tgt": "homescreen_homescreen",
+      "confidence_score": 1.0,
       "source": "src_screens_main_homescreen_jsx",
-      "target": "homescreen_homescreen",
-      "confidence_score": 1.0
+      "target": "homescreen_homescreen"
     },
     {
       "relation": "calls",
@@ -3232,8 +2164,8 @@
       "source_file": "src/screens/main/HomeScreen.jsx",
       "source_location": "line 244",
       "weight": 1.0,
-      "_src": "homescreen_homescreen",
-      "_tgt": "homescreen_circularring",
+      "_src": "homescreen_circularring",
+      "_tgt": "homescreen_homescreen",
       "source": "homescreen_circularring",
       "target": "homescreen_homescreen"
     },
@@ -3286,42 +2218,6 @@
       "target": "routes_patient_routes"
     },
     {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "src/screens/main/SessionScreen.jsx",
-      "source_location": null,
-      "weight": 0.85,
-      "_src": "sessionscreen_sessionscreen",
-      "_tgt": "homescreen_homescreen",
-      "source": "homescreen_homescreen",
-      "target": "sessionscreen_sessionscreen"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/HomeScreen.jsx",
-      "source_location": "line 260",
-      "weight": 1.0,
-      "_src": "homescreen_homescreen",
-      "_tgt": "booktherapistscreen_booktherapistscreen",
-      "source": "homescreen_homescreen",
-      "target": "booktherapistscreen_booktherapistscreen"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/SessionScreen.jsx",
-      "source_location": "line 256",
-      "weight": 1.0,
-      "_src": "sessionscreen_sessioncompleteview",
-      "_tgt": "homescreen_homescreen",
-      "source": "homescreen_homescreen",
-      "target": "sessionscreen_sessioncompleteview"
-    },
-    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/screens/main/BookScreen.jsx",
@@ -3329,9 +2225,9 @@
       "weight": 1.0,
       "_src": "src_screens_main_bookscreen_jsx",
       "_tgt": "bookscreen_bookscreen",
+      "confidence_score": 1.0,
       "source": "src_screens_main_bookscreen_jsx",
-      "target": "bookscreen_bookscreen",
-      "confidence_score": 1.0
+      "target": "bookscreen_bookscreen"
     },
     {
       "relation": "references",
@@ -3365,9 +2261,9 @@
       "weight": 1.0,
       "_src": "src_screens_main_slotselectionscreen_jsx",
       "_tgt": "slotselectionscreen_slotselectionscreen",
+      "confidence_score": 1.0,
       "source": "src_screens_main_slotselectionscreen_jsx",
-      "target": "slotselectionscreen_slotselectionscreen",
-      "confidence_score": 1.0
+      "target": "slotselectionscreen_slotselectionscreen"
     },
     {
       "relation": "contains",
@@ -3377,9 +2273,9 @@
       "weight": 1.0,
       "_src": "src_screens_main_slotselectionscreen_jsx",
       "_tgt": "slotselectionscreen_summaryrow",
+      "confidence_score": 1.0,
       "source": "src_screens_main_slotselectionscreen_jsx",
-      "target": "slotselectionscreen_summaryrow",
-      "confidence_score": 1.0
+      "target": "slotselectionscreen_summaryrow"
     },
     {
       "relation": "references",
@@ -3415,186 +2311,6 @@
       "_src": "slotselectionscreen_slotselectionscreen",
       "_tgt": "routes_patient_routes",
       "source": "slotselectionscreen_slotselectionscreen",
-      "target": "routes_patient_routes"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/BookTherapistScreen.jsx",
-      "source_location": "line 51",
-      "weight": 1.0,
-      "_src": "booktherapistscreen_booktherapistscreen",
-      "_tgt": "slotselectionscreen_slotselectionscreen",
-      "source": "slotselectionscreen_slotselectionscreen",
-      "target": "booktherapistscreen_booktherapistscreen"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/screens/main/SessionScreen.jsx",
-      "source_location": "L97",
-      "weight": 1.0,
-      "_src": "src_screens_main_sessionscreen_jsx",
-      "_tgt": "sessionscreen_countdownring",
-      "source": "src_screens_main_sessionscreen_jsx",
-      "target": "sessionscreen_countdownring",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/screens/main/SessionScreen.jsx",
-      "source_location": "L175",
-      "weight": 1.0,
-      "_src": "src_screens_main_sessionscreen_jsx",
-      "_tgt": "sessionscreen_sessioncompleteview",
-      "source": "src_screens_main_sessionscreen_jsx",
-      "target": "sessionscreen_sessioncompleteview",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/screens/main/SessionScreen.jsx",
-      "source_location": "L392",
-      "weight": 1.0,
-      "_src": "src_screens_main_sessionscreen_jsx",
-      "_tgt": "sessionscreen_sessionscreen",
-      "source": "src_screens_main_sessionscreen_jsx",
-      "target": "sessionscreen_sessionscreen",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/SessionScreen.jsx",
-      "source_location": "line 658",
-      "weight": 1.0,
-      "_src": "sessionscreen_sessionscreen",
-      "_tgt": "sessionscreen_countdownring",
-      "source": "sessionscreen_countdownring",
-      "target": "sessionscreen_sessionscreen"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/SessionScreen.jsx",
-      "source_location": "line 557",
-      "weight": 1.0,
-      "_src": "sessionscreen_sessionscreen",
-      "_tgt": "sessionscreen_sessioncompleteview",
-      "source": "sessionscreen_sessioncompleteview",
-      "target": "sessionscreen_sessionscreen"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/SessionScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "sessionscreen_sessionscreen",
-      "_tgt": "colors_colors",
-      "source": "sessionscreen_sessionscreen",
-      "target": "colors_colors"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/SessionScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "sessionscreen_sessionscreen",
-      "_tgt": "fonts_fonts",
-      "source": "sessionscreen_sessionscreen",
-      "target": "fonts_fonts"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/SessionScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "sessionscreen_sessionscreen",
-      "_tgt": "routes_patient_routes",
-      "source": "sessionscreen_sessionscreen",
-      "target": "routes_patient_routes"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/screens/main/BookTherapistScreen.jsx",
-      "source_location": "L49",
-      "weight": 1.0,
-      "_src": "src_screens_main_booktherapistscreen_jsx",
-      "_tgt": "booktherapistscreen_booktherapistscreen",
-      "source": "src_screens_main_booktherapistscreen_jsx",
-      "target": "booktherapistscreen_booktherapistscreen",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/BookTherapistScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "booktherapistscreen_booktherapistscreen",
-      "_tgt": "tabscreenwrapper_tabscreenwrapper",
-      "source": "booktherapistscreen_booktherapistscreen",
-      "target": "tabscreenwrapper_tabscreenwrapper"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/BookTherapistScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "booktherapistscreen_booktherapistscreen",
-      "_tgt": "therapistcard_therapistcard",
-      "source": "booktherapistscreen_booktherapistscreen",
-      "target": "therapistcard_therapistcard"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/BookTherapistScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "booktherapistscreen_booktherapistscreen",
-      "_tgt": "colors_colors",
-      "source": "booktherapistscreen_booktherapistscreen",
-      "target": "colors_colors"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/BookTherapistScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "booktherapistscreen_booktherapistscreen",
-      "_tgt": "fonts_fonts",
-      "source": "booktherapistscreen_booktherapistscreen",
-      "target": "fonts_fonts"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/screens/main/BookTherapistScreen.jsx",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "booktherapistscreen_booktherapistscreen",
-      "_tgt": "routes_patient_routes",
-      "source": "booktherapistscreen_booktherapistscreen",
       "target": "routes_patient_routes"
     },
     {
@@ -3605,9 +2321,9 @@
       "weight": 1.0,
       "_src": "src_components_ui_achievementicon_jsx",
       "_tgt": "achievementicon_flameicon",
+      "confidence_score": 1.0,
       "source": "src_components_ui_achievementicon_jsx",
-      "target": "achievementicon_flameicon",
-      "confidence_score": 1.0
+      "target": "achievementicon_flameicon"
     },
     {
       "relation": "contains",
@@ -3617,9 +2333,9 @@
       "weight": 1.0,
       "_src": "src_components_ui_achievementicon_jsx",
       "_tgt": "achievementicon_staricon",
+      "confidence_score": 1.0,
       "source": "src_components_ui_achievementicon_jsx",
-      "target": "achievementicon_staricon",
-      "confidence_score": 1.0
+      "target": "achievementicon_staricon"
     },
     {
       "relation": "contains",
@@ -3629,9 +2345,9 @@
       "weight": 1.0,
       "_src": "src_components_ui_achievementicon_jsx",
       "_tgt": "achievementicon_trophyicon",
+      "confidence_score": 1.0,
       "source": "src_components_ui_achievementicon_jsx",
-      "target": "achievementicon_trophyicon",
-      "confidence_score": 1.0
+      "target": "achievementicon_trophyicon"
     },
     {
       "relation": "contains",
@@ -3641,9 +2357,9 @@
       "weight": 1.0,
       "_src": "src_components_ui_achievementicon_jsx",
       "_tgt": "achievementicon_achievementicon",
+      "confidence_score": 1.0,
       "source": "src_components_ui_achievementicon_jsx",
-      "target": "achievementicon_achievementicon",
-      "confidence_score": 1.0
+      "target": "achievementicon_achievementicon"
     },
     {
       "relation": "calls",
@@ -3652,8 +2368,8 @@
       "source_file": "src/components/ui/AchievementIcon.jsx",
       "source_location": "line 104",
       "weight": 1.0,
-      "_src": "achievementicon_achievementicon",
-      "_tgt": "achievementicon_flameicon",
+      "_src": "achievementicon_flameicon",
+      "_tgt": "achievementicon_achievementicon",
       "source": "achievementicon_flameicon",
       "target": "achievementicon_achievementicon"
     },
@@ -3664,8 +2380,8 @@
       "source_file": "src/components/ui/AchievementIcon.jsx",
       "source_location": "line 105",
       "weight": 1.0,
-      "_src": "achievementicon_achievementicon",
-      "_tgt": "achievementicon_staricon",
+      "_src": "achievementicon_staricon",
+      "_tgt": "achievementicon_achievementicon",
       "source": "achievementicon_staricon",
       "target": "achievementicon_achievementicon"
     },
@@ -3676,22 +2392,10 @@
       "source_file": "src/components/ui/AchievementIcon.jsx",
       "source_location": "line 106",
       "weight": 1.0,
-      "_src": "achievementicon_achievementicon",
-      "_tgt": "achievementicon_trophyicon",
+      "_src": "achievementicon_trophyicon",
+      "_tgt": "achievementicon_achievementicon",
       "source": "achievementicon_trophyicon",
       "target": "achievementicon_achievementicon"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "claude_md_concept_projectreference",
-      "_tgt": "achievementicon_achievementicon",
-      "source": "achievementicon_achievementicon",
-      "target": "claude_md_concept_projectreference"
     },
     {
       "relation": "contains",
@@ -3701,9 +2405,9 @@
       "weight": 1.0,
       "_src": "src_components_ui_primarybutton_jsx",
       "_tgt": "primarybutton_primarybutton",
+      "confidence_score": 1.0,
       "source": "src_components_ui_primarybutton_jsx",
-      "target": "primarybutton_primarybutton",
-      "confidence_score": 1.0
+      "target": "primarybutton_primarybutton"
     },
     {
       "relation": "conceptually_related_to",
@@ -3724,8 +2428,8 @@
       "source_file": "ONBOARDING_PLAN.md",
       "source_location": null,
       "weight": 0.75,
-      "_src": "onboardingshell_onboardingshell",
-      "_tgt": "primarybutton_primarybutton",
+      "_src": "primarybutton_primarybutton",
+      "_tgt": "onboardingshell_onboardingshell",
       "source": "primarybutton_primarybutton",
       "target": "onboardingshell_onboardingshell"
     },
@@ -3737,9 +2441,9 @@
       "weight": 1.0,
       "_src": "src_components_ui_outlinebutton_jsx",
       "_tgt": "outlinebutton_outlinebutton",
+      "confidence_score": 1.0,
       "source": "src_components_ui_outlinebutton_jsx",
-      "target": "outlinebutton_outlinebutton",
-      "confidence_score": 1.0
+      "target": "outlinebutton_outlinebutton"
     },
     {
       "relation": "contains",
@@ -3749,9 +2453,9 @@
       "weight": 1.0,
       "_src": "src_components_chat_conversationrow_jsx",
       "_tgt": "conversationrow_formattime",
+      "confidence_score": 1.0,
       "source": "src_components_chat_conversationrow_jsx",
-      "target": "conversationrow_formattime",
-      "confidence_score": 1.0
+      "target": "conversationrow_formattime"
     },
     {
       "relation": "contains",
@@ -3761,9 +2465,9 @@
       "weight": 1.0,
       "_src": "src_components_chat_conversationrow_jsx",
       "_tgt": "conversationrow_getinitials",
+      "confidence_score": 1.0,
       "source": "src_components_chat_conversationrow_jsx",
-      "target": "conversationrow_getinitials",
-      "confidence_score": 1.0
+      "target": "conversationrow_getinitials"
     },
     {
       "relation": "contains",
@@ -3773,9 +2477,9 @@
       "weight": 1.0,
       "_src": "src_components_chat_conversationrow_jsx",
       "_tgt": "conversationrow_conversationrow",
+      "confidence_score": 1.0,
       "source": "src_components_chat_conversationrow_jsx",
-      "target": "conversationrow_conversationrow",
-      "confidence_score": 1.0
+      "target": "conversationrow_conversationrow"
     },
     {
       "relation": "calls",
@@ -3783,11 +2487,11 @@
       "source_file": "src/components/chat/ConversationRow.jsx",
       "source_location": "L80",
       "weight": 1.0,
-      "_src": "conversationrow_conversationrow",
-      "_tgt": "conversationrow_formattime",
+      "_src": "conversationrow_formattime",
+      "_tgt": "conversationrow_conversationrow",
+      "confidence_score": 1.0,
       "source": "conversationrow_formattime",
-      "target": "conversationrow_conversationrow",
-      "confidence_score": 1.0
+      "target": "conversationrow_conversationrow"
     },
     {
       "relation": "calls",
@@ -3795,71 +2499,11 @@
       "source_file": "src/components/chat/ConversationRow.jsx",
       "source_location": "L58",
       "weight": 1.0,
-      "_src": "conversationrow_conversationrow",
-      "_tgt": "conversationrow_getinitials",
-      "source": "conversationrow_getinitials",
-      "target": "conversationrow_conversationrow",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "src/components/chat/ConversationRow.jsx",
-      "source_location": null,
-      "weight": 0.85,
-      "_src": "conversationrow_conversationrow",
-      "_tgt": "chatservice_getconversations",
-      "source": "conversationrow_conversationrow",
-      "target": "chatservice_getconversations"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/components/chat/ComposerBar.jsx",
-      "source_location": "L29",
-      "weight": 1.0,
-      "_src": "src_components_chat_composerbar_jsx",
-      "_tgt": "composerbar_composerbar",
-      "source": "src_components_chat_composerbar_jsx",
-      "target": "composerbar_composerbar",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
+      "_src": "conversationrow_getinitials",
+      "_tgt": "conversationrow_conversationrow",
       "confidence_score": 1.0,
-      "source_file": "src/components/chat/ComposerBar.jsx",
-      "source_location": "line 66",
-      "weight": 1.0,
-      "_src": "composerbar_composerbar",
-      "_tgt": "replypreview_replypreview",
-      "source": "composerbar_composerbar",
-      "target": "replypreview_replypreview"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 0.75,
-      "_src": "composerbar_composerbar",
-      "_tgt": "attachmentsheet_attachmentsheet",
-      "source": "composerbar_composerbar",
-      "target": "attachmentsheet_attachmentsheet"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/components/chat/ComposerBar.jsx",
-      "source_location": null,
-      "weight": 0.8,
-      "_src": "composerbar_composerbar",
-      "_tgt": "chatservice_sendmessage",
-      "source": "composerbar_composerbar",
-      "target": "chatservice_sendmessage"
+      "source": "conversationrow_getinitials",
+      "target": "conversationrow_conversationrow"
     },
     {
       "relation": "contains",
@@ -3869,9 +2513,9 @@
       "weight": 1.0,
       "_src": "src_components_chat_messagebubble_jsx",
       "_tgt": "messagebubble_formatbubbletime",
+      "confidence_score": 1.0,
       "source": "src_components_chat_messagebubble_jsx",
-      "target": "messagebubble_formatbubbletime",
-      "confidence_score": 1.0
+      "target": "messagebubble_formatbubbletime"
     },
     {
       "relation": "contains",
@@ -3881,9 +2525,9 @@
       "weight": 1.0,
       "_src": "src_components_chat_messagebubble_jsx",
       "_tgt": "messagebubble_readreceipt",
+      "confidence_score": 1.0,
       "source": "src_components_chat_messagebubble_jsx",
-      "target": "messagebubble_readreceipt",
-      "confidence_score": 1.0
+      "target": "messagebubble_readreceipt"
     },
     {
       "relation": "contains",
@@ -3893,9 +2537,9 @@
       "weight": 1.0,
       "_src": "src_components_chat_messagebubble_jsx",
       "_tgt": "messagebubble_inlinereplystrip",
+      "confidence_score": 1.0,
       "source": "src_components_chat_messagebubble_jsx",
-      "target": "messagebubble_inlinereplystrip",
-      "confidence_score": 1.0
+      "target": "messagebubble_inlinereplystrip"
     },
     {
       "relation": "contains",
@@ -3905,9 +2549,9 @@
       "weight": 1.0,
       "_src": "src_components_chat_messagebubble_jsx",
       "_tgt": "messagebubble_messagebubble",
+      "confidence_score": 1.0,
       "source": "src_components_chat_messagebubble_jsx",
-      "target": "messagebubble_messagebubble",
-      "confidence_score": 1.0
+      "target": "messagebubble_messagebubble"
     },
     {
       "relation": "calls",
@@ -3915,11 +2559,11 @@
       "source_file": "src/components/chat/MessageBubble.jsx",
       "source_location": "L130",
       "weight": 1.0,
-      "_src": "messagebubble_messagebubble",
-      "_tgt": "messagebubble_formatbubbletime",
+      "_src": "messagebubble_formatbubbletime",
+      "_tgt": "messagebubble_messagebubble",
+      "confidence_score": 1.0,
       "source": "messagebubble_formatbubbletime",
-      "target": "messagebubble_messagebubble",
-      "confidence_score": 1.0
+      "target": "messagebubble_messagebubble"
     },
     {
       "relation": "calls",
@@ -3928,8 +2572,8 @@
       "source_file": "src/components/chat/MessageBubble.jsx",
       "source_location": "line 132",
       "weight": 1.0,
-      "_src": "messagebubble_messagebubble",
-      "_tgt": "messagebubble_readreceipt",
+      "_src": "messagebubble_readreceipt",
+      "_tgt": "messagebubble_messagebubble",
       "source": "messagebubble_readreceipt",
       "target": "messagebubble_messagebubble"
     },
@@ -3940,34 +2584,10 @@
       "source_file": "src/components/chat/MessageBubble.jsx",
       "source_location": "line 120",
       "weight": 1.0,
-      "_src": "messagebubble_messagebubble",
-      "_tgt": "messagebubble_inlinereplystrip",
+      "_src": "messagebubble_inlinereplystrip",
+      "_tgt": "messagebubble_messagebubble",
       "source": "messagebubble_inlinereplystrip",
       "target": "messagebubble_messagebubble"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/components/chat/ReplyPreview.jsx",
-      "source_location": null,
-      "weight": 0.8,
-      "_src": "replypreview_replypreview",
-      "_tgt": "messagebubble_inlinereplystrip",
-      "source": "messagebubble_inlinereplystrip",
-      "target": "replypreview_replypreview"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "src/components/chat/MessageBubble.jsx",
-      "source_location": null,
-      "weight": 0.85,
-      "_src": "messagebubble_messagebubble",
-      "_tgt": "chatservice_getmessages",
-      "source": "messagebubble_messagebubble",
-      "target": "chatservice_getmessages"
     },
     {
       "relation": "contains",
@@ -3977,9 +2597,9 @@
       "weight": 1.0,
       "_src": "src_components_chat_attachmentsheet_jsx",
       "_tgt": "attachmentsheet_animatedsheet",
+      "confidence_score": 1.0,
       "source": "src_components_chat_attachmentsheet_jsx",
-      "target": "attachmentsheet_animatedsheet",
-      "confidence_score": 1.0
+      "target": "attachmentsheet_animatedsheet"
     },
     {
       "relation": "contains",
@@ -3989,9 +2609,9 @@
       "weight": 1.0,
       "_src": "src_components_chat_attachmentsheet_jsx",
       "_tgt": "attachmentsheet_attachmentsheet",
+      "confidence_score": 1.0,
       "source": "src_components_chat_attachmentsheet_jsx",
-      "target": "attachmentsheet_attachmentsheet",
-      "confidence_score": 1.0
+      "target": "attachmentsheet_attachmentsheet"
     },
     {
       "relation": "calls",
@@ -4000,22 +2620,10 @@
       "source_file": "src/components/chat/AttachmentSheet.jsx",
       "source_location": "line 133",
       "weight": 1.0,
-      "_src": "attachmentsheet_attachmentsheet",
-      "_tgt": "attachmentsheet_animatedsheet",
+      "_src": "attachmentsheet_animatedsheet",
+      "_tgt": "attachmentsheet_attachmentsheet",
       "source": "attachmentsheet_animatedsheet",
       "target": "attachmentsheet_attachmentsheet"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "claude_md_concept_projectreference",
-      "_tgt": "attachmentsheet_attachmentsheet",
-      "source": "attachmentsheet_attachmentsheet",
-      "target": "claude_md_concept_projectreference"
     },
     {
       "relation": "contains",
@@ -4025,9 +2633,9 @@
       "weight": 1.0,
       "_src": "src_components_chat_centertabbutton_jsx",
       "_tgt": "centertabbutton_centertabbutton",
+      "confidence_score": 1.0,
       "source": "src_components_chat_centertabbutton_jsx",
-      "target": "centertabbutton_centertabbutton",
-      "confidence_score": 1.0
+      "target": "centertabbutton_centertabbutton"
     },
     {
       "relation": "calls",
@@ -4036,70 +2644,10 @@
       "source_file": "src/components/navigation/AnimatedTabBar.jsx",
       "source_location": "line 164",
       "weight": 1.0,
-      "_src": "animatedtabbar_animatedtabbar",
-      "_tgt": "centertabbutton_centertabbutton",
+      "_src": "centertabbutton_centertabbutton",
+      "_tgt": "animatedtabbar_animatedtabbar",
       "source": "centertabbutton_centertabbutton",
       "target": "animatedtabbar_animatedtabbar"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "claude_md_concept_projectreference",
-      "_tgt": "centertabbutton_centertabbutton",
-      "source": "centertabbutton_centertabbutton",
-      "target": "claude_md_concept_projectreference"
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/components/navigation/AnimatedTabBar.jsx",
-      "source_location": "line 93",
-      "weight": 0.8,
-      "_src": "centertabbutton_centertabbutton",
-      "_tgt": "chatservice_getconversations",
-      "source": "centertabbutton_centertabbutton",
-      "target": "chatservice_getconversations"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/components/chat/ReplyPreview.jsx",
-      "source_location": "L18",
-      "weight": 1.0,
-      "_src": "src_components_chat_replypreview_jsx",
-      "_tgt": "replypreview_replypreview",
-      "source": "src_components_chat_replypreview_jsx",
-      "target": "replypreview_replypreview",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/components/chat/TypingIndicator.jsx",
-      "source_location": "L16",
-      "weight": 1.0,
-      "_src": "src_components_chat_typingindicator_jsx",
-      "_tgt": "typingindicator_typingindicator",
-      "source": "src_components_chat_typingindicator_jsx",
-      "target": "typingindicator_typingindicator",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "shares_data_with",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "source_file": "src/components/chat/TypingIndicator.jsx",
-      "source_location": null,
-      "weight": 0.85,
-      "_src": "typingindicator_typingindicator",
-      "_tgt": "chatservice_gettypingstatus",
-      "source": "typingindicator_typingindicator",
-      "target": "chatservice_gettypingstatus"
     },
     {
       "relation": "contains",
@@ -4109,9 +2657,9 @@
       "weight": 1.0,
       "_src": "src_components_auth_selectablepill_jsx",
       "_tgt": "selectablepill_selectablepill",
+      "confidence_score": 1.0,
       "source": "src_components_auth_selectablepill_jsx",
-      "target": "selectablepill_selectablepill",
-      "confidence_score": 1.0
+      "target": "selectablepill_selectablepill"
     },
     {
       "relation": "conceptually_related_to",
@@ -4120,58 +2668,10 @@
       "source_file": "ONBOARDING_PLAN.md",
       "source_location": null,
       "weight": 0.8,
-      "_src": "onboardingshell_onboardingshell",
-      "_tgt": "selectablepill_selectablepill",
+      "_src": "selectablepill_selectablepill",
+      "_tgt": "onboardingshell_onboardingshell",
       "source": "selectablepill_selectablepill",
       "target": "onboardingshell_onboardingshell"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "MWP_PATIENT_ONBOARDING.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "mwp_patient_onboarding_concept_taskspec",
-      "_tgt": "selectablepill_selectablepill",
-      "source": "selectablepill_selectablepill",
-      "target": "mwp_patient_onboarding_concept_taskspec"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/components/auth/SelectableCard.jsx",
-      "source_location": "L19",
-      "weight": 1.0,
-      "_src": "src_components_auth_selectablecard_jsx",
-      "_tgt": "selectablecard_selectablecard",
-      "source": "src_components_auth_selectablecard_jsx",
-      "target": "selectablecard_selectablecard",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "ONBOARDING_PLAN.md",
-      "source_location": null,
-      "weight": 0.8,
-      "_src": "onboardingshell_onboardingshell",
-      "_tgt": "selectablecard_selectablecard",
-      "source": "selectablecard_selectablecard",
-      "target": "onboardingshell_onboardingshell"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "MWP_PATIENT_ONBOARDING.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "mwp_patient_onboarding_concept_taskspec",
-      "_tgt": "selectablecard_selectablecard",
-      "source": "selectablecard_selectablecard",
-      "target": "mwp_patient_onboarding_concept_taskspec"
     },
     {
       "relation": "contains",
@@ -4181,57 +2681,9 @@
       "weight": 1.0,
       "_src": "src_components_auth_onboardingshell_jsx",
       "_tgt": "onboardingshell_onboardingshell",
+      "confidence_score": 1.0,
       "source": "src_components_auth_onboardingshell_jsx",
-      "target": "onboardingshell_onboardingshell",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "ONBOARDING_PLAN.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "onboarding_plan_concept_onboardingflow",
-      "_tgt": "onboardingshell_onboardingshell",
-      "source": "onboardingshell_onboardingshell",
-      "target": "onboarding_plan_concept_onboardingflow"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "MWP_PATIENT_ONBOARDING.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "mwp_patient_onboarding_concept_taskspec",
-      "_tgt": "onboardingshell_onboardingshell",
-      "source": "onboardingshell_onboardingshell",
-      "target": "mwp_patient_onboarding_concept_taskspec"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "claude_md_concept_projectreference",
-      "_tgt": "onboardingshell_onboardingshell",
-      "source": "onboardingshell_onboardingshell",
-      "target": "claude_md_concept_projectreference"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.75,
-      "source_file": "ONBOARDING_PLAN.md",
-      "source_location": null,
-      "weight": 0.75,
-      "_src": "onboardingshell_onboardingshell",
-      "_tgt": "concept_onboarding_context",
-      "source": "onboardingshell_onboardingshell",
-      "target": "concept_onboarding_context"
+      "target": "onboardingshell_onboardingshell"
     },
     {
       "relation": "contains",
@@ -4241,9 +2693,9 @@
       "weight": 1.0,
       "_src": "src_components_booking_therapistcard_jsx",
       "_tgt": "therapistcard_star",
+      "confidence_score": 1.0,
       "source": "src_components_booking_therapistcard_jsx",
-      "target": "therapistcard_star",
-      "confidence_score": 1.0
+      "target": "therapistcard_star"
     },
     {
       "relation": "contains",
@@ -4253,9 +2705,9 @@
       "weight": 1.0,
       "_src": "src_components_booking_therapistcard_jsx",
       "_tgt": "therapistcard_therapistcard",
+      "confidence_score": 1.0,
       "source": "src_components_booking_therapistcard_jsx",
-      "target": "therapistcard_therapistcard",
-      "confidence_score": 1.0
+      "target": "therapistcard_therapistcard"
     },
     {
       "relation": "calls",
@@ -4264,8 +2716,8 @@
       "source_file": "src/components/booking/TherapistCard.jsx",
       "source_location": "line 54",
       "weight": 1.0,
-      "_src": "therapistcard_therapistcard",
-      "_tgt": "therapistcard_star",
+      "_src": "therapistcard_star",
+      "_tgt": "therapistcard_therapistcard",
       "source": "therapistcard_star",
       "target": "therapistcard_therapistcard"
     },
@@ -4277,21 +2729,9 @@
       "weight": 1.0,
       "_src": "src_components_navigation_tabscreenwrapper_jsx",
       "_tgt": "tabscreenwrapper_tabscreenwrapper",
-      "source": "src_components_navigation_tabscreenwrapper_jsx",
-      "target": "tabscreenwrapper_tabscreenwrapper",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "claude_md_concept_projectreference",
-      "_tgt": "tabscreenwrapper_tabscreenwrapper",
-      "source": "tabscreenwrapper_tabscreenwrapper",
-      "target": "claude_md_concept_projectreference"
+      "source": "src_components_navigation_tabscreenwrapper_jsx",
+      "target": "tabscreenwrapper_tabscreenwrapper"
     },
     {
       "relation": "conceptually_related_to",
@@ -4313,261 +2753,9 @@
       "weight": 1.0,
       "_src": "src_components_navigation_animatedtabbar_jsx",
       "_tgt": "animatedtabbar_animatedtabbar",
+      "confidence_score": 1.0,
       "source": "src_components_navigation_animatedtabbar_jsx",
-      "target": "animatedtabbar_animatedtabbar",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/components/navigation/AnimatedTabBar.jsx",
-      "source_location": "line 93",
-      "weight": 1.0,
-      "_src": "animatedtabbar_animatedtabbar",
-      "_tgt": "chatservice_chatservice",
-      "source": "animatedtabbar_animatedtabbar",
-      "target": "chatservice_chatservice"
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/components/navigation/AnimatedTabBar.jsx",
-      "source_location": "line 93",
-      "weight": 1.0,
-      "_src": "animatedtabbar_animatedtabbar",
-      "_tgt": "chatservice_getconversations",
-      "source": "animatedtabbar_animatedtabbar",
-      "target": "chatservice_getconversations"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "claude_md_concept_projectreference",
-      "_tgt": "animatedtabbar_animatedtabbar",
-      "source": "animatedtabbar_animatedtabbar",
-      "target": "claude_md_concept_projectreference"
-    },
-    {
-      "relation": "implements",
-      "confidence": "INFERRED",
-      "confidence_score": 0.9,
-      "source_file": "src/components/navigation/AnimatedTabBar.jsx",
-      "source_location": null,
-      "weight": 0.9,
-      "_src": "animatedtabbar_animatedtabbar",
-      "_tgt": "concept_tab_bar_absolute_position",
-      "source": "animatedtabbar_animatedtabbar",
-      "target": "concept_tab_bar_absolute_position"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L230",
-      "weight": 1.0,
-      "_src": "src_services_chatservice_js",
-      "_tgt": "chatservice_delay",
-      "source": "src_services_chatservice_js",
-      "target": "chatservice_delay",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L234",
-      "weight": 1.0,
-      "_src": "src_services_chatservice_js",
-      "_tgt": "chatservice_formattime",
-      "source": "src_services_chatservice_js",
-      "target": "chatservice_formattime",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L253",
-      "weight": 1.0,
-      "_src": "src_services_chatservice_js",
-      "_tgt": "chatservice_getconversations",
-      "source": "src_services_chatservice_js",
-      "target": "chatservice_getconversations",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L269",
-      "weight": 1.0,
-      "_src": "src_services_chatservice_js",
-      "_tgt": "chatservice_getmessages",
-      "source": "src_services_chatservice_js",
-      "target": "chatservice_getmessages",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L299",
-      "weight": 1.0,
-      "_src": "src_services_chatservice_js",
-      "_tgt": "chatservice_sendmessage",
-      "source": "src_services_chatservice_js",
-      "target": "chatservice_sendmessage",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L340",
-      "weight": 1.0,
-      "_src": "src_services_chatservice_js",
-      "_tgt": "chatservice_markasread",
-      "source": "src_services_chatservice_js",
-      "target": "chatservice_markasread",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L365",
-      "weight": 1.0,
-      "_src": "src_services_chatservice_js",
-      "_tgt": "chatservice_gettypingstatus",
-      "source": "src_services_chatservice_js",
-      "target": "chatservice_gettypingstatus",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L254",
-      "weight": 1.0,
-      "_src": "chatservice_getconversations",
-      "_tgt": "chatservice_delay",
-      "source": "chatservice_delay",
-      "target": "chatservice_getconversations",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L270",
-      "weight": 1.0,
-      "_src": "chatservice_getmessages",
-      "_tgt": "chatservice_delay",
-      "source": "chatservice_delay",
-      "target": "chatservice_getmessages",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L300",
-      "weight": 1.0,
-      "_src": "chatservice_sendmessage",
-      "_tgt": "chatservice_delay",
-      "source": "chatservice_delay",
-      "target": "chatservice_sendmessage",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L341",
-      "weight": 1.0,
-      "_src": "chatservice_markasread",
-      "_tgt": "chatservice_delay",
-      "source": "chatservice_delay",
-      "target": "chatservice_markasread",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "source_file": "src/services/chatService.js",
-      "source_location": "L366",
-      "weight": 1.0,
-      "_src": "chatservice_gettypingstatus",
-      "_tgt": "chatservice_delay",
-      "source": "chatservice_delay",
-      "target": "chatservice_gettypingstatus",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/services/chatService.js",
-      "source_location": "line 375",
-      "weight": 1.0,
-      "_src": "chatservice_chatservice",
-      "_tgt": "chatservice_getconversations",
-      "source": "chatservice_getconversations",
-      "target": "chatservice_chatservice"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/services/chatService.js",
-      "source_location": "line 376",
-      "weight": 1.0,
-      "_src": "chatservice_chatservice",
-      "_tgt": "chatservice_getmessages",
-      "source": "chatservice_getmessages",
-      "target": "chatservice_chatservice"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/services/chatService.js",
-      "source_location": "line 377",
-      "weight": 1.0,
-      "_src": "chatservice_chatservice",
-      "_tgt": "chatservice_sendmessage",
-      "source": "chatservice_sendmessage",
-      "target": "chatservice_chatservice"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/services/chatService.js",
-      "source_location": "line 378",
-      "weight": 1.0,
-      "_src": "chatservice_chatservice",
-      "_tgt": "chatservice_markasread",
-      "source": "chatservice_markasread",
-      "target": "chatservice_chatservice"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/services/chatService.js",
-      "source_location": "line 379",
-      "weight": 1.0,
-      "_src": "chatservice_chatservice",
-      "_tgt": "chatservice_gettypingstatus",
-      "source": "chatservice_gettypingstatus",
-      "target": "chatservice_chatservice"
+      "target": "animatedtabbar_animatedtabbar"
     },
     {
       "relation": "contains",
@@ -4577,185 +2765,850 @@
       "weight": 1.0,
       "_src": "src_services_auth_mockonboardingservice_js",
       "_tgt": "mockonboardingservice_submitonboarding",
+      "confidence_score": 1.0,
       "source": "src_services_auth_mockonboardingservice_js",
-      "target": "mockonboardingservice_submitonboarding",
+      "target": "mockonboardingservice_submitonboarding"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "App.jsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_src": "app_jsx",
+      "_tgt": "app_app",
+      "source": "app_jsx",
+      "target": "app_app",
       "confidence_score": 1.0
     },
     {
-      "relation": "implements",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/context/PatientContext.jsx",
+      "source_location": "L33",
+      "weight": 1.0,
+      "_src": "src_context_patientcontext_jsx",
+      "_tgt": "patientcontext_patientprovider",
+      "source": "src_context_patientcontext_jsx",
+      "target": "patientcontext_patientprovider",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/context/PatientContext.jsx",
+      "source_location": "L100",
+      "weight": 1.0,
+      "_src": "src_context_patientcontext_jsx",
+      "_tgt": "patientcontext_usepatient",
+      "source": "src_context_patientcontext_jsx",
+      "target": "patientcontext_usepatient",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/navigation/AppNavigator.jsx",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "patientcontext_patientprovider",
+      "_tgt": "appnavigator_appnavigator",
+      "source": "patientcontext_patientprovider",
+      "target": "appnavigator_appnavigator"
+    },
+    {
+      "relation": "calls",
       "confidence": "INFERRED",
-      "confidence_score": 0.9,
-      "source_file": "src/services/auth/mockOnboardingService.js",
-      "source_location": "line 1",
-      "weight": 0.9,
-      "_src": "mockonboardingservice_submitonboarding",
-      "_tgt": "concept_mock_first_service_pattern",
-      "source": "mockonboardingservice_submitonboarding",
-      "target": "concept_mock_first_service_pattern"
+      "confidence_score": 0.8,
+      "source_file": "src/screens/auth/OnboardingCompleteScreen.jsx",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_src": "patientcontext_usepatient",
+      "_tgt": "onboardingcompletescreen_onboardingcompletescreen",
+      "source": "patientcontext_usepatient",
+      "target": "onboardingcompletescreen_onboardingcompletescreen"
     },
     {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "ONBOARDING_PLAN.md",
-      "source_location": "line 155",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/screens/main/ProfileScreen.jsx",
+      "source_location": "L72",
       "weight": 1.0,
-      "_src": "onboarding_plan_concept_onboardingflow",
-      "_tgt": "mockonboardingservice_submitonboarding",
-      "source": "mockonboardingservice_submitonboarding",
-      "target": "onboarding_plan_concept_onboardingflow"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "MWP_PATIENT_ONBOARDING.md",
-      "source_location": null,
-      "weight": 1.0,
-      "_src": "mwp_patient_onboarding_concept_taskspec",
-      "_tgt": "mockonboardingservice_submitonboarding",
-      "source": "mockonboardingservice_submitonboarding",
-      "target": "mwp_patient_onboarding_concept_taskspec"
+      "_src": "patientcontext_usepatient",
+      "_tgt": "profilescreen_profilescreen",
+      "source": "patientcontext_usepatient",
+      "target": "profilescreen_profilescreen"
     },
     {
       "relation": "implements",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "src/services/chatService.js",
-      "source_location": "line 1",
-      "weight": 1.0,
-      "_src": "chatservice_chatservice",
-      "_tgt": "concept_mock_first_service_pattern",
-      "source": "chatservice_chatservice",
-      "target": "concept_mock_first_service_pattern"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
+      "source_file": "src/context/OnboardingContext.jsx",
       "source_location": null,
       "weight": 1.0,
-      "_src": "claude_md_concept_projectreference",
-      "_tgt": "chatservice_chatservice",
-      "source": "chatservice_chatservice",
-      "target": "claude_md_concept_projectreference"
+      "_src": "onboardingcontext_onboardingprovider",
+      "_tgt": "onboardingcontext_useonboarding",
+      "source": "onboardingcontext_onboardingprovider",
+      "target": "onboardingcontext_useonboarding"
     },
     {
-      "relation": "references",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/screens/auth/PersonalInfoScreen.jsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_src": "onboardingcontext_useonboarding",
+      "_tgt": "personalinfoscreen_personalinfoscreen",
+      "source": "onboardingcontext_useonboarding",
+      "target": "personalinfoscreen_personalinfoscreen"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/navigation/AuthNavigator.jsx",
+      "source_location": "L48",
+      "weight": 1.0,
+      "_src": "src_navigation_authnavigator_jsx",
+      "_tgt": "authnavigator_authnavigator",
+      "source": "src_navigation_authnavigator_jsx",
+      "target": "authnavigator_authnavigator",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/navigation/RootNavigator.jsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_src": "src_navigation_rootnavigator_jsx",
+      "_tgt": "rootnavigator_rootnavigator",
+      "source": "src_navigation_rootnavigator_jsx",
+      "target": "rootnavigator_rootnavigator",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "ONBOARDING_PLAN.md",
-      "source_location": "line 110",
+      "source_file": "src/navigation/AppNavigator.jsx",
+      "source_location": null,
       "weight": 1.0,
-      "_src": "onboarding_plan_concept_onboardingflow",
-      "_tgt": "concept_onboarding_context",
-      "source": "onboarding_plan_concept_onboardingflow",
-      "target": "concept_onboarding_context"
+      "_src": "rootnavigator_rootnavigator",
+      "_tgt": "appnavigator_appnavigator",
+      "source": "rootnavigator_rootnavigator",
+      "target": "appnavigator_appnavigator"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_src": "src_screens_messages_chatroomscreen_jsx",
+      "_tgt": "chatroomscreen_getinitials",
+      "source": "src_screens_messages_chatroomscreen_jsx",
+      "target": "chatroomscreen_getinitials",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
+      "source_location": "L52",
+      "weight": 1.0,
+      "_src": "src_screens_messages_chatroomscreen_jsx",
+      "_tgt": "chatroomscreen_chatroomscreen",
+      "source": "src_screens_messages_chatroomscreen_jsx",
+      "target": "chatroomscreen_chatroomscreen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
+      "source_location": "L254",
+      "weight": 1.0,
+      "_src": "chatroomscreen_getinitials",
+      "_tgt": "chatroomscreen_chatroomscreen",
+      "source": "chatroomscreen_getinitials",
+      "target": "chatroomscreen_chatroomscreen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
+      "source_location": "L105",
+      "weight": 1.0,
+      "_src": "chatroomscreen_chatroomscreen",
+      "_tgt": "chatservice_getmessages",
+      "source": "chatroomscreen_chatroomscreen",
+      "target": "chatservice_getmessages"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
+      "source_location": "L108",
+      "weight": 1.0,
+      "_src": "chatroomscreen_chatroomscreen",
+      "_tgt": "chatservice_markasread",
+      "source": "chatroomscreen_chatroomscreen",
+      "target": "chatservice_markasread"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/screens/messages/ChatRoomScreen.jsx",
+      "source_location": "L136",
+      "weight": 1.0,
+      "_src": "chatroomscreen_chatroomscreen",
+      "_tgt": "chatservice_subscribetoroom",
+      "source": "chatroomscreen_chatroomscreen",
+      "target": "chatservice_subscribetoroom"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/messages/MessagesScreen.jsx",
+      "source_location": "L28",
+      "weight": 1.0,
+      "_src": "src_screens_messages_messagesscreen_jsx",
+      "_tgt": "messagesscreen_messagesscreen",
+      "source": "src_screens_messages_messagesscreen_jsx",
+      "target": "messagesscreen_messagesscreen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/screens/messages/MessagesScreen.jsx",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_src": "messagesscreen_messagesscreen",
+      "_tgt": "chatservice_getconversations",
+      "source": "messagesscreen_messagesscreen",
+      "target": "chatservice_getconversations"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/auth/ClerkAuthScreen.jsx",
+      "source_location": "L34",
+      "weight": 1.0,
+      "_src": "src_screens_auth_clerkauthscreen_jsx",
+      "_tgt": "clerkauthscreen_clerkauthscreen",
+      "source": "src_screens_auth_clerkauthscreen_jsx",
+      "target": "clerkauthscreen_clerkauthscreen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/auth/LoginScreen.jsx",
+      "source_location": "L40",
+      "weight": 1.0,
+      "_src": "src_screens_auth_loginscreen_jsx",
+      "_tgt": "loginscreen_loginscreen",
+      "source": "src_screens_auth_loginscreen_jsx",
+      "target": "loginscreen_loginscreen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/auth/OnboardingCompleteScreen.jsx",
+      "source_location": "L19",
+      "weight": 1.0,
+      "_src": "src_screens_auth_onboardingcompletescreen_jsx",
+      "_tgt": "onboardingcompletescreen_onboardingcompletescreen",
+      "source": "src_screens_auth_onboardingcompletescreen_jsx",
+      "target": "onboardingcompletescreen_onboardingcompletescreen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/auth/PersonalInfoScreen.jsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_src": "src_screens_auth_personalinfoscreen_jsx",
+      "_tgt": "personalinfoscreen_personalinfoscreen",
+      "source": "src_screens_auth_personalinfoscreen_jsx",
+      "target": "personalinfoscreen_personalinfoscreen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/main/ProfileScreen.jsx",
+      "source_location": "L24",
+      "weight": 1.0,
+      "_src": "src_screens_main_profilescreen_jsx",
+      "_tgt": "profilescreen_menurow",
+      "source": "src_screens_main_profilescreen_jsx",
+      "target": "profilescreen_menurow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/main/ProfileScreen.jsx",
+      "source_location": "L62",
+      "weight": 1.0,
+      "_src": "src_screens_main_profilescreen_jsx",
+      "_tgt": "profilescreen_getinitials",
+      "source": "src_screens_main_profilescreen_jsx",
+      "target": "profilescreen_getinitials",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/main/ProfileScreen.jsx",
+      "source_location": "L69",
+      "weight": 1.0,
+      "_src": "src_screens_main_profilescreen_jsx",
+      "_tgt": "profilescreen_profilescreen",
+      "source": "src_screens_main_profilescreen_jsx",
+      "target": "profilescreen_profilescreen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/main/ProfileScreen.jsx",
+      "source_location": "L105",
+      "weight": 1.0,
+      "_src": "profilescreen_getinitials",
+      "_tgt": "profilescreen_profilescreen",
+      "source": "profilescreen_getinitials",
+      "target": "profilescreen_profilescreen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/screens/main/SessionScreen.jsx",
+      "source_location": "line 557",
+      "weight": 1.0,
+      "_src": "sessionscreen_sessionscreen",
+      "_tgt": "sessionscreen_sessioncompleteview",
+      "source": "sessionscreen_sessionscreen",
+      "target": "sessionscreen_sessioncompleteview"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/screens/main/SessionScreen.jsx",
+      "source_location": "line 658",
+      "weight": 1.0,
+      "_src": "sessionscreen_sessionscreen",
+      "_tgt": "sessionscreen_countdownring",
+      "source": "sessionscreen_sessionscreen",
+      "target": "sessionscreen_countdownring"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/main/BookTherapistScreen.jsx",
+      "source_location": "L21",
+      "weight": 1.0,
+      "_src": "src_screens_main_booktherapistscreen_jsx",
+      "_tgt": "booktherapistscreen_normalizetherapist",
+      "source": "src_screens_main_booktherapistscreen_jsx",
+      "target": "booktherapistscreen_normalizetherapist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/main/BookTherapistScreen.jsx",
+      "source_location": "L39",
+      "weight": 1.0,
+      "_src": "src_screens_main_booktherapistscreen_jsx",
+      "_tgt": "booktherapistscreen_booktherapistscreen",
+      "source": "src_screens_main_booktherapistscreen_jsx",
+      "target": "booktherapistscreen_booktherapistscreen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/chat/ComposerBar.jsx",
+      "source_location": "line 66",
+      "weight": 1.0,
+      "_src": "composerbar_composerbar",
+      "_tgt": "replypreview_replypreview",
+      "source": "composerbar_composerbar",
+      "target": "replypreview_replypreview"
     },
     {
       "relation": "conceptually_related_to",
       "confidence": "INFERRED",
-      "confidence_score": 0.9,
-      "source_file": "MWP_PATIENT_ONBOARDING.md",
+      "confidence_score": 0.8,
+      "source_file": "src/components/chat/ComposerBar.jsx",
       "source_location": null,
-      "weight": 0.9,
-      "_src": "mwp_patient_onboarding_concept_taskspec",
-      "_tgt": "onboarding_plan_concept_onboardingflow",
-      "source": "onboarding_plan_concept_onboardingflow",
-      "target": "mwp_patient_onboarding_concept_taskspec"
+      "weight": 0.8,
+      "_src": "composerbar_composerbar",
+      "_tgt": "chatservice_sendmessage",
+      "source": "composerbar_composerbar",
+      "target": "chatservice_sendmessage"
     },
     {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "CLAUDE.md",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "src/components/chat/TypingIndicator.jsx",
       "source_location": null,
+      "weight": 0.85,
+      "_src": "typingindicator_typingindicator",
+      "_tgt": "chatservice_gettypingstatus",
+      "source": "typingindicator_typingindicator",
+      "target": "chatservice_gettypingstatus"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/apiClient.js",
+      "source_location": "L28",
       "weight": 1.0,
-      "_src": "claude_md_concept_projectreference",
-      "_tgt": "concept_tab_bar_absolute_position",
-      "source": "claude_md_concept_projectreference",
-      "target": "concept_tab_bar_absolute_position"
+      "_src": "src_lib_apiclient_js",
+      "_tgt": "apiclient_buildurl",
+      "source": "src_lib_apiclient_js",
+      "target": "apiclient_buildurl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/apiClient.js",
+      "source_location": "L39",
+      "weight": 1.0,
+      "_src": "src_lib_apiclient_js",
+      "_tgt": "apiclient_withquery",
+      "source": "src_lib_apiclient_js",
+      "target": "apiclient_withquery",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/apiClient.js",
+      "source_location": "L58",
+      "weight": 1.0,
+      "_src": "src_lib_apiclient_js",
+      "_tgt": "apiclient_request",
+      "source": "src_lib_apiclient_js",
+      "target": "apiclient_request",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/apiClient.js",
+      "source_location": "L60",
+      "weight": 1.0,
+      "_src": "apiclient_buildurl",
+      "_tgt": "apiclient_request",
+      "source": "apiclient_buildurl",
+      "target": "apiclient_request",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/apiClient.js",
+      "source_location": "L60",
+      "weight": 1.0,
+      "_src": "apiclient_withquery",
+      "_tgt": "apiclient_request",
+      "source": "apiclient_withquery",
+      "target": "apiclient_request",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L32",
+      "weight": 1.0,
+      "_src": "src_lib_chatsocket_js",
+      "_tgt": "chatsocket_connect",
+      "source": "src_lib_chatsocket_js",
+      "target": "chatsocket_connect",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L81",
+      "weight": 1.0,
+      "_src": "src_lib_chatsocket_js",
+      "_tgt": "chatsocket_disconnect",
+      "source": "src_lib_chatsocket_js",
+      "target": "chatsocket_disconnect",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L98",
+      "weight": 1.0,
+      "_src": "src_lib_chatsocket_js",
+      "_tgt": "chatsocket_on",
+      "source": "src_lib_chatsocket_js",
+      "target": "chatsocket_on",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L111",
+      "weight": 1.0,
+      "_src": "src_lib_chatsocket_js",
+      "_tgt": "chatsocket_off",
+      "source": "src_lib_chatsocket_js",
+      "target": "chatsocket_off",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L122",
+      "weight": 1.0,
+      "_src": "src_lib_chatsocket_js",
+      "_tgt": "chatsocket_emit",
+      "source": "src_lib_chatsocket_js",
+      "target": "chatsocket_emit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L131",
+      "weight": 1.0,
+      "_src": "src_lib_chatsocket_js",
+      "_tgt": "chatsocket_isconnected",
+      "source": "src_lib_chatsocket_js",
+      "target": "chatsocket_isconnected",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L58",
+      "weight": 1.0,
+      "_src": "chatsocket_connect",
+      "_tgt": "chatsocket_on",
+      "source": "chatsocket_connect",
+      "target": "chatsocket_on",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/services/chatService.js",
+      "source_location": "L247",
+      "weight": 1.0,
+      "_src": "chatsocket_connect",
+      "_tgt": "chatservice_subscribetoroom",
+      "source": "chatsocket_connect",
+      "target": "chatservice_subscribetoroom"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/chatSocket.js",
+      "source_location": "L103",
+      "weight": 1.0,
+      "_src": "chatsocket_on",
+      "_tgt": "chatsocket_off",
+      "source": "chatsocket_on",
+      "target": "chatsocket_off",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/services/chatService.js",
+      "source_location": "L258",
+      "weight": 1.0,
+      "_src": "chatsocket_on",
+      "_tgt": "chatservice_subscribetoroom",
+      "source": "chatsocket_on",
+      "target": "chatservice_subscribetoroom"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/services/chatService.js",
+      "source_location": "L187",
+      "weight": 1.0,
+      "_src": "chatsocket_emit",
+      "_tgt": "chatservice_markasread",
+      "source": "chatsocket_emit",
+      "target": "chatservice_markasread"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/services/chatService.js",
+      "source_location": "L248",
+      "weight": 1.0,
+      "_src": "chatsocket_emit",
+      "_tgt": "chatservice_subscribetoroom",
+      "source": "chatsocket_emit",
+      "target": "chatservice_subscribetoroom"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/services/chatService.js",
+      "source_location": "L291",
+      "weight": 1.0,
+      "_src": "chatsocket_emit",
+      "_tgt": "chatservice_settyping",
+      "source": "chatsocket_emit",
+      "target": "chatservice_settyping"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L34",
+      "weight": 1.0,
+      "_src": "src_services_chatservice_js",
+      "_tgt": "chatservice_picktherapist",
+      "source": "src_services_chatservice_js",
+      "target": "chatservice_picktherapist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L51",
+      "weight": 1.0,
+      "_src": "src_services_chatservice_js",
+      "_tgt": "chatservice_normalizeroom",
+      "source": "src_services_chatservice_js",
+      "target": "chatservice_normalizeroom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L74",
+      "weight": 1.0,
+      "_src": "src_services_chatservice_js",
+      "_tgt": "chatservice_normalizemessage",
+      "source": "src_services_chatservice_js",
+      "target": "chatservice_normalizemessage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L110",
+      "weight": 1.0,
+      "_src": "src_services_chatservice_js",
+      "_tgt": "chatservice_getconversations",
+      "source": "src_services_chatservice_js",
+      "target": "chatservice_getconversations",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L130",
+      "weight": 1.0,
+      "_src": "src_services_chatservice_js",
+      "_tgt": "chatservice_getmessages",
+      "source": "src_services_chatservice_js",
+      "target": "chatservice_getmessages",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L167",
+      "weight": 1.0,
+      "_src": "src_services_chatservice_js",
+      "_tgt": "chatservice_sendmessage",
+      "source": "src_services_chatservice_js",
+      "target": "chatservice_sendmessage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L183",
+      "weight": 1.0,
+      "_src": "src_services_chatservice_js",
+      "_tgt": "chatservice_markasread",
+      "source": "src_services_chatservice_js",
+      "target": "chatservice_markasread",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L196",
+      "weight": 1.0,
+      "_src": "src_services_chatservice_js",
+      "_tgt": "chatservice_createroom",
+      "source": "src_services_chatservice_js",
+      "target": "chatservice_createroom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L210",
+      "weight": 1.0,
+      "_src": "src_services_chatservice_js",
+      "_tgt": "chatservice_listavailabletherapists",
+      "source": "src_services_chatservice_js",
+      "target": "chatservice_listavailabletherapists",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L243",
+      "weight": 1.0,
+      "_src": "src_services_chatservice_js",
+      "_tgt": "chatservice_subscribetoroom",
+      "source": "src_services_chatservice_js",
+      "target": "chatservice_subscribetoroom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L290",
+      "weight": 1.0,
+      "_src": "src_services_chatservice_js",
+      "_tgt": "chatservice_settyping",
+      "source": "src_services_chatservice_js",
+      "target": "chatservice_settyping",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L300",
+      "weight": 1.0,
+      "_src": "src_services_chatservice_js",
+      "_tgt": "chatservice_gettypingstatus",
+      "source": "src_services_chatservice_js",
+      "target": "chatservice_gettypingstatus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L53",
+      "weight": 1.0,
+      "_src": "chatservice_picktherapist",
+      "_tgt": "chatservice_normalizeroom",
+      "source": "chatservice_picktherapist",
+      "target": "chatservice_normalizeroom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L117",
+      "weight": 1.0,
+      "_src": "chatservice_normalizeroom",
+      "_tgt": "chatservice_getconversations",
+      "source": "chatservice_normalizeroom",
+      "target": "chatservice_getconversations",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L200",
+      "weight": 1.0,
+      "_src": "chatservice_normalizeroom",
+      "_tgt": "chatservice_createroom",
+      "source": "chatservice_normalizeroom",
+      "target": "chatservice_createroom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L143",
+      "weight": 1.0,
+      "_src": "chatservice_normalizemessage",
+      "_tgt": "chatservice_getmessages",
+      "source": "chatservice_normalizemessage",
+      "target": "chatservice_getmessages",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L175",
+      "weight": 1.0,
+      "_src": "chatservice_normalizemessage",
+      "_tgt": "chatservice_sendmessage",
+      "source": "chatservice_normalizemessage",
+      "target": "chatservice_sendmessage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "src/services/chatService.js",
+      "source_location": "L256",
+      "weight": 1.0,
+      "_src": "chatservice_normalizemessage",
+      "_tgt": "chatservice_subscribetoroom",
+      "source": "chatservice_normalizemessage",
+      "target": "chatservice_subscribetoroom",
+      "confidence_score": 1.0
     }
   ],
-  "hyperedges": [
-    {
-      "id": "hyperedge_onboarding_flow",
-      "label": "Onboarding Screen Flow",
-      "nodes": [
-        "loginscreen_loginscreen",
-        "personalinfoscreen_personalinfoscreen",
-        "painlocationscreen_painlocationscreen",
-        "painseverityscreen_painseverityscreen",
-        "paindurationscreen_paindurationscreen",
-        "recoverygoalsscreen_recoverygoalsscreen",
-        "availabilityscreen_availabilityscreen",
-        "onboardingcompletescreen_onboardingcompletescreen"
-      ],
-      "relation": "conceptually_related_to",
-      "note": "Sequential onboarding wizard; each screen navigates to the next via navigation.navigate(PATIENT_ROUTES.X); all screens share onboarding data via OnboardingContext"
-    },
-    {
-      "id": "hyperedge_booking_flow",
-      "label": "Booking Flow",
-      "nodes": [
-        "booktherapistscreen_booktherapistscreen",
-        "slotselectionscreen_slotselectionscreen",
-        "bookingconfirmedscreen_bookingconfirmedscreen"
-      ],
-      "relation": "conceptually_related_to",
-      "note": "Linear booking flow navigated via BookStack; therapist object passed as route param across all steps"
-    },
-    {
-      "id": "hyperedge_main_tab_screens",
-      "label": "Main Tab Screens",
-      "nodes": [
-        "homescreen_homescreen",
-        "booktherapistscreen_booktherapistscreen",
-        "progressscreen_progressscreen",
-        "profilescreen_profilescreen"
-      ],
-      "relation": "conceptually_related_to",
-      "note": "All root tab screens use TabScreenWrapper for entry animation and consume PatientContext"
-    },
-    {
-      "id": "hyperedge_chat_components",
-      "label": "ChatFeatureComponents",
-      "members": [
-        "conversationrow_conversationrow",
-        "messagebubble_messagebubble",
-        "composerbar_composerbar",
-        "attachmentsheet_attachmentsheet",
-        "replypreview_replypreview",
-        "typingindicator_typingindicator",
-        "centertabbutton_centertabbutton"
-      ],
-      "relation": "conceptually_related_to",
-      "note": "All components that together compose the chat feature of MWP Patient"
-    },
-    {
-      "id": "hyperedge_onboarding_components",
-      "label": "OnboardingUIComponents",
-      "members": [
-        "onboardingshell_onboardingshell",
-        "selectablecard_selectablecard",
-        "selectablepill_selectablepill",
-        "primarybutton_primarybutton",
-        "outlinebutton_outlinebutton"
-      ],
-      "relation": "conceptually_related_to",
-      "note": "All UI components that compose the onboarding flow screens"
-    },
-    {
-      "id": "hyperedge_navigation_components",
-      "label": "NavigationComponents",
-      "members": [
-        "animatedtabbar_animatedtabbar",
-        "tabscreenwrapper_tabscreenwrapper",
-        "centertabbutton_centertabbutton"
-      ],
-      "relation": "conceptually_related_to",
-      "note": "Components forming the custom bottom tab navigation system"
-    }
-  ]
+  "hyperedges": []
 }

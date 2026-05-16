@@ -10,6 +10,7 @@ const { connect: connectDB, disconnect: disconnectDB } = require('./config/datab
 const { getClient: getRedis, disconnect: disconnectRedis } = require('./config/redis');
 const { init: initContainer, container } = require('./container');
 const createApp = require('./app');
+const { mountFinalHandlers } = require('./app');
 const socketAuthMiddleware = require('./core/middleware/socketAuthMiddleware');
 const { startNotificationWorker } = require('./core/jobs/workers/notificationWorker');
 const { startAuditWorker } = require('./core/jobs/workers/auditWorker');
@@ -99,8 +100,10 @@ async function bootstrap() {
   // Expose io on app for modules/plugins that need it
   app.set('io', io);
 
-  // 7. Register plugins (async)
+  // 7. Register plugins (async). MUST come before mountFinalHandlers so
+  // plugin routes are registered ahead of the 404 catch-all.
   await app._pluginManager.registerAll(app, container);
+  mountFinalHandlers(app);
 
   // 8. Cache warming — pre-populate frequently accessed caches
   await warmCaches().catch((err) =>
@@ -164,6 +167,8 @@ process.on('uncaughtException', (err) => {
 });
 
 bootstrap().catch((err) => {
-  logger.error({ event: 'BOOTSTRAP_FAILED', err: err.message });
+  console.error('BOOTSTRAP FAILED:', err.message);
+  console.error(err.stack);
+  logger.error({ event: 'BOOTSTRAP_FAILED', err: err.message, stack: err.stack });
   process.exit(1);
 });

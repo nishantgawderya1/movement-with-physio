@@ -2,9 +2,16 @@
 
 const winston = require('winston');
 
-const { combine, timestamp, json, errors, colorize, simple } = winston.format;
+const { combine, timestamp, json, errors, printf, colorize } = winston.format;
 
 const isProduction = process.env.NODE_ENV === 'production';
+
+// Human-readable format for development
+const devFormat = printf(({ level, message, timestamp: ts, stack, ...meta }) => {
+  const metaStr = Object.keys(meta).length ? ' ' + JSON.stringify(meta) : '';
+  const msg = stack || message || JSON.stringify(meta);
+  return `${ts} ${level}: ${msg}${metaStr}`;
+});
 
 const logger = winston.createLogger({
   level: isProduction ? 'info' : 'debug',
@@ -15,7 +22,9 @@ const logger = winston.createLogger({
   ),
   transports: [
     new winston.transports.Console({
-      format: isProduction ? combine(timestamp(), json()) : combine(colorize(), simple()),
+      format: isProduction
+        ? combine(timestamp(), json())
+        : combine(colorize(), timestamp(), devFormat),
     }),
   ],
 });

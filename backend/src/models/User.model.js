@@ -50,10 +50,8 @@ UserSchema.plugin(fieldEncryption, {
   saltGenerator: (secret) => secret.slice(0, 16),
 });
 
-// Indexes
-UserSchema.index({ email: 1 }, { unique: true });
-UserSchema.index({ role: 1, specialty: 1, rating: -1, isVerified: 1 }); // therapist search
-UserSchema.index({ clerkId: 1 });
+// Compound index for therapist search (email + clerkId indexes are already defined in schema field defs)
+UserSchema.index({ role: 1, specialty: 1, rating: -1, isVerified: 1 });
 
 const User = mongoose.model('User', UserSchema);
 module.exports = User;

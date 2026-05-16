@@ -1,13 +1,17 @@
 import React from 'react';
-import { usePatient } from '../context/PatientContext';
+import { useAuth } from '@clerk/clerk-expo';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 
 /**
  * Switches between the auth flow and the main app based on
- * isOnboardingComplete from PatientContext.
+ * Clerk's real session state (isSignedIn).
  */
 export default function RootNavigator() {
-  var { isOnboardingComplete } = usePatient();
-  return isOnboardingComplete ? <MainNavigator /> : <AuthNavigator />;
+  const { isSignedIn, isLoaded } = useAuth();
+
+  // While Clerk is loading the session, render nothing (splash is still showing)
+  if (!isLoaded) return null;
+
+  return isSignedIn ? <MainNavigator key="main" /> : <AuthNavigator key="auth" />;
 }

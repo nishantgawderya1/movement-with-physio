@@ -5,7 +5,7 @@ const controller = require('./auth.controller');
 const { authLimiter } = require('../../core/middleware/rateLimiter');
 const authMiddleware = require('../../core/middleware/authMiddleware');
 const validate = require('../../core/middleware/validate');
-const { sendOTPSchema, verifyOTPSchema } = require('./auth.validation');
+const { sendOTPSchema, verifyOTPSchema, initMeSchema, emailStatusSchema } = require('./auth.validation');
 
 const router = Router();
 
@@ -42,6 +42,48 @@ router.post('/send-otp', authLimiter, validate(sendOTPSchema), controller.sendOT
  *     summary: Verify OTP and return user profile
  */
 router.post('/verify-otp', authLimiter, validate(verifyOTPSchema), controller.verifyOTP);
+
+/**
+ * @openapi
+ * /api/v1/auth/me/init:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Provision (or fetch) the Mongo User doc after Clerk sign-in
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [role]
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum: [patient, therapist]
+ *               name:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User created or returned
+ *       409:
+ *         description: Existing account has a different role
+ */
+router.post('/me/init', authMiddleware, validate(initMeSchema), controller.initMe);
+
+/**
+ * @openapi
+ * /api/v1/auth/email-status:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Pre-flight check — is this email available for the calling app's role?
+ *     description: |
+ *       Public endpoint used by both apps before kicking off Clerk OTP, so we
+ *       can block "this email is registered in the other app" before the user
+ *       ever enters a Clerk session.
+ */
+router.post('/email-status', authLimiter, validate(emailStatusSchema), controller.emailStatus);
 
 /**
  * @openapi

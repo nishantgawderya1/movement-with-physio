@@ -2,10 +2,10 @@
 
 const { Router } = require('express');
 const controller = require('./notification.controller');
-const authMiddleware = require('../../../core/middleware/authMiddleware');
-const rbac = require('../../../core/middleware/rbac');
-const { defaultLimiter } = require('../../../core/middleware/rateLimiter');
-const PluginBase = require('../../../core/plugins/PluginBase');
+const authMiddleware = require('../../core/middleware/authMiddleware');
+const rbac = require('../../core/middleware/rbac');
+const { defaultLimiter } = require('../../core/middleware/rateLimiter');
+const PluginBase = require('../../core/plugins/PluginBase');
 
 /**
  * NotificationPlugin — auto-registered by PluginManager.

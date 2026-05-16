@@ -2,8 +2,8 @@
 
 const { Router } = require('express');
 const { createController } = require('./progress.controller');
-const authMiddleware = require('../../../core/middleware/authMiddleware');
-const PluginBase = require('../../../core/plugins/PluginBase');
+const authMiddleware = require('../../core/middleware/authMiddleware');
+const PluginBase = require('../../core/plugins/PluginBase');
 
 class ProgressPlugin extends PluginBase {
   get name() { return 'progress'; }

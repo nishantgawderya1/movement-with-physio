@@ -14,7 +14,6 @@ const SessionNoteSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Booking',
       required: true,
-      index: true,
     },
     therapistId: {
       type: String, // Clerk user ID

@@ -1,8 +1,8 @@
 'use strict';
 
 const notificationService = require('./notification.service');
-const apiResponse = require('../../../core/utils/apiResponse');
-const asyncHandler = require('../../../core/utils/asyncHandler');
+const apiResponse = require('../../core/utils/apiResponse');
+const asyncHandler = require('../../core/utils/asyncHandler');
 
 const listNotifications = asyncHandler(async (req, res) => {
   const userId = req.user._id || req.user.id;

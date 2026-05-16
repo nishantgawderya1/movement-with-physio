@@ -9,3 +9,4 @@ dist/
 coverage/
 .nyc_output/
 .DS_Store
+graphify-out/.graphify_python

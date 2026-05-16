@@ -24,6 +24,28 @@ router.get('/users', controller.listUsers);
 
 /**
  * @openapi
+ * /api/v1/admin/therapists/pending:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List unverified therapists (admin only)
+ *     security:
+ *       - BearerAuth: []
+ */
+router.get('/therapists/pending', controller.getPendingTherapists);
+
+/**
+ * @openapi
+ * /api/v1/admin/stats:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get platform-wide statistics (admin only)
+ *     security:
+ *       - BearerAuth: []
+ */
+router.get('/stats', controller.getStats);
+
+/**
+ * @openapi
  * /api/v1/admin/audit-logs:
  *   get:
  *     tags: [Admin]

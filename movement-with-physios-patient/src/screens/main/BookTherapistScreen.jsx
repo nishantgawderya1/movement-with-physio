@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
@@ -7,39 +7,29 @@ import { fonts } from '../../constants/fonts';
 import { PATIENT_ROUTES } from '../../constants/routes';
 import TherapistCard from '../../components/booking/TherapistCard';
 import TabScreenWrapper from '../../components/navigation/TabScreenWrapper';
+import { apiClient } from '../../lib/apiClient';
 
-var MOCK_THERAPISTS = [
-  {
-    id: 1,
-    name: 'Dr. Anjali Sharma',
-    spec: 'Sports & Rehab',
-    exp: '12 years',
-    rating: 4.9,
-    reviews: 234,
-    langs: ['English', 'Hindi'],
-    slot: 'Today, 3:00 PM',
-  },
-  {
-    id: 2,
-    name: 'Dr. Rajesh Kumar',
-    spec: 'Orthopedic Therapy',
-    exp: '15 years',
-    rating: 4.8,
-    reviews: 156,
-    langs: ['English', 'Hindi', 'Tamil'],
-    slot: 'Tomorrow, 10:00 AM',
-  },
-  {
-    id: 3,
-    name: 'Dr. Priya Mehta',
-    spec: 'Posture Correction',
-    exp: '8 years',
-    rating: 4.8,
-    reviews: 90,
-    langs: ['English', 'Hindi', 'Marathi'],
-    slot: 'Today, 5:00 PM',
-  },
-];
+/**
+ * Map a backend User (therapist) document into the shape TherapistCard
+ * expects. Fields the backend doesn't yet expose (years of experience,
+ * review counts, next slot, languages) get safe defaults so the card
+ * always renders without crashing.
+ *
+ * @param {object} u - backend therapist user doc
+ * @returns {object}
+ */
+function normalizeTherapist(u) {
+  return {
+    id: String(u._id),
+    name: u.name || u.email || 'Therapist',
+    spec: u.specialty || 'Physiotherapist',
+    exp: '',
+    rating: typeof u.rating === 'number' ? u.rating : 0,
+    reviews: 0,
+    langs: ['English'],
+    slot: 'Available',
+  };
+}
 
 /**
  * Book Therapist tab screen.
@@ -47,6 +37,31 @@ var MOCK_THERAPISTS = [
  * @param {{ navigation: object }} props
  */
 export default function BookTherapistScreen({ navigation }) {
+  var [therapists, setTherapists] = useState([]);
+  var [loading, setLoading] = useState(true);
+  var [error, setError] = useState(null);
+
+  var loadTherapists = useCallback(function () {
+    setLoading(true);
+    // includeUnverified=true so therapists who haven't been admin-verified
+    // yet still appear during dev — the gate stays in place for production
+    // by passing nothing here later.
+    apiClient.get('/therapists', { limit: 50, includeUnverified: true }).then(function (res) {
+      if (res.success) {
+        var raw = Array.isArray(res.data) ? res.data : [];
+        setTherapists(raw.map(normalizeTherapist));
+        setError(null);
+      } else {
+        setError(res.error || 'Could not load therapists');
+      }
+      setLoading(false);
+    });
+  }, []);
+
+  useEffect(function () {
+    loadTherapists();
+  }, [loadTherapists]);
+
   function handleTherapistPress(therapist) {
     navigation.navigate(PATIENT_ROUTES.SLOT_SELECTION, { therapist: therapist });
   }
@@ -60,6 +75,26 @@ export default function BookTherapistScreen({ navigation }) {
     );
   }
 
+  function renderEmpty() {
+    if (loading) {
+      return (
+        <View style={styles.emptyWrap}>
+          <ActivityIndicator size="small" color={colors.primary} />
+        </View>
+      );
+    }
+    return (
+      <View style={styles.emptyWrap}>
+        <Text style={styles.emptyTitle}>
+          {error ? 'Could not load therapists' : 'No therapists available yet'}
+        </Text>
+        <Text style={styles.emptySubtitle}>
+          {error || 'Check back soon — new therapists join regularly.'}
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <TabScreenWrapper tabIndex={1}>
       <SafeAreaView style={styles.safe}>
@@ -67,11 +102,12 @@ export default function BookTherapistScreen({ navigation }) {
         <Text style={styles.headerTitle}>Book Therapist</Text>
 
         <FlatList
-          data={MOCK_THERAPISTS}
+          data={therapists}
           keyExtractor={function (item) { return String(item.id); }}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          ListEmptyComponent={renderEmpty}
           ListHeaderComponent={
             /* Featured Banner */
             <View style={styles.featuredBanner}>
@@ -150,6 +186,26 @@ var styles = StyleSheet.create({
   featuredSub: {
     fontSize: fonts.sm,
     color: colors.textMedium,
+    lineHeight: fonts.sm * 1.5,
+  },
+
+  // Empty / loading state
+  emptyWrap: {
+    paddingVertical: 60,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    gap: 8,
+  },
+  emptyTitle: {
+    fontFamily: fonts.heading.regular,
+    fontSize: fonts.lg,
+    color: colors.textDark,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: fonts.sm,
+    color: colors.textMedium,
+    textAlign: 'center',
     lineHeight: fonts.sm * 1.5,
   },
 });

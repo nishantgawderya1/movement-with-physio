@@ -1,6 +1,5 @@
 const VideoCall = require('../../models/VideoCall.model');
 const ApiError = require('../../core/utils/ApiError');
-const httpStatus = require('http-status');
 const logger = require('../../core/utils/logger');
 const { NOTIFICATION_TYPES } = require('../../core/utils/constants');
 const { addJob } = require('../../core/jobs/jobQueue');
@@ -52,7 +51,7 @@ class VideoService {
   async getCall(callId) {
     const call = await VideoCall.findById(callId).populate('participants', 'name role');
     if (!call) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'Video call not found');
+      throw new ApiError(404, 'Video call not found');
     }
     return call;
   }

@@ -1,10 +1,10 @@
 'use strict';
 
-const Exercise = require('../../../models/Exercise.model');
-const cacheManager = require('../../../core/cache/cacheManager');
-const paginate = require('../../../core/utils/paginator');
-const { REDIS_TTL } = require('../../../core/utils/constants');
-const logger = require('../../../core/utils/logger');
+const Exercise = require('../../models/Exercise.model');
+const cacheManager = require('../../core/cache/cacheManager');
+const paginate = require('../../core/utils/paginator');
+const { REDIS_TTL } = require('../../core/utils/constants');
+const logger = require('../../core/utils/logger');
 
 const EXERCISE_CACHE_TTL = REDIS_TTL.EXERCISE || 3600; // 1hr
 
@@ -142,7 +142,7 @@ async function assignExercise(exerciseId, patientId, therapistId) {
  * Mark an exercise as completed in a tracking session.
  */
 async function completeExercise(sessionId, exerciseData) {
-  const TrackingSession = require('../../../models/TrackingSession.model');
+  const TrackingSession = require('../../models/TrackingSession.model');
   const session = await TrackingSession.findById(sessionId);
   if (!session) {
     const err = new Error('Session not found');

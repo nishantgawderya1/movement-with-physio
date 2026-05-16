@@ -2,12 +2,12 @@
 
 const { Router } = require('express');
 const { createController } = require('./session.controller');
-const authMiddleware = require('../../../core/middleware/authMiddleware');
-const validate = require('../../../core/middleware/validate');
+const authMiddleware = require('../../core/middleware/authMiddleware');
+const validate = require('../../core/middleware/validate');
 const sessionValidation = require('./session.validation');
-const PluginBase = require('../../../core/plugins/PluginBase');
-const auditLog = require('../../../core/middleware/auditLog');
-const rbac = require('../../../core/middleware/rbac');
+const PluginBase = require('../../core/plugins/PluginBase');
+const auditLog = require('../../core/middleware/auditLog');
+const rbac = require('../../core/middleware/rbac');
 
 class SessionPlugin extends PluginBase {
   get name() { return 'session'; }

@@ -6,6 +6,8 @@ const authMiddleware = require('../../core/middleware/authMiddleware');
 const rbac = require('../../core/middleware/rbac');
 const { defaultLimiter } = require('../../core/middleware/rateLimiter');
 const auditLog = require('../../core/middleware/auditLog');
+const validate = require('../../core/middleware/validate');
+const { updateProfile, completeOnboarding } = require('./patient.validation');
 
 const router = Router();
 
@@ -32,7 +34,7 @@ router.get('/profile', controller.getProfile);
  *     security:
  *       - BearerAuth: []
  */
-router.patch('/profile', auditLog('UPDATE_PATIENT_PROFILE', 'patient'), controller.updateProfile);
+router.patch('/profile', validate(updateProfile), auditLog('UPDATE_PATIENT_PROFILE', 'patient'), controller.updateProfile);
 
 /**
  * @openapi
@@ -43,7 +45,29 @@ router.patch('/profile', auditLog('UPDATE_PATIENT_PROFILE', 'patient'), controll
  *     security:
  *       - BearerAuth: []
  */
-router.post('/onboarding', auditLog('PATIENT_ONBOARDING', 'patient'), controller.completeOnboarding);
+router.post('/onboarding', validate(completeOnboarding), auditLog('PATIENT_ONBOARDING', 'patient'), controller.completeOnboarding);
+
+/**
+ * @openapi
+ * /api/v1/patient/dashboard:
+ *   get:
+ *     tags: [Patient]
+ *     summary: Get patient dashboard data
+ *     security:
+ *       - BearerAuth: []
+ */
+router.get('/dashboard', controller.getDashboard);
+
+/**
+ * @openapi
+ * /api/v1/patient/assigned-therapist:
+ *   get:
+ *     tags: [Patient]
+ *     summary: Get assigned therapist details
+ *     security:
+ *       - BearerAuth: []
+ */
+router.get('/assigned-therapist', controller.getAssignedTherapist);
 
 /**
  * @openapi
@@ -57,3 +81,4 @@ router.post('/onboarding', auditLog('PATIENT_ONBOARDING', 'patient'), controller
 router.delete('/account', auditLog('DELETE_PATIENT_ACCOUNT', 'patient'), controller.deletePatientAccount);
 
 module.exports = router;
+
