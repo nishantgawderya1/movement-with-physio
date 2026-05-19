@@ -15,6 +15,9 @@ const BOOKING_STATUS = Object.freeze({
   CONFIRMED: 'confirmed',
   CANCELLED: 'cancelled',
   COMPLETED: 'completed',
+  // Phase 2 — instant video call lifecycle
+  INSTANT_PENDING: 'instant_pending',
+  INSTANT_DECLINED: 'instant_declined',
 });
 
 const NOTIFICATION_TYPES = Object.freeze({
@@ -26,6 +29,12 @@ const NOTIFICATION_TYPES = Object.freeze({
   NEW_MESSAGE: 'new_message',
   VIDEO_CALL: 'video_call',
   SESSION_NOTE_ADDED: 'session_note_added',
+  // Phase 2 — video calls + assessments
+  VIDEO_CALL_REQUESTED: 'video_call_requested',
+  VIDEO_CALL_SCHEDULED: 'video_call_scheduled',
+  VIDEO_CALL_REMINDER: 'video_call_reminder',
+  VIDEO_CALL_DECLINED: 'video_call_declined',
+  ASSESSMENT_COMPLETED: 'assessment_completed',
 });
 
 const CRITICAL_NOTIFICATION_TYPES = [
@@ -71,6 +80,40 @@ const REDIS_TTL = Object.freeze({
   FEATURE_FLAGS: 10 * 60,          // 10 min
 });
 
+// ── Phase 2 — video calling / instant booking / assessments ────────
+const MEETING_TYPE = Object.freeze({
+  VIDEO: 'video',
+  IN_PERSON: 'in_person',
+});
+
+const VIDEO_CALL_STATUS = Object.freeze({
+  SCHEDULED: 'scheduled',
+  INITIATED: 'initiated',
+  ONGOING: 'ongoing',
+  ENDED: 'ended',
+  MISSED: 'missed',
+});
+
+const ASSESSMENT_MODE = Object.freeze({
+  PATIENT_SELF: 'patient_self',
+  THERAPIST_DRIVEN: 'therapist_driven',
+});
+
+const SCHEDULED_MODE = Object.freeze({
+  SLOT_BOOKING: 'slot_booking',
+  INSTANT: 'instant',
+});
+
+const INSTANT_DELAY_MINUTES = Object.freeze([15, 30]);
+const INSTANT_REQUEST_TIMEOUT_MS = 5 * 60 * 1000;
+
+const JOB_NAMES = Object.freeze({
+  SEND_NOTIFICATION: 'send_notification',
+  GENERATE_ASSESSMENT_PDF: 'generate_assessment_pdf',
+  AUTO_CLEAR_AVAILABILITY: 'auto_clear_availability',
+  EXPIRE_INSTANT_REQUESTS: 'expire_instant_requests',
+});
+
 module.exports = {
   ROLES,
   BOOKING_STATUS,
@@ -80,4 +123,12 @@ module.exports = {
   FILE_LIMITS,
   PAGINATION,
   REDIS_TTL,
+  // Phase 2
+  MEETING_TYPE,
+  VIDEO_CALL_STATUS,
+  ASSESSMENT_MODE,
+  SCHEDULED_MODE,
+  INSTANT_DELAY_MINUTES,
+  INSTANT_REQUEST_TIMEOUT_MS,
+  JOB_NAMES,
 };
