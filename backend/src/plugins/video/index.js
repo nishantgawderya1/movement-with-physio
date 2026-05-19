@@ -2,6 +2,7 @@
 
 const { Router } = require('express');
 const { createController } = require('./video.controller');
+const { getIceConfig } = require('./iceConfig.controller');
 const authMiddleware = require('../../core/middleware/authMiddleware');
 const validate = require('../../core/middleware/validate');
 const videoValidation = require('./video.validation');
@@ -23,6 +24,10 @@ class VideoPlugin extends PluginBase {
     router.get('/calls/:callId', authMiddleware, validate(videoValidation.getCall), controller.getCall);
     router.post('/calls/:callId/end', authMiddleware, auditLog('END_VIDEO_CALL', 'video'), controller.endCall);
     router.get('/turn-credentials', authMiddleware, controller.getTurnCredentials);
+
+    // Phase 2: Metered ICE config endpoint — returns short-lived TURN
+    // credentials. Replaces the legacy /turn-credentials for new clients.
+    router.get('/ice-config', authMiddleware, getIceConfig);
 
     app.use('/api/v1/video', router);
 
