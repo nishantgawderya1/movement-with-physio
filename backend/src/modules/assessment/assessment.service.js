@@ -5,7 +5,10 @@ const TrackingSession = require('../../models/TrackingSession.model');
 const cacheManager = require('../../core/cache/cacheManager');
 const paginate = require('../../core/utils/paginator');
 const { addJob } = require('../../core/jobs/jobQueue');
-const { NOTIFICATION_TYPES, REDIS_TTL } = require('../../core/utils/constants');
+const {
+  NOTIFICATION_TYPES, REDIS_TTL,
+  ASSESSMENT_MODE, JOB_NAMES, ROLES,
+} = require('../../core/utils/constants');
 const logger = require('../../core/utils/logger');
 
 // ── Default body parts supported ──────────────────────────────
@@ -94,12 +97,60 @@ async function listAssessments({ patientId, status, cursor, limit }) {
 }
 
 /**
- * Submit a response to a question.
+ * Validate an answer against a question's declared answerType.
+ * Throws { statusCode: 400, code: 'INVALID_ANSWER' } on mismatch.
+ */
+function validateAnswerShape(question, answer) {
+  const fail = (msg) => {
+    const err = new Error(msg);
+    err.statusCode = 400;
+    err.code = 'INVALID_ANSWER';
+    throw err;
+  };
+
+  switch (question.answerType) {
+    case 'text': {
+      if (typeof answer !== 'string') fail('Answer must be a string');
+      if (question.required && answer.trim().length === 0) fail('Answer is required');
+      break;
+    }
+    case 'scale': {
+      const n = Number(answer);
+      if (!Number.isFinite(n) || n < 0 || n > 10) fail('Answer must be a number 0–10');
+      break;
+    }
+    case 'boolean': {
+      if (typeof answer !== 'boolean') fail('Answer must be true or false');
+      break;
+    }
+    case 'multiselect': {
+      if (!Array.isArray(answer)) fail('Answer must be an array');
+      const allowed = new Set((question.options || []).map(String));
+      for (const v of answer) {
+        if (typeof v !== 'string' || !allowed.has(v)) {
+          fail(`Answer contains value not in options: ${v}`);
+        }
+      }
+      break;
+    }
+    default:
+      // Unknown answerType — be permissive (forward-compat)
+      break;
+  }
+}
+
+/**
+ * Submit (or overwrite) a response to a question.
+ * The controller layer is responsible for RBAC; this just performs the mutation.
+ *
  * @param {string} assessmentId
  * @param {string} questionId
  * @param {*} answer
+ * @param {object} [opts]
+ * @param {string} [opts.answeredBy] - Mongo user id of the responder
+ *   (therapist for therapist_driven, patient for patient_self).
  */
-async function respondToQuestion(assessmentId, questionId, answer) {
+async function respondToQuestion(assessmentId, questionId, answer, { answeredBy = null } = {}) {
   const assessment = await Assessment.findById(assessmentId);
   if (!assessment) {
     const err = new Error('Assessment not found');
@@ -112,13 +163,35 @@ async function respondToQuestion(assessmentId, questionId, answer) {
     throw err;
   }
 
-  // Upsert response
+  // Must match a question that exists in this assessment.
+  const question = assessment.questions.find((q) => q.questionId === questionId);
+  if (!question) {
+    const err = new Error(`Unknown questionId: ${questionId}`);
+    err.statusCode = 400;
+    err.code = 'UNKNOWN_QUESTION';
+    throw err;
+  }
+
+  validateAnswerShape(question, answer);
+
+  // Idempotent overwrite: replace existing response with same questionId.
   const idx = assessment.responses.findIndex((r) => r.questionId === questionId);
+  const entry = {
+    questionId,
+    answer,
+    answeredAt: new Date(),
+    answeredBy: answeredBy || null,
+  };
   if (idx >= 0) {
-    assessment.responses[idx].answer = answer;
-    assessment.responses[idx].answeredAt = new Date();
+    assessment.responses[idx].answer = entry.answer;
+    assessment.responses[idx].answeredAt = entry.answeredAt;
+    assessment.responses[idx].answeredBy = entry.answeredBy;
   } else {
-    assessment.responses.push({ questionId, answer, answeredAt: new Date() });
+    assessment.responses.push(entry);
+  }
+
+  if (assessment.status === 'pending') {
+    assessment.status = 'in_progress';
   }
 
   await assessment.save();
@@ -126,7 +199,8 @@ async function respondToQuestion(assessmentId, questionId, answer) {
 }
 
 /**
- * Complete an assessment.
+ * Complete an assessment. When in therapist_driven mode and no PDF has been
+ * generated yet, enqueue the PDF worker job (idempotent on assessmentId).
  */
 async function completeAssessment(assessmentId, { painScore, notes }) {
   const assessment = await Assessment.findByIdAndUpdate(
@@ -144,8 +218,94 @@ async function completeAssessment(assessmentId, { painScore, notes }) {
     err.statusCode = 404;
     throw err;
   }
-  logger.info({ event: 'ASSESSMENT_COMPLETED', assessmentId });
+  logger.info({ event: 'ASSESSMENT_COMPLETED', assessmentId, mode: assessment.mode });
+
+  if (assessment.mode === ASSESSMENT_MODE.THERAPIST_DRIVEN && !assessment.pdfKey) {
+    try {
+      await addJob(
+        JOB_NAMES.GENERATE_ASSESSMENT_PDF,
+        { assessmentId: String(assessment._id) },
+        { jobId: `pdf:${assessment._id}` } // BullMQ dedup
+      );
+    } catch (err) {
+      logger.warn({ event: 'PDF_JOB_ENQUEUE_FAILED', source: 'completeAssessment', err: err.message });
+    }
+  }
+
   return assessment;
+}
+
+/**
+ * Authorization helper — determines what the requesting user is allowed to
+ * see/do on this assessment, given role + mode.
+ *
+ * Returns { ok: true, scope: 'full' | 'metadata' | 'patient_owner' } or
+ * throws { statusCode: 403, code }.
+ *
+ * @param {object} assessment - mongoose doc or lean object
+ * @param {{ mongoId, role }} actor
+ * @param {'read'|'respond'|'complete'|'pdf'} action
+ */
+function authorizeAssessmentAction(assessment, actor, action) {
+  const isPatient = String(assessment.patientId) === String(actor.mongoId);
+  const isTherapist = assessment.therapistId && String(assessment.therapistId) === String(actor.mongoId);
+  const isAdmin = actor.role === ROLES.ADMIN;
+
+  if (!isPatient && !isTherapist && !isAdmin) {
+    const e = new Error('Forbidden'); e.statusCode = 403; e.code = 'NOT_PARTICIPANT'; throw e;
+  }
+
+  if (assessment.mode === ASSESSMENT_MODE.PATIENT_SELF) {
+    // Patient self: patient owns it for all actions; admin can read; therapist
+    // can read (legacy behavior was no enforcement, so don't tighten further).
+    if (action === 'respond' || action === 'complete') {
+      if (!isPatient) {
+        const e = new Error('Only the patient can respond to a self-assessment.');
+        e.statusCode = 403; e.code = 'PATIENT_ONLY'; throw e;
+      }
+    }
+    return { ok: true, scope: 'full' };
+  }
+
+  // therapist_driven
+  if (action === 'respond' || action === 'complete') {
+    if (!isTherapist) {
+      const e = new Error('Only the assigned therapist can act on this assessment.');
+      e.statusCode = 403; e.code = 'THERAPIST_ONLY'; throw e;
+    }
+    return { ok: true, scope: 'full' };
+  }
+  if (action === 'pdf') {
+    if (!isTherapist && !isAdmin) {
+      const e = new Error('PDF is restricted to the assigned therapist.');
+      e.statusCode = 403; e.code = 'ASSESSMENT_PDF_FORBIDDEN'; throw e;
+    }
+    return { ok: true, scope: 'full' };
+  }
+  // read
+  if (isTherapist || isAdmin) return { ok: true, scope: 'full' };
+  // patient on therapist_driven — metadata-only view
+  return { ok: true, scope: 'metadata' };
+}
+
+/**
+ * Strip questions/responses out of an assessment for the metadata view.
+ */
+function toMetadataView(assessment) {
+  const doc = typeof assessment.toObject === 'function' ? assessment.toObject() : assessment;
+  return {
+    _id: doc._id,
+    status: doc.status,
+    mode: doc.mode,
+    bodyParts: doc.bodyParts,
+    createdAt: doc.createdAt,
+    completedAt: doc.completedAt,
+    bookingId: doc.bookingId || null,
+    videoCallId: doc.videoCallId || null,
+    pdfGeneratedAt: doc.pdfGeneratedAt || null,
+    questions: [],
+    responses: [],
+  };
 }
 
 /**
@@ -225,4 +385,8 @@ module.exports = {
   createTrackingSession,
   completeTrackingSession,
   listTrackingSessions,
+  // Phase 2 — RBAC + view helpers
+  authorizeAssessmentAction,
+  toMetadataView,
+  validateAnswerShape,
 };

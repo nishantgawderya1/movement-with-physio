@@ -1,8 +1,29 @@
 'use strict';
 
+const Assessment = require('../../models/Assessment.model');
+const User = require('../../models/User.model');
 const assessmentService = require('./assessment.service');
 const apiResponse = require('../../core/utils/apiResponse');
 const asyncHandler = require('../../core/utils/asyncHandler');
+const { getStorage } = require('../../core/storage');
+
+/**
+ * Resolve Mongo user id for the request — mirrors chat/booking helpers.
+ */
+async function resolveActor(req) {
+  if (req.user && req.user.mongoId) {
+    return { mongoId: req.user.mongoId, role: req.user.role };
+  }
+  const dbUser = await User.findOne({ clerkId: req.user.id }).select('_id role').lean();
+  if (!dbUser) {
+    const err = new Error('User profile not found');
+    err.statusCode = 404;
+    throw err;
+  }
+  req.user.mongoId = String(dbUser._id);
+  req.user.role = req.user.role || dbUser.role;
+  return { mongoId: String(dbUser._id), role: req.user.role || dbUser.role };
+}
 
 const getBodyParts = asyncHandler(async (req, res) => {
   const parts = await assessmentService.getBodyParts();
@@ -24,8 +45,15 @@ const createAssessment = asyncHandler(async (req, res) => {
 });
 
 const getAssessment = asyncHandler(async (req, res) => {
-  const assessment = await assessmentService.getAssessment(req.params.id);
+  const assessment = await Assessment.findById(req.params.id);
   if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId);
+
+  const actor = await resolveActor(req);
+  const { scope } = assessmentService.authorizeAssessmentAction(assessment, actor, 'read');
+
+  if (scope === 'metadata') {
+    return apiResponse.success(res, assessmentService.toMetadataView(assessment));
+  }
   return apiResponse.success(res, assessment);
 });
 
@@ -38,14 +66,54 @@ const listAssessments = asyncHandler(async (req, res) => {
 
 const respondToQuestion = asyncHandler(async (req, res) => {
   const { questionId, answer } = req.body;
-  const assessment = await assessmentService.respondToQuestion(req.params.id, questionId, answer);
-  return apiResponse.success(res, assessment);
+
+  const assessment = await Assessment.findById(req.params.id).select('mode patientId therapistId').lean();
+  if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId);
+
+  const actor = await resolveActor(req);
+  assessmentService.authorizeAssessmentAction(assessment, actor, 'respond');
+
+  const updated = await assessmentService.respondToQuestion(
+    req.params.id, questionId, answer, { answeredBy: actor.mongoId }
+  );
+  return apiResponse.success(res, updated);
 });
 
 const completeAssessment = asyncHandler(async (req, res) => {
   const { painScore, notes } = req.body;
-  const assessment = await assessmentService.completeAssessment(req.params.id, { painScore, notes });
-  return apiResponse.success(res, assessment);
+
+  const assessment = await Assessment.findById(req.params.id).select('mode patientId therapistId').lean();
+  if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId);
+
+  const actor = await resolveActor(req);
+  assessmentService.authorizeAssessmentAction(assessment, actor, 'complete');
+
+  const updated = await assessmentService.completeAssessment(req.params.id, { painScore, notes });
+  return apiResponse.success(res, updated);
+});
+
+/**
+ * GET /api/v1/assessments/:id/pdf
+ * Returns:
+ *   - 202 { status: 'generating' } if PDF not yet created.
+ *   - 200 { status: 'ready', url } with a 5-min signed URL.
+ */
+const getAssessmentPdf = asyncHandler(async (req, res) => {
+  const assessment = await Assessment.findById(req.params.id)
+    .select('mode patientId therapistId pdfKey pdfGeneratedAt')
+    .lean();
+  if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId);
+
+  const actor = await resolveActor(req);
+  assessmentService.authorizeAssessmentAction(assessment, actor, 'pdf');
+
+  if (!assessment.pdfKey) {
+    return res.status(202).json({ success: true, data: { status: 'generating' } });
+  }
+
+  const storage = getStorage();
+  const url = await storage.getSignedUrl(assessment.pdfKey, { expiresInSeconds: 300 });
+  return apiResponse.success(res, { status: 'ready', url, generatedAt: assessment.pdfGeneratedAt });
 });
 
 const getHistory = asyncHandler(async (req, res) => {
@@ -95,4 +163,5 @@ module.exports = {
   createTrackingSession,
   completeTrackingSession,
   listTrackingSessions,
+  getAssessmentPdf,
 };
