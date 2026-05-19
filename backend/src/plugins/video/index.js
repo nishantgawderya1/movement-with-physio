@@ -3,6 +3,7 @@
 const { Router } = require('express');
 const { createController } = require('./video.controller');
 const { getIceConfig } = require('./iceConfig.controller');
+const videoCallController = require('./videoCall.controller');
 const authMiddleware = require('../../core/middleware/authMiddleware');
 const validate = require('../../core/middleware/validate');
 const videoValidation = require('./video.validation');
@@ -21,13 +22,23 @@ class VideoPlugin extends PluginBase {
 
     // REST Routes
     router.post('/calls', authMiddleware, auditLog('CREATE_VIDEO_CALL', 'video'), validate(videoValidation.createCall), controller.createCall);
-    router.get('/calls/:callId', authMiddleware, validate(videoValidation.getCall), controller.getCall);
+    // Phase 2: enriched call view — participant-checked, includes canJoin,
+    // otherParty, assessmentMode. Replaces the legacy thin getCall (legacy
+    // version pre-Phase-2 returned a populated mongoose doc without
+    // participant enforcement; nothing in the live mobile apps depended
+    // on the old shape so we're upgrading in-place).
+    router.get('/calls/:callId', authMiddleware, validate(videoValidation.getCall), videoCallController.getCall);
     router.post('/calls/:callId/end', authMiddleware, auditLog('END_VIDEO_CALL', 'video'), controller.endCall);
     router.get('/turn-credentials', authMiddleware, controller.getTurnCredentials);
 
     // Phase 2: Metered ICE config endpoint — returns short-lived TURN
     // credentials. Replaces the legacy /turn-credentials for new clients.
     router.get('/ice-config', authMiddleware, getIceConfig);
+
+    // Phase 2: call lifecycle — join records the participant and returns
+    // ICE config inline; leave finalizes state and triggers the PDF job.
+    router.post('/calls/:callId/join', authMiddleware, auditLog('JOIN_VIDEO_CALL', 'video'), videoCallController.joinCall);
+    router.post('/calls/:callId/leave', authMiddleware, auditLog('LEAVE_VIDEO_CALL', 'video'), videoCallController.leaveCall);
 
     app.use('/api/v1/video', router);
 
