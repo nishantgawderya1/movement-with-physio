@@ -14,6 +14,11 @@ const { mountFinalHandlers } = require('./app');
 const socketAuthMiddleware = require('./core/middleware/socketAuthMiddleware');
 const { startNotificationWorker } = require('./core/jobs/workers/notificationWorker');
 const { startAuditWorker } = require('./core/jobs/workers/auditWorker');
+const { startAssessmentPdfWorker } = require('./core/jobs/workers/assessmentPdfWorker');
+const {
+  startAvailabilityWorker,
+  registerInstantExpireRepeat,
+} = require('./core/jobs/workers/availabilityWorker');
 const corsOptions = require('./config/cors');
 const logger = require('./core/utils/logger');
 const cacheManager = require('./core/cache/cacheManager');
@@ -113,6 +118,15 @@ async function bootstrap() {
   // 9. Start background workers
   workers.push(startNotificationWorker(redis));
   workers.push(startAuditWorker(redis));
+  workers.push(startAssessmentPdfWorker());
+  workers.push(startAvailabilityWorker());
+
+  // Register the repeat job for instant-request expiry. Idempotent.
+  try {
+    await registerInstantExpireRepeat();
+  } catch (err) {
+    logger.error({ event: 'EXPIRE_REPEAT_REGISTER_FAILED', err: err.message });
+  }
 
   // 10. Start listening
   server.listen(PORT, () => {
