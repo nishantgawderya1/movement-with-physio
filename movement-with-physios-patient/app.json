@@ -14,21 +14,47 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mwp.patient"
+      "bundleIdentifier": "com.mwp.patient",
+      "infoPlist": {
+        "UIBackgroundModes": ["audio"]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.mwp.patient"
+      "package": "com.mwp.patient",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "WAKE_LOCK"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "sdkVersion": "54.0.0",
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-dev-client",
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Movement With Physios uses your camera for video consultations.",
+          "microphonePermission": "Movement With Physios uses your microphone for video consultations."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": { "deploymentTarget": "15.1" },
+          "android": { "minSdkVersion": 24, "compileSdkVersion": 34 }
+        }
+      ]
     ]
   }
 }

@@ -4,3 +4,6 @@ node_modules
 backend/.agent
 graphify-out/.graphify_python
 .env
+
+# Expo local state (device list, prebuild caches, build logs)
+.expo/
