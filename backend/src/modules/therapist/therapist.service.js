@@ -174,6 +174,44 @@ async function getDashboard(clerkId) {
 }
 
 /**
+ * Toggle a therapist's instant-call availability.
+ * - Sets availableNow + availableNowSince (or clears the timestamp when off).
+ * - When turning ON, returns the new availableNowSince timestamp so the
+ *   caller can schedule the auto-clear job tied to that exact value.
+ *
+ * @param {string} clerkId
+ * @param {boolean} availableNow
+ * @returns {Promise<{ availableNow, availableNowSince }>}
+ */
+async function setInstantAvailability(clerkId, availableNow) {
+  const update = availableNow
+    ? { availableNow: true, availableNowSince: new Date() }
+    : { availableNow: false, availableNowSince: null };
+
+  const user = await User.findOneAndUpdate(
+    { clerkId, role: 'therapist' },
+    update,
+    { new: true, runValidators: true }
+  ).select('availableNow availableNowSince').lean();
+
+  if (!user) {
+    const err = new Error('Therapist not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  await cacheManager.invalidate(`therapist:profile:${clerkId}`);
+  logger.info({
+    event: 'THERAPIST_INSTANT_AVAILABILITY',
+    clerkId,
+    availableNow: user.availableNow,
+    availableNowSince: user.availableNowSince,
+  });
+
+  return { availableNow: user.availableNow, availableNowSince: user.availableNowSince };
+}
+
+/**
  * Admin: verify a therapist.
  */
 async function verifyTherapist(therapistId) {
@@ -200,4 +238,5 @@ module.exports = {
   updateAvailability,
   getDashboard,
   verifyTherapist,
+  setInstantAvailability,
 };

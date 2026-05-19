@@ -83,6 +83,27 @@ router.put(
 
 /**
  * @openapi
+ * /api/v1/therapists/me/instant-availability:
+ *   patch:
+ *     tags: [Therapist]
+ *     summary: Toggle instant-call availability (separate from slot scheduling)
+ *     description: |
+ *       Sets the therapist's `availableNow` flag. Turning ON also enqueues
+ *       a 2-hour auto-clear job to flip the flag back off if the therapist
+ *       forgets. Different concern from PUT /me/availability (slot schedule).
+ *     security:
+ *       - BearerAuth: []
+ */
+router.patch(
+  '/me/instant-availability',
+  authMiddleware,
+  rbac('therapist'),
+  auditLog('SET_INSTANT_AVAILABILITY', 'therapist'),
+  controller.setInstantAvailability
+);
+
+/**
+ * @openapi
  * /api/v1/therapists/me/dashboard:
  *   get:
  *     tags: [Therapist]
