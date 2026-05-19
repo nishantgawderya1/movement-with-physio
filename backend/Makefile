@@ -1,4 +1,4 @@
-.PHONY: dev seed test build
+.PHONY: dev seed seed-exercises seed-assessment-questions test build
 
 dev:
 	cp -n .env.local .env 2>/dev/null || true
@@ -16,6 +16,9 @@ seed:
 
 seed-exercises:
 	NODE_ENV=development node scripts/seed-exercises.js
+
+seed-assessment-questions:
+	NODE_ENV=development node scripts/seed-assessment-questions.js
 
 test:
 	NODE_ENV=test npm test

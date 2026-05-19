@@ -1,0 +1,548 @@
+[
+  {
+    "bodyPart": "leg",
+    "questionId": "leg-001",
+    "order": 1,
+    "questionText": "How long have you had pain in your leg? (e.g., 3 days, 2 weeks, 1 month)",
+    "answerType": "text",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "leg",
+    "questionId": "leg-002",
+    "order": 2,
+    "questionText": "Rate your current leg pain (0 = no pain, 10 = worst imaginable)",
+    "answerType": "scale",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "leg",
+    "questionId": "leg-003",
+    "order": 3,
+    "questionText": "Did the pain start after a specific injury or event?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "leg",
+    "questionId": "leg-004",
+    "order": 4,
+    "questionText": "Which of these movements make the pain worse?",
+    "answerType": "multiselect",
+    "options": ["Walking", "Running", "Climbing stairs", "Standing still", "Sitting", "Sleeping", "None"],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "leg",
+    "questionId": "leg-005",
+    "order": 5,
+    "questionText": "Describe the type of pain (e.g., sharp, dull, throbbing, burning)",
+    "answerType": "text",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "leg",
+    "questionId": "leg-006",
+    "order": 6,
+    "questionText": "Does the leg ever feel numb, tingling, or weak?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "leg",
+    "questionId": "leg-007",
+    "order": 7,
+    "questionText": "Have you tried any of the following?",
+    "answerType": "multiselect",
+    "options": ["Rest", "Ice", "Heat", "OTC painkillers", "Physical therapy", "None"],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "leg",
+    "questionId": "leg-008",
+    "order": 8,
+    "questionText": "How much is the pain affecting your daily activities? (0 = not at all, 10 = completely)",
+    "answerType": "scale",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+
+  {
+    "bodyPart": "knee",
+    "questionId": "knee-001",
+    "order": 1,
+    "questionText": "How long have you had knee pain? (e.g., 3 days, 2 weeks, 1 month)",
+    "answerType": "text",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "knee",
+    "questionId": "knee-002",
+    "order": 2,
+    "questionText": "Rate your current knee pain (0 = no pain, 10 = worst imaginable)",
+    "answerType": "scale",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "knee",
+    "questionId": "knee-003",
+    "order": 3,
+    "questionText": "Did the pain start after a specific injury (twist, fall, sports)?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "knee",
+    "questionId": "knee-004",
+    "order": 4,
+    "questionText": "Is there visible swelling around the knee?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "knee",
+    "questionId": "knee-005",
+    "order": 5,
+    "questionText": "Do you hear clicking, popping, or grinding when you bend the knee?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "knee",
+    "questionId": "knee-006",
+    "order": 6,
+    "questionText": "Does the knee ever lock, catch, or give way under your weight?",
+    "answerType": "multiselect",
+    "options": ["Locks", "Catches", "Gives way", "None of these"],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "knee",
+    "questionId": "knee-007",
+    "order": 7,
+    "questionText": "Which activities aggravate the pain the most?",
+    "answerType": "multiselect",
+    "options": ["Walking", "Running", "Climbing stairs", "Descending stairs", "Squatting", "Sitting cross-legged", "Sleeping"],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "knee",
+    "questionId": "knee-008",
+    "order": 8,
+    "questionText": "How much does the knee limit your daily activities? (0 = not at all, 10 = completely)",
+    "answerType": "scale",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+
+  {
+    "bodyPart": "back",
+    "questionId": "back-001",
+    "order": 1,
+    "questionText": "How long have you had back pain?",
+    "answerType": "text",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "back",
+    "questionId": "back-002",
+    "order": 2,
+    "questionText": "Where is the pain located?",
+    "answerType": "multiselect",
+    "options": ["Upper back (between shoulder blades)", "Mid back", "Lower back", "Buttocks / hip area"],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "back",
+    "questionId": "back-003",
+    "order": 3,
+    "questionText": "Rate your current back pain (0 = no pain, 10 = worst imaginable)",
+    "answerType": "scale",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "back",
+    "questionId": "back-004",
+    "order": 4,
+    "questionText": "Does the pain radiate down one or both legs (e.g., sciatica)?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "back",
+    "questionId": "back-005",
+    "order": 5,
+    "questionText": "Is the back stiff in the mornings? If so, for how long does it last?",
+    "answerType": "multiselect",
+    "options": ["No stiffness", "< 15 minutes", "15-30 minutes", "30-60 minutes", "> 1 hour"],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "back",
+    "questionId": "back-006",
+    "order": 6,
+    "questionText": "Which positions or activities make the pain worse?",
+    "answerType": "multiselect",
+    "options": ["Sitting for long periods", "Standing for long periods", "Bending forward", "Lifting", "Sleeping", "Coughing or sneezing"],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "back",
+    "questionId": "back-007",
+    "order": 7,
+    "questionText": "Any numbness, tingling, or weakness in legs or feet?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "back",
+    "questionId": "back-008",
+    "order": 8,
+    "questionText": "How much does the back pain limit your daily activities? (0 = not at all, 10 = completely)",
+    "answerType": "scale",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+
+  {
+    "bodyPart": "neck",
+    "questionId": "neck-001",
+    "order": 1,
+    "questionText": "How long have you had neck pain?",
+    "answerType": "text",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "neck",
+    "questionId": "neck-002",
+    "order": 2,
+    "questionText": "Rate your current neck pain (0 = no pain, 10 = worst imaginable)",
+    "answerType": "scale",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "neck",
+    "questionId": "neck-003",
+    "order": 3,
+    "questionText": "Does the pain radiate to the shoulders, arms, or hands?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "neck",
+    "questionId": "neck-004",
+    "order": 4,
+    "questionText": "Do you get headaches that seem related to the neck pain?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "neck",
+    "questionId": "neck-005",
+    "order": 5,
+    "questionText": "How is your range of motion when turning your head?",
+    "answerType": "multiselect",
+    "options": ["Full range, no pain", "Mild restriction", "Moderate restriction", "Severe restriction"],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "neck",
+    "questionId": "neck-006",
+    "order": 6,
+    "questionText": "Is the pain related to posture (e.g., long screen/desk time)?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "neck",
+    "questionId": "neck-007",
+    "order": 7,
+    "questionText": "Any numbness, tingling, or weakness in arms or hands?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "neck",
+    "questionId": "neck-008",
+    "order": 8,
+    "questionText": "How much does the neck pain affect sleep and daily activities? (0 = not at all, 10 = completely)",
+    "answerType": "scale",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+
+  {
+    "bodyPart": "shoulder",
+    "questionId": "shoulder-001",
+    "order": 1,
+    "questionText": "How long have you had shoulder pain?",
+    "answerType": "text",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "shoulder",
+    "questionId": "shoulder-002",
+    "order": 2,
+    "questionText": "Rate your current shoulder pain (0 = no pain, 10 = worst imaginable)",
+    "answerType": "scale",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "shoulder",
+    "questionId": "shoulder-003",
+    "order": 3,
+    "questionText": "Did the pain start after a specific injury (fall, lift, sport)?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "shoulder",
+    "questionId": "shoulder-004",
+    "order": 4,
+    "questionText": "Can you raise your arm fully overhead without pain?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "shoulder",
+    "questionId": "shoulder-005",
+    "order": 5,
+    "questionText": "Does it hurt when you sleep on the affected side?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "shoulder",
+    "questionId": "shoulder-006",
+    "order": 6,
+    "questionText": "Which movements are most painful or limited?",
+    "answerType": "multiselect",
+    "options": ["Reaching overhead", "Reaching behind back", "Carrying weight", "Throwing motion", "Putting on a shirt", "None of these"],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "shoulder",
+    "questionId": "shoulder-007",
+    "order": 7,
+    "questionText": "Any numbness, tingling, or weakness in the arm or hand?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "shoulder",
+    "questionId": "shoulder-008",
+    "order": 8,
+    "questionText": "How much does the shoulder pain limit daily activities? (0 = not at all, 10 = completely)",
+    "answerType": "scale",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+
+  {
+    "bodyPart": "ankle",
+    "questionId": "ankle-001",
+    "order": 1,
+    "questionText": "How long have you had ankle pain?",
+    "answerType": "text",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "ankle",
+    "questionId": "ankle-002",
+    "order": 2,
+    "questionText": "Rate your current ankle pain (0 = no pain, 10 = worst imaginable)",
+    "answerType": "scale",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "ankle",
+    "questionId": "ankle-003",
+    "order": 3,
+    "questionText": "Did you twist, roll, or fall on the ankle recently?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "ankle",
+    "questionId": "ankle-004",
+    "order": 4,
+    "questionText": "Is there visible swelling or bruising?",
+    "answerType": "multiselect",
+    "options": ["Swelling", "Bruising", "Both", "Neither"],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "ankle",
+    "questionId": "ankle-005",
+    "order": 5,
+    "questionText": "Can you bear weight on the ankle without significant pain?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "ankle",
+    "questionId": "ankle-006",
+    "order": 6,
+    "questionText": "Does the ankle ever feel unstable (like it might give way)?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "ankle",
+    "questionId": "ankle-007",
+    "order": 7,
+    "questionText": "Have you had previous ankle injuries on the same side?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "ankle",
+    "questionId": "ankle-008",
+    "order": 8,
+    "questionText": "How much does the ankle limit walking and daily activities? (0 = not at all, 10 = completely)",
+    "answerType": "scale",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+
+  {
+    "bodyPart": "general",
+    "questionId": "general-001",
+    "order": 1,
+    "questionText": "Describe the main reason for this consultation in your own words.",
+    "answerType": "text",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "general",
+    "questionId": "general-002",
+    "order": 2,
+    "questionText": "Rate your overall pain level today (0 = no pain, 10 = worst imaginable)",
+    "answerType": "scale",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "general",
+    "questionId": "general-003",
+    "order": 3,
+    "questionText": "How long have you been experiencing this issue?",
+    "answerType": "multiselect",
+    "options": ["< 1 week", "1-4 weeks", "1-3 months", "3-6 months", "> 6 months"],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "general",
+    "questionId": "general-004",
+    "order": 4,
+    "questionText": "Have you previously consulted a doctor or physiotherapist for this?",
+    "answerType": "boolean",
+    "options": [],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "general",
+    "questionId": "general-005",
+    "order": 5,
+    "questionText": "Which best describes how this is affecting your life?",
+    "answerType": "multiselect",
+    "options": ["Sleep disturbed", "Work limited", "Exercise limited", "Mood affected", "Daily chores limited", "None"],
+    "required": true,
+    "isActive": true
+  },
+  {
+    "bodyPart": "general",
+    "questionId": "general-006",
+    "order": 6,
+    "questionText": "Anything else you'd like the therapist to know before the call?",
+    "answerType": "text",
+    "options": [],
+    "required": false,
+    "isActive": true
+  }
+]
