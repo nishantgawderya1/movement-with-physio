@@ -31,6 +31,10 @@ const UserSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false, index: true },
     verifiedAt: { type: Date, default: null },
 
+    // Phase 2 — therapist instant-call availability
+    availableNow: { type: Boolean, default: false, index: true },
+    availableNowSince: { type: Date, default: null },
+
     // Patient-specific
     onboardingCompleted: { type: Boolean, default: false },
   },

@@ -2,7 +2,12 @@
 
 const mongoose = require('mongoose');
 const softDeletePlugin = require('../core/utils/softDelete');
-const { BOOKING_STATUS } = require('../core/utils/constants');
+const {
+  BOOKING_STATUS,
+  MEETING_TYPE,
+  SCHEDULED_MODE,
+  INSTANT_DELAY_MINUTES,
+} = require('../core/utils/constants');
 
 const BookingSchema = new mongoose.Schema(
   {
@@ -50,6 +55,36 @@ const BookingSchema = new mongoose.Schema(
     cancelledAt: { type: Date, default: null },
     cancelledBy: { type: String, default: null }, // 'patient' | 'therapist' | 'admin'
     completedAt: { type: Date, default: null },
+
+    // ── Phase 2: Video calling ────────────────────────────────
+    meetingType: {
+      type: String,
+      enum: Object.values(MEETING_TYPE),
+      default: MEETING_TYPE.IN_PERSON,
+      index: true,
+    },
+    scheduledMode: {
+      type: String,
+      enum: Object.values(SCHEDULED_MODE),
+      default: SCHEDULED_MODE.SLOT_BOOKING,
+    },
+    instantDelayMinutes: {
+      type: Number,
+      enum: [...INSTANT_DELAY_MINUTES, null],
+      default: null,
+    },
+    instantRequestedAt: { type: Date, default: null },
+    instantExpiresAt: { type: Date, default: null, index: true },
+    videoCallId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'VideoCall',
+      default: null,
+    },
+    assessmentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Assessment',
+      default: null,
+    },
   },
   {
     timestamps: true,
