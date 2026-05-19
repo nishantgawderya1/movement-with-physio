@@ -11,14 +11,23 @@
     "ios": {
       "bundleIdentifier": "com.mwp.therapist",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "We need access to your photos to upload your government ID."
+        "NSPhotoLibraryUsageDescription": "We need access to your photos to upload your government ID.",
+        "UIBackgroundModes": ["audio"]
       }
     },
     "android": {
       "package": "com.mwp.therapist",
       "adaptiveIcon": {
         "backgroundColor": "#1A6B55"
-      }
+      },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "WAKE_LOCK"
+      ]
     },
     "plugins": [
       "expo-font",
@@ -26,6 +35,21 @@
         "expo-image-picker",
         {
           "photosPermission": "We need access to your photos to upload your government ID."
+        }
+      ],
+      "expo-dev-client",
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "Movement With Physios uses your camera for video consultations.",
+          "microphonePermission": "Movement With Physios uses your microphone for video consultations."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": { "deploymentTarget": "15.1" },
+          "android": { "minSdkVersion": 24, "compileSdkVersion": 34 }
         }
       ]
     ]

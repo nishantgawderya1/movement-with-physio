@@ -8,25 +8,25 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		25F62C8A4F1D1EFCB16069CB /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60BA613844270DA46775D31B /* ExpoModulesProvider.swift */; };
+		3C09A975C8EB6610C26434FF /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 21FEFCD0F786DD958C38E3FA /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		BF96ACA84E291C37CC7C7F0C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 60431148ED7EDC839CF39495 /* PrivacyInfo.xcprivacy */; };
-		D4E912877E6CAF3C3FAE451D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04308B0226056AD7963E4556 /* ExpoModulesProvider.swift */; };
-		D58A2E4AA0D73F5E15DF8DCA /* libPods-MWPTherapist.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6533EAE514AB123ACDBFF6A9 /* libPods-MWPTherapist.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+		FBFDDA20E6C40572BF7FDAB1 /* libPods-MWPTherapist.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EA31E55123732B438554D1C1 /* libPods-MWPTherapist.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		04308B0226056AD7963E4556 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-MWPTherapist/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* MWPTherapist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MWPTherapist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = MWPTherapist/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MWPTherapist/Info.plist; sourceTree = "<group>"; };
-		53D9466D8A8077E3A8E5C483 /* Pods-MWPTherapist.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MWPTherapist.release.xcconfig"; path = "Target Support Files/Pods-MWPTherapist/Pods-MWPTherapist.release.xcconfig"; sourceTree = "<group>"; };
-		60431148ED7EDC839CF39495 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = MWPTherapist/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		6533EAE514AB123ACDBFF6A9 /* libPods-MWPTherapist.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MWPTherapist.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		21FEFCD0F786DD958C38E3FA /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = MWPTherapist/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		3522E2868F6DDB9AFB3B0483 /* Pods-MWPTherapist.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MWPTherapist.debug.xcconfig"; path = "Target Support Files/Pods-MWPTherapist/Pods-MWPTherapist.debug.xcconfig"; sourceTree = "<group>"; };
+		3C9106D694C47A8CB07B90EA /* Pods-MWPTherapist.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MWPTherapist.release.xcconfig"; path = "Target Support Files/Pods-MWPTherapist/Pods-MWPTherapist.release.xcconfig"; sourceTree = "<group>"; };
+		60BA613844270DA46775D31B /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-MWPTherapist/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = MWPTherapist/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B2CC77BC31D2A88255FEF7BF /* Pods-MWPTherapist.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MWPTherapist.debug.xcconfig"; path = "Target Support Files/Pods-MWPTherapist/Pods-MWPTherapist.debug.xcconfig"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
+		EA31E55123732B438554D1C1 /* libPods-MWPTherapist.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MWPTherapist.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = MWPTherapist/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* MWPTherapist-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "MWPTherapist-Bridging-Header.h"; path = "MWPTherapist/MWPTherapist-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D58A2E4AA0D73F5E15DF8DCA /* libPods-MWPTherapist.a in Frameworks */,
+				FBFDDA20E6C40572BF7FDAB1 /* libPods-MWPTherapist.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,26 +53,27 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				60431148ED7EDC839CF39495 /* PrivacyInfo.xcprivacy */,
+				21FEFCD0F786DD958C38E3FA /* PrivacyInfo.xcprivacy */,
 			);
 			name = MWPTherapist;
-			sourceTree = "<group>";
-		};
-		2BE07B607DB4B86F347B78AC /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				AD3E2D5CD7698F57CBD61466 /* MWPTherapist */,
-			);
-			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				6533EAE514AB123ACDBFF6A9 /* libPods-MWPTherapist.a */,
+				EA31E55123732B438554D1C1 /* libPods-MWPTherapist.a */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		6334254B78B39F400046ECD6 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				3522E2868F6DDB9AFB3B0483 /* Pods-MWPTherapist.debug.xcconfig */,
+				3C9106D694C47A8CB07B90EA /* Pods-MWPTherapist.release.xcconfig */,
+			);
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -89,8 +90,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				E0342D81FEA3216BDE42946E /* Pods */,
-				2BE07B607DB4B86F347B78AC /* ExpoModulesProviders */,
+				6334254B78B39F400046ECD6 /* Pods */,
+				A8B1C0CDA1D837AA13E664EE /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -105,12 +106,12 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		AD3E2D5CD7698F57CBD61466 /* MWPTherapist */ = {
+		A8B1C0CDA1D837AA13E664EE /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				04308B0226056AD7963E4556 /* ExpoModulesProvider.swift */,
+				DF8CAD552440EFC5B2ED3FCF /* MWPTherapist */,
 			);
-			name = MWPTherapist;
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -122,14 +123,12 @@
 			path = MWPTherapist/Supporting;
 			sourceTree = "<group>";
 		};
-		E0342D81FEA3216BDE42946E /* Pods */ = {
+		DF8CAD552440EFC5B2ED3FCF /* MWPTherapist */ = {
 			isa = PBXGroup;
 			children = (
-				B2CC77BC31D2A88255FEF7BF /* Pods-MWPTherapist.debug.xcconfig */,
-				53D9466D8A8077E3A8E5C483 /* Pods-MWPTherapist.release.xcconfig */,
+				60BA613844270DA46775D31B /* ExpoModulesProvider.swift */,
 			);
-			name = Pods;
-			path = Pods;
+			name = MWPTherapist;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -140,13 +139,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "MWPTherapist" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				AA5D126FB403790E1B4DF0DF /* [Expo] Configure project */,
+				64938F89FC965CFF9729393E /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				0C507DC0B02083B339222940 /* [CP] Embed Pods Frameworks */,
+				395440C25F34B4D84B1FE035 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -196,7 +195,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				BF96ACA84E291C37CC7C7F0C /* PrivacyInfo.xcprivacy in Resources */,
+				3C09A975C8EB6610C26434FF /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,19 +241,21 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		0C507DC0B02083B339222940 /* [CP] Embed Pods Frameworks */ = {
+		395440C25F34B4D84B1FE035 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-MWPTherapist/Pods-MWPTherapist-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/JitsiWebRTC/WebRTC.framework/WebRTC",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/WebRTC.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
@@ -264,33 +265,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MWPTherapist/Pods-MWPTherapist-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-MWPTherapist/Pods-MWPTherapist-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MWPTherapist/Pods-MWPTherapist-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		AA5D126FB403790E1B4DF0DF /* [Expo] Configure project */ = {
+		64938F89FC965CFF9729393E /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -314,6 +289,38 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-MWPTherapist/expo-configure-project.sh\"\n";
 		};
+		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-MWPTherapist/Pods-MWPTherapist-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXApplication/ExpoApplication_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/expo-dev-launcher/EXDevLauncher.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/expo-dev-menu/EXDevMenu.bundle",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoApplication_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXDevLauncher.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXDevMenu.bundle",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MWPTherapist/Pods-MWPTherapist-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -322,7 +329,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				D4E912877E6CAF3C3FAE451D /* ExpoModulesProvider.swift in Sources */,
+				25F62C8A4F1D1EFCB16069CB /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -331,12 +338,13 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B2CC77BC31D2A88255FEF7BF /* Pods-MWPTherapist.debug.xcconfig */;
+			baseConfigurationReference = 3522E2868F6DDB9AFB3B0483 /* Pods-MWPTherapist.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MWPTherapist/MWPTherapist.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UACKJ675KL;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -367,12 +375,14 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 53D9466D8A8077E3A8E5C483 /* Pods-MWPTherapist.release.xcconfig */;
+			baseConfigurationReference = 3C9106D694C47A8CB07B90EA /* Pods-MWPTherapist.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MWPTherapist/MWPTherapist.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UACKJ675KL;
+				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = MWPTherapist/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -425,6 +435,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -488,6 +499,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				ENABLE_BITCODE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
