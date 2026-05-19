@@ -46,6 +46,52 @@ to keep the graph current.
 | Haptics | `expo-haptics` |
 | Gestures | `react-native-gesture-handler` ~2.28.0 |
 | Safe Area | `react-native-safe-area-context` ~5.6.0 |
+| WebRTC | `react-native-webrtc@124.0.6` (pinned) + `@config-plugins/react-native-webrtc@13.0.0` |
+| Dev client | `expo-dev-client@~6.0.21` (SDK 54 — NOT ^55) + `expo-build-properties@~1.0.10` |
+
+---
+
+## Dev Client + WebRTC plumbing (Phase 1, no UI yet)
+
+Expo Go cannot be used — the app links `react-native-webrtc` natively, so
+all development happens through a custom dev-client build (`expo run:ios
+--device` once, then `expo start --dev-client` thereafter).
+
+### Critical version pin
+`expo-dev-client` and `expo-build-properties` are now on Expo's renumbered
+55.x track. **SDK 54 needs the OLD numbering**: `~6.0.x` and `~1.0.x`
+respectively. Installing with `npm install expo-dev-client` will grab `^55`
+which breaks at compile-time (`AppContext.reloadAppAsync()` not in SDK 54
+expo-modules-core). Always use `npx expo install expo-dev-client
+expo-build-properties` so versions match SDK.
+
+### metro.config.js exports bypass
+`react-native-webrtc` imports `event-target-shim/index`, but the v6
+`exports` field only exposes `.` — Metro's Node-exports check blocks
+the subpath even via `resolveFrom`. The fix in `metro.config.js`
+resolves to the literal `node_modules/react-native-webrtc/node_modules/event-target-shim/index.js`
+to bypass the check. The original Clerk `react-dom` stub is preserved.
+
+### app.json natives
+- iOS: `UIBackgroundModes: ["audio"]` + `expo-build-properties.ios.deploymentTarget: "15.1"`
+- Android: perms `CAMERA, RECORD_AUDIO, MODIFY_AUDIO_SETTINGS, INTERNET, ACCESS_NETWORK_STATE, WAKE_LOCK` + `minSdkVersion: 24, compileSdkVersion: 34`
+- Plugins: `expo-dev-client`, `@config-plugins/react-native-webrtc` (with camera/mic prompt strings), `expo-build-properties`
+
+### ios/ folder is tracked
+First-time prebuild generated `ios/` and it is committed (partial-bare
+pattern, matches therapist). `ios/.gitignore` filters Pods/build/DerivedData.
+`.expo/` is gitignored — never commit `.expo/devices.json` or
+`xcodebuild*.log`.
+
+### `.npmrc` / `legacy-peer-deps=true`
+Committed at app root. Needed for `@clerk/clerk-expo 2.x` peer-dep
+resolution; without it `npm install` fails.
+
+### Placeholder assets (TODO)
+`assets/icon.png`, `splash.png`, `adaptive-icon.png`, `favicon.png` are
+**copies of the therapist app's assets**, dropped in because patient
+`app.json` referenced files that never existed and prebuild errored.
+Replace with real patient branding before any public/internal build.
 
 ---
 
@@ -540,6 +586,8 @@ App renders `null` until fonts are loaded (or error). SplashScreen held via `exp
 | Real therapist data | Mock list in `BookTherapistScreen` |
 | Real chat API | `chatService.js` mock-first — swap implementations when backend is ready |
 | Video call from chat header | Placeholder `onPress: () => {}` in ChatRoomScreen |
+| Video consultation UI | Not built — WebRTC native modules linked (Phase 1 plumbing only). Verified on iOS via temporary smoke screen (now removed). Bare `mediaDevices.getUserMedia` + `RTCView` confirmed working. |
+| Patient brand assets | `assets/*.png` are placeholders copied from therapist — replace with real branding before any external build. |
 
 ---
 
