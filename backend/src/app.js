@@ -1,7 +1,7 @@
 'use strict';
 
 require('dotenv').config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
-require('./config/env'); // Validate env on startup
+const env = require('./config/env'); // Validate env on startup
 
 const express = require('express');
 const cors = require('cors');
@@ -137,6 +137,19 @@ function createApp(container) {
         results,
       });
     });
+  }
+
+  // ── Static (auth-gated) for local-disk storage driver ───────
+  // Only mounted when STORAGE_DRIVER=local so generated PDFs and other
+  // private artifacts aren't served from an open path in production
+  // (where STORAGE_DRIVER=s3 and signed URLs are used instead).
+  if (env.STORAGE_DRIVER === 'local') {
+    const authMiddleware = require('./core/middleware/authMiddleware');
+    app.use(
+      '/static',
+      authMiddleware,
+      express.static(path.resolve(env.STORAGE_LOCAL_DIR))
+    );
   }
 
   // ── Module routes ────────────────────────────────────────────
