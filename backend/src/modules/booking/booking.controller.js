@@ -3,6 +3,24 @@
 const bookingService = require('./booking.service');
 const apiResponse = require('../../core/utils/apiResponse');
 const asyncHandler = require('../../core/utils/asyncHandler');
+const User = require('../../models/User.model');
+
+/**
+ * Resolve the Mongo User._id for the current request from the Clerk session.
+ * Mirrors the chat plugin pattern — needed because Booking stores ObjectIds,
+ * not Clerk IDs.
+ */
+async function resolveMongoUserId(req) {
+  if (req.user && req.user.mongoId) return req.user.mongoId;
+  const dbUser = await User.findOne({ clerkId: req.user.id }).select('_id').lean();
+  if (!dbUser) {
+    const err = new Error('User profile not found');
+    err.statusCode = 404;
+    throw err;
+  }
+  req.user.mongoId = String(dbUser._id);
+  return req.user.mongoId;
+}
 
 /**
  * GET /api/v1/bookings/slots
@@ -22,23 +40,77 @@ const listSlots = asyncHandler(async (req, res) => {
 /**
  * POST /api/v1/bookings
  * Create a new booking.
- * Protected by: authMiddleware + rbac('patient') + idempotency
+ * Protected by: authMiddleware + rbac('patient') + idempotency.
+ *
+ * Response shape:
+ *   - in_person (default): backwards-compatible — returns the booking doc
+ *     directly so existing patient-app code unwraps the same fields it
+ *     always did. No videoCall or assessment keys are introduced.
+ *   - video: returns { booking, videoCall, assessment } envelope — this is
+ *     a NEW flow with no pre-existing client expecting the old shape.
  */
 const createBooking = asyncHandler(async (req, res) => {
-  const { therapistId, slotStart, timezone, durationMinutes, notes } = req.body;
-  const patientId = req.user._id || req.user.id;
+  const { therapistId, slotStart, timezone, durationMinutes, notes, meetingType } = req.body;
+  const patientId = await resolveMongoUserId(req);
 
-  const booking = await bookingService.createBooking({
+  const result = await bookingService.createBooking({
     therapistId,
     patientId,
     slotStart,
     timezone,
     durationMinutes,
     notes,
+    meetingType,
     idempotencyKey: req.headers['idempotency-key'],
   });
 
-  return apiResponse.success(res, booking, 201);
+  if (result.videoCall || result.assessment) {
+    return apiResponse.success(res, result, 201);
+  }
+  return apiResponse.success(res, result.booking, 201);
+});
+
+/**
+ * POST /api/v1/bookings/instant
+ * Patient requests an instant video call.
+ * Body: { therapistId, instantDelayMinutes }
+ */
+const requestInstantBooking = asyncHandler(async (req, res) => {
+  const { therapistId, instantDelayMinutes } = req.body;
+  const patientId = await resolveMongoUserId(req);
+  const result = await bookingService.createInstantBooking({
+    therapistId,
+    patientId,
+    instantDelayMinutes,
+    idempotencyKey: req.headers['idempotency-key'],
+  });
+  return apiResponse.success(res, result, 201);
+});
+
+/**
+ * POST /api/v1/bookings/:id/accept
+ * Therapist accepts an instant call request.
+ */
+const acceptInstantBooking = asyncHandler(async (req, res) => {
+  const therapistId = await resolveMongoUserId(req);
+  const result = await bookingService.acceptInstantBooking({
+    bookingId: req.params.id,
+    therapistId,
+  });
+  return apiResponse.success(res, result);
+});
+
+/**
+ * POST /api/v1/bookings/:id/decline
+ * Therapist declines an instant call request.
+ */
+const declineInstantBooking = asyncHandler(async (req, res) => {
+  const therapistId = await resolveMongoUserId(req);
+  const result = await bookingService.declineInstantBooking({
+    bookingId: req.params.id,
+    therapistId,
+  });
+  return apiResponse.success(res, result);
 });
 
 /**
@@ -87,4 +159,14 @@ const completeBooking = asyncHandler(async (req, res) => {
   return apiResponse.success(res, booking);
 });
 
-module.exports = { listSlots, createBooking, getBooking, listBookings, cancelBooking, completeBooking };
+module.exports = {
+  listSlots,
+  createBooking,
+  getBooking,
+  listBookings,
+  cancelBooking,
+  completeBooking,
+  requestInstantBooking,
+  acceptInstantBooking,
+  declineInstantBooking,
+};
