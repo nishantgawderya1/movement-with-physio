@@ -1,8 +1,8 @@
 'use strict';
 
 const mongoose = require('mongoose');
-const { fieldEncryption } = require('mongoose-field-encryption');
 const softDeletePlugin = require('../core/utils/softDelete');
+const fieldCryptoPlugin = require('../core/security/mongooseFieldCryptoPlugin');
 const { ROLES } = require('../core/utils/constants');
 
 const UserSchema = new mongoose.Schema(
@@ -60,12 +60,12 @@ const UserSchema = new mongoose.Schema(
 // Soft delete plugin
 UserSchema.plugin(softDeletePlugin);
 
-// Field encryption for PII (requires FIELD_ENCRYPTION_KEY env var, 32-byte hex)
-UserSchema.plugin(fieldEncryption, {
-  fields: ['phone'],
-  secret: process.env.FIELD_ENCRYPTION_KEY,
-  saltGenerator: (secret) => secret.slice(0, 16),
-});
+// Field encryption for PII. AES-256-GCM via our in-house plugin
+// (src/core/security/mongooseFieldCryptoPlugin.js). Replaces the old
+// `mongoose-field-encryption` which was incompatible with Mongoose 8.x
+// (called `this.update()` — removed in v8). Requires FIELD_ENCRYPTION_KEY
+// env var (32-byte hex / 64 hex chars), validated at boot in config/env.js.
+UserSchema.plugin(fieldCryptoPlugin, { fields: ['phone'] });
 
 // Compound index for therapist search (email + clerkId indexes are already defined in schema field defs)
 UserSchema.index({ role: 1, specialty: 1, rating: -1, isVerified: 1 });
