@@ -12,13 +12,8 @@ const { init: initContainer, container } = require('./container');
 const createApp = require('./app');
 const { mountFinalHandlers } = require('./app');
 const socketAuthMiddleware = require('./core/middleware/socketAuthMiddleware');
-const { startNotificationWorker } = require('./core/jobs/workers/notificationWorker');
-const { startAuditWorker } = require('./core/jobs/workers/auditWorker');
-const { startAssessmentPdfWorker } = require('./core/jobs/workers/assessmentPdfWorker');
-const {
-  startAvailabilityWorker,
-  registerInstantExpireRepeat,
-} = require('./core/jobs/workers/availabilityWorker');
+const { startUnifiedWorker } = require('./core/jobs/workers/unifiedWorker');
+const { registerInstantExpireRepeat } = require('./core/jobs/workers/availabilityWorker');
 const corsOptions = require('./config/cors');
 const logger = require('./core/utils/logger');
 const cacheManager = require('./core/cache/cacheManager');
@@ -115,11 +110,11 @@ async function bootstrap() {
     logger.warn({ event: 'CACHE_WARM_FAILED', err: err.message })
   );
 
-  // 9. Start background workers
-  workers.push(startNotificationWorker(redis));
-  workers.push(startAuditWorker(redis));
-  workers.push(startAssessmentPdfWorker());
-  workers.push(startAvailabilityWorker());
+  // 9. Start background workers — single unified Worker on the shared
+  //    `mwp-jobs` queue, dispatching by job.name. Replaces the old
+  //    four-Workers-racing-the-queue setup that silently dropped jobs
+  //    whose name didn't match the first worker that claimed them.
+  workers.push(startUnifiedWorker());
 
   // Register the repeat job for instant-request expiry. Idempotent.
   try {

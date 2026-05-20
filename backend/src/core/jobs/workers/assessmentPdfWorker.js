@@ -1,13 +1,10 @@
 'use strict';
 
-const { Worker } = require('bullmq');
 const PDFDocument = require('pdfkit');
 const logger = require('../../utils/logger');
 const { getStorage } = require('../../storage');
-const {
-  JOB_NAMES, NOTIFICATION_TYPES, QUEUE_NAME,
-} = require('../../utils/constants');
-const { QUEUE_NAME: REAL_QUEUE_NAME, addJob, getBullMQConnection } = require('../jobQueue');
+const { JOB_NAMES, NOTIFICATION_TYPES } = require('../../utils/constants');
+const { addJob } = require('../jobQueue');
 const Assessment = require('../../../models/Assessment.model');
 const User = require('../../../models/User.model');
 const env = require('../../../config/env');
@@ -74,75 +71,63 @@ async function buildPdfBuffer(assessment, patient, therapist) {
 }
 
 /**
- * Start the PDF worker. Returns the BullMQ Worker so it can be closed
- * during graceful shutdown.
+ * PDF handler — generates the assessment PDF, persists it via the storage
+ * adapter, writes pdfKey + pdfGeneratedAt onto the Assessment, and enqueues
+ * a follow-up notification to the therapist.
+ *
+ * Idempotent: bails immediately if pdfKey is already set.
+ *
+ * Now invoked by the unified worker (see unifiedWorker.js) — no longer
+ * constructs its own BullMQ Worker.
  */
-function startAssessmentPdfWorker() {
-  const worker = new Worker(
-    REAL_QUEUE_NAME,
-    async (job) => {
-      if (job.name !== JOB_NAMES.GENERATE_ASSESSMENT_PDF) return; // let other workers handle
+async function pdfHandler(job) {
+  const { assessmentId } = job.data || {};
+  if (!assessmentId) throw new Error('assessmentId missing in job data');
 
-      const { assessmentId } = job.data || {};
-      if (!assessmentId) throw new Error('assessmentId missing in job data');
+  const assessment = await Assessment.findById(assessmentId);
+  if (!assessment) throw new Error(`Assessment ${assessmentId} not found`);
 
-      const assessment = await Assessment.findById(assessmentId);
-      if (!assessment) throw new Error(`Assessment ${assessmentId} not found`);
+  // Idempotency: bail if PDF already generated.
+  if (assessment.pdfKey) {
+    logger.info({ event: 'PDF_ALREADY_GENERATED', assessmentId });
+    return;
+  }
 
-      // Idempotency: bail if PDF already generated.
-      if (assessment.pdfKey) {
-        logger.info({ event: 'PDF_ALREADY_GENERATED', assessmentId });
-        return;
-      }
+  const [patient, therapist] = await Promise.all([
+    User.findById(assessment.patientId).select('name'),
+    assessment.therapistId ? User.findById(assessment.therapistId).select('name') : null,
+  ]);
 
-      const [patient, therapist] = await Promise.all([
-        User.findById(assessment.patientId).select('name'),
-        assessment.therapistId ? User.findById(assessment.therapistId).select('name') : null,
-      ]);
-
-      const buffer = await buildPdfBuffer(assessment, patient, therapist);
-      const key = `${env.ASSESSMENT_PDF_PREFIX}${assessmentId}.pdf`;
-      const storage = getStorage();
-      await storage.putPdf(buffer, key, {
-        contentDisposition: `attachment; filename="assessment-${assessmentId}.pdf"`,
-      });
-
-      assessment.pdfKey = key;
-      assessment.pdfGeneratedAt = new Date();
-      await assessment.save();
-
-      // Notify therapist
-      if (assessment.therapistId) {
-        try {
-          await addJob(JOB_NAMES.SEND_NOTIFICATION, {
-            userId: String(assessment.therapistId),
-            title: 'Assessment PDF Ready',
-            body: 'The assessment PDF has been generated.',
-            type: NOTIFICATION_TYPES.ASSESSMENT_COMPLETED,
-            data: {
-              assessmentId: String(assessment._id),
-              bookingId: assessment.bookingId ? String(assessment.bookingId) : null,
-            },
-          });
-        } catch (err) {
-          logger.warn({ event: 'PDF_NOTIFICATION_ENQUEUE_FAILED', err: err.message });
-        }
-      }
-
-      logger.info({ event: 'PDF_GENERATED', assessmentId, key });
-    },
-    {
-      connection: getBullMQConnection(process.env.REDIS_URL),
-      concurrency: 3,
-    }
-  );
-
-  worker.on('failed', (job, err) => {
-    logger.error({ event: 'PDF_WORKER_FAILED', jobId: job?.id, err: err.message });
+  const buffer = await buildPdfBuffer(assessment, patient, therapist);
+  const key = `${env.ASSESSMENT_PDF_PREFIX}${assessmentId}.pdf`;
+  const storage = getStorage();
+  await storage.putPdf(buffer, key, {
+    contentDisposition: `attachment; filename="assessment-${assessmentId}.pdf"`,
   });
 
-  logger.info({ event: 'PDF_WORKER_STARTED' });
-  return worker;
+  assessment.pdfKey = key;
+  assessment.pdfGeneratedAt = new Date();
+  await assessment.save();
+
+  // Notify therapist
+  if (assessment.therapistId) {
+    try {
+      await addJob(JOB_NAMES.SEND_NOTIFICATION, {
+        userId: String(assessment.therapistId),
+        title: 'Assessment PDF Ready',
+        body: 'The assessment PDF has been generated.',
+        type: NOTIFICATION_TYPES.ASSESSMENT_COMPLETED,
+        data: {
+          assessmentId: String(assessment._id),
+          bookingId: assessment.bookingId ? String(assessment.bookingId) : null,
+        },
+      });
+    } catch (err) {
+      logger.warn({ event: 'PDF_NOTIFICATION_ENQUEUE_FAILED', err: err.message });
+    }
+  }
+
+  logger.info({ event: 'PDF_GENERATED', assessmentId, key });
 }
 
-module.exports = { startAssessmentPdfWorker, buildPdfBuffer };
+module.exports = { pdfHandler, buildPdfBuffer };

@@ -1,11 +1,10 @@
 'use strict';
 
-const { Worker } = require('bullmq');
 const logger = require('../../utils/logger');
 const {
   JOB_NAMES, BOOKING_STATUS, NOTIFICATION_TYPES,
 } = require('../../utils/constants');
-const { QUEUE_NAME, addJob, getQueue, getBullMQConnection } = require('../jobQueue');
+const { addJob, getQueue } = require('../jobQueue');
 const User = require('../../../models/User.model');
 const Booking = require('../../../models/Booking.model');
 const cacheManager = require('../../cache/cacheManager');
@@ -17,6 +16,8 @@ const EXPIRE_REPEAT_EVERY_MS = 60 * 1000; // 1 minute
  * Fired ~2h after a therapist toggles availableNow ON. Only clears the flag
  * if availableNowSince still matches the timestamp captured at enqueue time,
  * so a manual re-toggle in between is not clobbered.
+ *
+ * Now invoked by the unified worker (see unifiedWorker.js).
  */
 async function handleAutoClearAvailability(job) {
   const { clerkId, availableNowSince } = job.data || {};
@@ -57,6 +58,8 @@ async function handleAutoClearAvailability(job) {
  * Handler: EXPIRE_INSTANT_REQUESTS
  * Finds all INSTANT_PENDING bookings whose instantExpiresAt has passed;
  * flips them to INSTANT_DECLINED and notifies the patient.
+ *
+ * Now invoked by the unified worker (see unifiedWorker.js).
  */
 async function handleExpireInstantRequests() {
   const now = new Date();
@@ -89,38 +92,9 @@ async function handleExpireInstantRequests() {
 }
 
 /**
- * Start the availability worker (handles both auto-clear and instant-expire).
- */
-function startAvailabilityWorker() {
-  const worker = new Worker(
-    QUEUE_NAME,
-    async (job) => {
-      switch (job.name) {
-        case JOB_NAMES.AUTO_CLEAR_AVAILABILITY:
-          return handleAutoClearAvailability(job);
-        case JOB_NAMES.EXPIRE_INSTANT_REQUESTS:
-          return handleExpireInstantRequests();
-        default:
-          return; // not for this worker
-      }
-    },
-    {
-      connection: getBullMQConnection(process.env.REDIS_URL),
-      concurrency: 2,
-    }
-  );
-
-  worker.on('failed', (job, err) => {
-    logger.error({ event: 'AVAILABILITY_WORKER_FAILED', jobId: job?.id, name: job?.name, err: err.message });
-  });
-
-  logger.info({ event: 'AVAILABILITY_WORKER_STARTED' });
-  return worker;
-}
-
-/**
- * Register the repeat job that polls for expired instant requests every minute.
- * Idempotent — BullMQ deduplicates by repeat key.
+ * Register the repeat job that polls for expired instant requests every
+ * minute. Idempotent — BullMQ deduplicates by repeat key. Not a Worker:
+ * uses the Queue directly.
  */
 async function registerInstantExpireRepeat() {
   const queue = getQueue();
@@ -138,8 +112,7 @@ async function registerInstantExpireRepeat() {
 }
 
 module.exports = {
-  startAvailabilityWorker,
-  registerInstantExpireRepeat,
   handleAutoClearAvailability,
   handleExpireInstantRequests,
+  registerInstantExpireRepeat,
 };
