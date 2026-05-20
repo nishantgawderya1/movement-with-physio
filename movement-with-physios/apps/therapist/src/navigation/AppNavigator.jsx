@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { useAuth } from '@clerk/clerk-expo';
 import AuthNavigator from './AuthNavigator';
 import AppStack from './AppStack';
+import IncomingInstantCallModal from '../components/notifications/IncomingInstantCallModal';
 import { colors } from '../constants/colors';
 
 /**
@@ -49,7 +50,19 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer ref={navigationRef}>
-      {isSignedIn ? <AppStack /> : <AuthNavigator />}
+      {isSignedIn ? (
+        <>
+          <AppStack />
+          {/* Phase 3B — app-level modal for incoming instant-call requests.
+              Subscribes to videoSocket; appears over any signed-in screen.
+              See component docs for the FCM-vs-socket emit gap (backend
+              currently emits via FCM only; adding the socket.emit on the
+              backend's instant flow makes this fire in real time). */}
+          <IncomingInstantCallModal navigation={navigationRef.current} />
+        </>
+      ) : (
+        <AuthNavigator />
+      )}
     </NavigationContainer>
   );
 };
