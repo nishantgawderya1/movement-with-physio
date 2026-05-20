@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   TextInput,
   Animated,
+  Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useClerk } from '@clerk/clerk-expo';
@@ -24,6 +25,7 @@ import { fonts, fontFamilies } from '../../constants/fonts';
 import BottomTabBar from '../../components/BottomTabBar';
 import { ROUTES } from '../../constants/routes';
 import { apiClient } from '../../lib/apiClient';
+import { toggleAvailability } from '../../services/availabilityService';
 
 /**
  * Format a slot.start ISO timestamp into "10:00 AM" style.
@@ -63,6 +65,10 @@ const DashboardScreen = ({ navigation }) => {
   const [therapistName, setTherapistName] = useState('');
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Phase 3B — instant-call availability toggle. Optimistic UI with revert
+  // on failure (no toast lib in the app yet — we silently revert and log).
+  const [availableNow, setAvailableNow] = useState(false);
+  const [togglingAvail, setTogglingAvail] = useState(false);
   const { signOut } = useClerk();
 
   // Load profile + dashboard stats from the backend on mount + whenever the
@@ -80,6 +86,9 @@ const DashboardScreen = ({ navigation }) => {
         // Prefer the typed name; fall back to email so the header never
         // says just "Welcome" for users who skipped PersonalInfo via DEV.
         setTherapistName(prof.data.name || prof.data.email || '');
+        // Phase 3B — surface availableNow from the profile so the Switch
+        // reflects the current backend state on mount + refocus.
+        setAvailableNow(!!prof.data.availableNow);
       }
       if (dash.success && dash.data) {
         setDashboard(dash.data);
@@ -102,6 +111,23 @@ const DashboardScreen = ({ navigation }) => {
     }
   };
 
+  const handleToggleAvailability = async (nextValue) => {
+    if (togglingAvail) return;
+    // Optimistic flip — revert on failure so the user sees the truth.
+    setTogglingAvail(true);
+    setAvailableNow(nextValue);
+    const resp = await toggleAvailability(nextValue);
+    setTogglingAvail(false);
+    if (!resp.success) {
+      // eslint-disable-next-line no-console
+      console.warn('[Dashboard] availability toggle failed:', resp.error);
+      setAvailableNow(!nextValue);
+    } else if (resp.data && typeof resp.data.availableNow === 'boolean') {
+      // Server is the source of truth — sync exactly.
+      setAvailableNow(resp.data.availableNow);
+    }
+  };
+
   const handleTabPress = (tabId) => {
     if (tabId === 'clients') {
       navigation.navigate(ROUTES.CLIENTS);
@@ -109,6 +135,8 @@ const DashboardScreen = ({ navigation }) => {
       navigation.navigate(ROUTES.EXERCISES);
     } else if (tabId === 'messages') {
       navigation.navigate(ROUTES.MESSAGES);
+    } else if (tabId === 'calendar') {
+      navigation.navigate(ROUTES.BOOKINGS);
     }
   };
 
@@ -160,6 +188,22 @@ const DashboardScreen = ({ navigation }) => {
             placeholderTextColor={colors.placeholder}
             value={searchText}
             onChangeText={setSearchText}
+          />
+        </View>
+
+        {/* ── Phase 3B: Instant-call availability toggle ──────────── */}
+        <View style={styles.availCard}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.availTitle}>Available for instant calls</Text>
+            <Text style={styles.availSubtitle}>Patients can call you right now</Text>
+          </View>
+          <Switch
+            value={availableNow}
+            onValueChange={handleToggleAvailability}
+            disabled={togglingAvail}
+            trackColor={{ false: colors.cardBorder, true: colors.primary }}
+            thumbColor={colors.white}
+            ios_backgroundColor={colors.cardBorder}
           />
         </View>
 
@@ -345,6 +389,24 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1, fontSize: fonts.sm, color: colors.textDark,
     paddingVertical: 0,
+  },
+
+  // Phase 3B — instant-call availability toggle card
+  availCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderWidth: 1, borderColor: colors.cardBorder,
+    borderRadius: 12,
+    paddingVertical: 12, paddingHorizontal: 14,
+    marginBottom: 20,
+    gap: 12,
+  },
+  availTitle: {
+    fontSize: fonts.sm, color: colors.textDark, fontWeight: fonts.semibold,
+  },
+  availSubtitle: {
+    fontSize: fonts.xs, color: colors.textMedium, marginTop: 2,
   },
 
   // Stats
