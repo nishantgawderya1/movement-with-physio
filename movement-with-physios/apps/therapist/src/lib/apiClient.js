@@ -37,7 +37,7 @@ async function request(method, path, opts) {
   const options = opts || {};
   const url = withQuery(buildUrl(path), options.query);
 
-  const headers = { Accept: 'application/json' };
+  const headers = { Accept: 'application/json', 'ngrok-skip-browser-warning': 'true' };
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
 
   const token = await tokenProvider.getToken();
