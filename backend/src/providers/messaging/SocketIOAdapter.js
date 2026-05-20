@@ -51,6 +51,37 @@ class SocketIOAdapter extends MessagingProvider {
     }
     this.io.to(`user:${userId}`).emit(event, data);
   }
+  /**
+   * Emit an event to a room on a specific Socket.IO namespace.
+   * Use when you need to target a non-default namespace (e.g. '/video', '/chat').
+   * @param {string} namespace - e.g. '/video'
+   * @param {string} roomId
+   * @param {string} event
+   * @param {*} data
+   */
+  emitToRoomOnNamespace(namespace, roomId, event, data) {
+    if (!this.io) {
+      logger.warn({ event: 'SOCKETIO_NOT_READY', action: 'emitToRoomOnNamespace' });
+      return;
+    }
+    this.io.of(namespace).to(roomId).emit(event, data);
+  }
+
+  /**
+   * Emit an event to a specific user on a specific Socket.IO namespace.
+   * Requires that the user has joined a `user:<id>` room within that namespace.
+   * @param {string} namespace - e.g. '/video'
+   * @param {string} userId
+   * @param {string} event
+   * @param {*} data
+   */
+  emitToUserOnNamespace(namespace, userId, event, data) {
+    if (!this.io) {
+      logger.warn({ event: 'SOCKETIO_NOT_READY', action: 'emitToUserOnNamespace' });
+      return;
+    }
+    this.io.of(namespace).to(`user:${userId}`).emit(event, data);
+  }
 }
 
 module.exports = SocketIOAdapter;

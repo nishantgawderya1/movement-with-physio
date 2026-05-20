@@ -500,6 +500,16 @@ async function createInstantBooking({
       delayMinutes: String(instantDelayMinutes),
     },
   });
+  try {
+      const messaging = require('../../container').container.messaging;
+      messaging.emitToUserOnNamespace('/video', therapistId.toString(), 'video_call_requested', {
+        bookingId: booking._id.toString(),
+        patientId: patientId.toString(),
+        delayMinutes: Number(instantDelayMinutes),
+      });
+    } catch (err) {
+      logger.warn({ event: 'INSTANT_CALL_SOCKET_EMIT_FAILED', err: err?.message });
+    }
 
   return { booking, videoCall: null, assessment: null };
 }

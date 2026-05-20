@@ -113,3 +113,25 @@ describe('Video call lifecycle reconciliation', () => {
     expect(ended.durationSeconds).toBeLessThanOrEqual(301);
   });
 });
+test('emitToUserOnNamespace targets /video namespace and user room', () => {
+    // Mock io, namespace, and to-chain
+    const emittedEvents = [];
+    const mockIo = {
+      of: (ns) => ({
+        to: (room) => ({
+          emit: (event, data) => emittedEvents.push({ ns, room, event, data }),
+        }),
+      }),
+    };
+    const SocketIOAdapter = require('../../../providers/messaging/SocketIOAdapter');
+    const adapter = new SocketIOAdapter();
+    adapter.setServer(mockIo);
+    adapter.emitToUserOnNamespace('/video', 'user-123', 'video_call_requested', { foo: 'bar' });
+    expect(emittedEvents).toHaveLength(1);
+    expect(emittedEvents[0]).toEqual({
+      ns: '/video',
+      room: 'user:user-123',
+      event: 'video_call_requested',
+      data: { foo: 'bar' },
+    });
+  });

@@ -129,7 +129,7 @@ const getBooking = asyncHandler(async (req, res) => {
 const listBookings = asyncHandler(async (req, res) => {
   const { status, cursor, limit } = req.query;
   const result = await bookingService.listBookings({
-    userId: req.user._id || req.user.id,
+    userId: await resolveMongoUserId(req),
     role: req.user.role,
     status,
     cursor,
