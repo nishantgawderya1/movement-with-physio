@@ -37,6 +37,19 @@ const UserSchema = new mongoose.Schema(
 
     // Patient-specific
     onboardingCompleted: { type: Boolean, default: false },
+
+    // Phase 3 — primary body part for clinical assessments.
+    // Enum MUST stay in sync with AssessmentQuestionTemplate.bodyPart values
+    // (verified 2026-05-20: ankle/back/general/knee/leg/neck/shoulder).
+    // Null means "not yet captured" → booking.service falls back to 'general'.
+    painLocation: {
+      type: String,
+      enum: ['leg', 'knee', 'back', 'neck', 'shoulder', 'ankle', 'general', null],
+      lowercase: true,
+      trim: true,
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: true,
