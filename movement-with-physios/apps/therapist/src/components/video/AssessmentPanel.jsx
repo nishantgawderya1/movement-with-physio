@@ -33,6 +33,7 @@ import {
   PanResponder,
   Dimensions,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -348,7 +349,7 @@ export default function AssessmentPanel({ assessmentId, onComplete, height, heig
           {pdfUrl ? (
             <TouchableOpacity
               style={styles.nextBtn}
-              onPress={function () { if (typeof onComplete === 'function') onComplete({ pdfUrl: pdfUrl }); }}
+              onPress={function () { Linking.openURL(pdfUrl); }}
             >
               <Text style={styles.nextBtnText}>View PDF</Text>
             </TouchableOpacity>

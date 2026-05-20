@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const StorageAdapter = require('./StorageAdapter');
+const { signStaticToken } = require('./staticUrlToken');
 
 class LocalDiskStorage extends StorageAdapter {
   constructor({ baseDir, publicBaseUrl }) {
@@ -25,10 +26,14 @@ class LocalDiskStorage extends StorageAdapter {
     return { key, url: `${this.publicBaseUrl}/static/${key}`, driver: 'local' };
   }
 
-  async getSignedUrl(key /* , opts */) {
-    // local: no signing, just return the static URL
+  async getSignedUrl(key, { expiresInSeconds = 300 } = {}) {
+    // Local-disk: mint a short-lived HMAC token bound to this key so the
+    // /static route can serve the file to browser clients (who can't carry
+    // the Clerk session token). Same risk profile as an S3 presigned URL —
+    // see staticUrlToken.js for the format.
     const safeKey = key.replace(/^\/+/, '');
-    return `${this.publicBaseUrl}/static/${safeKey}`;
+    const token = signStaticToken(safeKey, expiresInSeconds);
+    return `${this.publicBaseUrl}/static/${safeKey}?token=${token}`;
   }
 
   async exists(key) {

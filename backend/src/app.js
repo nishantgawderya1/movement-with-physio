@@ -139,15 +139,38 @@ function createApp(container) {
     });
   }
 
-  // ── Static (auth-gated) for local-disk storage driver ───────
+  // ── Static (signed-token gated) for local-disk storage driver ──
   // Only mounted when STORAGE_DRIVER=local so generated PDFs and other
   // private artifacts aren't served from an open path in production
-  // (where STORAGE_DRIVER=s3 and signed URLs are used instead).
+  // (where STORAGE_DRIVER=s3 and proper presigned URLs are used instead).
+  //
+  // Auth model: HMAC-SHA256 query-param token bound to the file path,
+  // 5-minute TTL by default. LocalDiskStorage.getSignedUrl mints the
+  // token; the middleware below verifies it. Browsers open these URLs
+  // directly via Linking.openURL — they can't carry the Clerk session,
+  // so per-URL signed tokens are the right model (same risk profile as
+  // an S3 presigned URL). See src/core/storage/staticUrlToken.js for
+  // format + verification details.
   if (env.STORAGE_DRIVER === 'local') {
-    const authMiddleware = require('./core/middleware/authMiddleware');
+    const { verifyStaticToken } = require('./core/storage/staticUrlToken');
     app.use(
       '/static',
-      authMiddleware,
+      (req, res, next) => {
+        // req.path here is the URL path AFTER the /static mount —
+        // matches the `key` the signer used. Strip the leading slash.
+        const key = (req.path || '').replace(/^\/+/, '');
+        const token = req.query && req.query.token;
+        const result = verifyStaticToken(key, token);
+        if (!result.ok) {
+          const status = result.reason === 'expired' ? 410 : 403;
+          return res.status(status).json({
+            success: false,
+            error: `Static URL token ${result.reason}`,
+            correlationId: req.correlationId,
+          });
+        }
+        next();
+      },
       express.static(path.resolve(env.STORAGE_LOCAL_DIR))
     );
   }
