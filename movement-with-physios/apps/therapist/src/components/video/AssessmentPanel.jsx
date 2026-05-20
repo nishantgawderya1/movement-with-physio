@@ -51,6 +51,10 @@ var COLLAPSED_HEIGHT = 44;
 var POLL_INTERVAL_MS = 2000;
 var POLL_TIMEOUT_MS = 30000;
 
+// Phase 3B UI pass — parent (VideoCallScreen) needs these to compute the
+// controls-bar offset and to seed its shared Animated.Value.
+export { DEFAULT_EXPANDED, COLLAPSED_HEIGHT };
+
 function clamp(n, lo, hi) { return Math.min(hi, Math.max(lo, n)); }
 
 /**
@@ -58,8 +62,12 @@ function clamp(n, lo, hi) { return Math.min(hi, Math.max(lo, n)); }
  * @param {string} props.assessmentId
  * @param {(result: { pdfUrl: string|null }) => void} [props.onComplete]
  * @param {number} [props.height] - override the default expanded height
+ * @param {import('react-native').Animated.Value} [props.heightValue] - optional
+ *   parent-controlled Animated.Value for the panel height. When provided, the
+ *   parent can listen to it (e.g. to anchor the controls bar 12px above the
+ *   panel). When omitted, the panel uses its own internal value as before.
  */
-export default function AssessmentPanel({ assessmentId, onComplete, height }) {
+export default function AssessmentPanel({ assessmentId, onComplete, height, heightValue }) {
   var EXPANDED_HEIGHT = height || DEFAULT_EXPANDED;
 
   var [assessment, setAssessment] = useState(null);
@@ -76,7 +84,11 @@ export default function AssessmentPanel({ assessmentId, onComplete, height }) {
   var [pollError, setPollError] = useState(null);
 
   // ── Bottom-sheet animation ──────────────────────────────────────
-  var heightAnim = useRef(new Animated.Value(EXPANDED_HEIGHT)).current;
+  // If the parent supplied a heightValue, use it (so the parent can listen
+  // for height changes and anchor things to the panel's top). Otherwise
+  // fall back to the panel's own internal value — preserves stand-alone use.
+  var internalHeight = useRef(new Animated.Value(EXPANDED_HEIGHT)).current;
+  var heightAnim = heightValue || internalHeight;
   var collapsedRef = useRef(false);
 
   function animateTo(toValue) {
