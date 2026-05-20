@@ -78,11 +78,26 @@ class VideoPlugin extends PluginBase {
       });
 
       socket.on('end_call', async ({ callId }) => {
-        await videoService.endCall(callId);
-        socket.to(`call:${callId}`).emit('call_ended', { callId, endedBy: userId });
+        // endCall now broadcasts call_ended via messaging.emitToRoom — no
+        // duplicate socket.to(...) emit needed.
+        await videoService.endCall(callId, userId);
       });
 
-      socket.on('disconnect', () => {
+      socket.on('disconnect', async () => {
+        // Force-quit safety net: a participant who dropped without saying
+        // 'end_call' (network loss, app killed) gets their leftAt recorded
+        // and any call rooms they were in marked as ended. socket.rooms
+        // includes the per-user room plus each call:* room they joined.
+        for (const room of socket.rooms) {
+          if (typeof room === 'string' && room.startsWith('call:')) {
+            const callId = room.slice('call:'.length);
+            try {
+              await videoService.endCall(callId, userId);
+            } catch (e) {
+              logger.warn({ event: 'VIDEO_DISCONNECT_END_FAILED', callId, err: e.message });
+            }
+          }
+        }
         logger.info({ event: 'VIDEO_SOCKET_DISCONNECTED', userId, socketId: socket.id });
       });
     });
