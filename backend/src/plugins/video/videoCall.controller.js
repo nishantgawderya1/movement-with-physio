@@ -161,6 +161,19 @@ const joinCall = asyncHandler(async (req, res, next) => {
 const leaveCall = asyncHandler(async (req, res) => {
   const { call, userId } = await loadCallForParticipant(req);
 
+  // Idempotency — if the socket-side end_call (or another /leave) already
+  // ended this call, return the current state without further mutation.
+  // The HTTP /leave is the backstop, not the authoritative end signal.
+  if (call.status === VIDEO_CALL_STATUS.ENDED) {
+    return apiResponse.success(res, {
+      id: String(call._id),
+      status: VIDEO_CALL_STATUS.ENDED,
+      alreadyEnded: true,
+      endedAt: call.endedAt || null,
+      durationSeconds: call.durationSeconds || null,
+    });
+  }
+
   const now = new Date();
   const key = String(userId);
   const existing = call.joinState?.get?.(key) || {};

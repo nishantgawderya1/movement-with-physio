@@ -57,22 +57,31 @@ class VideoService {
   }
 
   /**
-   * End a video call.
+   * End a video call. Idempotent — short-circuits if already ended.
+   * Optionally records the leaver in joinState so HTTP /leave and socket
+   * end_call agree on per-participant state.
+   *
    * @param {string} callId
+   * @param {string} [endedByUserId] - participant who ended the call
+   * @returns {Promise<VideoCall|null>}
    */
-  async endCall(callId) {
+  async endCall(callId, endedByUserId = null) {
     const call = await VideoCall.findById(callId);
-    if (!call) return;
-
+    if (!call || call.status === 'ended') return call;
     call.status = 'ended';
     call.endedAt = new Date();
     if (call.startedAt) {
       call.durationSeconds = Math.floor((call.endedAt - call.startedAt) / 1000);
     }
+    // Sync joinState so HTTP /leave and socket end_call agree
+    if (endedByUserId) {
+      const key = endedByUserId.toString();
+      const existing = call.joinState?.get?.(key) || {};
+      call.joinState.set(key, { joinedAt: existing.joinedAt || null, leftAt: new Date() });
+    }
     await call.save();
-
-    // Notify participants via socket
-    this.messaging.emitToRoom(`call:${callId}`, 'call_ended', { callId });
+    this.messaging.emitToRoom(`call:${callId}`, 'call_ended', { callId, endedBy: endedByUserId });
+    return call;
   }
 
   /**
