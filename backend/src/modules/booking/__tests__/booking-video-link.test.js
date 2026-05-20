@@ -43,10 +43,14 @@ describe('createBooking — video vs in-person', () => {
       email: 't@x.com', role: ROLES.THERAPIST, clerkId: 't_' + Date.now(),
       isVerified: true, name: 'Dr Th',
     });
-    // Seed at least general questions for the snapshot fallback.
+    // Seed both 'general' (fallback) and 'knee' (specific) templates so
+    // we can prove that painLocation drives the selection.
     await AssessmentQuestionTemplate.create([
       { bodyPart: 'general', questionId: 'general-001', order: 1, questionText: 'g1', answerType: 'text', isActive: true },
       { bodyPart: 'general', questionId: 'general-002', order: 2, questionText: 'g2', answerType: 'scale', isActive: true },
+      { bodyPart: 'knee', questionId: 'knee-001', order: 1, questionText: 'How long?', answerType: 'text', isActive: true },
+      { bodyPart: 'knee', questionId: 'knee-002', order: 2, questionText: 'Pain 0-10?', answerType: 'scale', isActive: true },
+      { bodyPart: 'knee', questionId: 'knee-003', order: 3, questionText: 'Swelling?', answerType: 'boolean', isActive: true },
     ]);
   });
 
@@ -94,6 +98,43 @@ describe('createBooking — video vs in-person', () => {
     const reloaded = await Booking.findById(result.booking._id);
     expect(String(reloaded.videoCallId)).toBe(String(result.videoCall._id));
     expect(String(reloaded.assessmentId)).toBe(String(result.assessment._id));
+  });
+
+  test('video booking uses patient.painLocation template when set', async () => {
+    // Phase 3: patient has 'knee' set — assessment must snapshot knee questions, not general.
+    patient.painLocation = 'knee';
+    await patient.save();
+
+    const result = await bookingService.createBooking({
+      therapistId: therapist._id,
+      patientId: patient._id,
+      slotStart: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+      timezone: 'Asia/Kolkata',
+      meetingType: MEETING_TYPE.VIDEO,
+    });
+
+    expect(result.assessment.bodyParts).toEqual(['knee']);
+    expect(result.assessment.questions.length).toBe(3);
+    expect(result.assessment.questions.map((q) => q.questionId)).toEqual([
+      'knee-001', 'knee-002', 'knee-003',
+    ]);
+  });
+
+  test('video booking falls back to general when patient.painLocation is null', async () => {
+    // Phase 3 backfill behaviour — legacy users have null painLocation.
+    expect(patient.painLocation).toBeFalsy();
+
+    const result = await bookingService.createBooking({
+      therapistId: therapist._id,
+      patientId: patient._id,
+      slotStart: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+      timezone: 'Asia/Kolkata',
+      meetingType: MEETING_TYPE.VIDEO,
+    });
+
+    expect(result.assessment.bodyParts).toEqual(['general']);
+    expect(result.assessment.questions.length).toBe(2);
+    expect(result.assessment.questions[0].questionId).toBe('general-001');
   });
 
   test('video booking enqueues VIDEO_CALL_SCHEDULED notification (not legacy BOOKING_CONFIRMED)', async () => {
