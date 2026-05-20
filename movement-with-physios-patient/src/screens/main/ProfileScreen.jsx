@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   Pressable,
   TouchableOpacity,
+  Modal,
+  ActivityIndicator,
   StyleSheet,
   Alert,
 } from 'react-native';
@@ -14,21 +16,33 @@ import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { useClerk } from '@clerk/clerk-expo';
 import { usePatient } from '../../context/PatientContext';
+import { updatePatientProfile, BACKEND_BODY_PARTS } from '../../services/auth/patientService';
 import TabScreenWrapper from '../../components/navigation/TabScreenWrapper';
 
 
 /**
  * A single tappable menu row.
- * @param {{ icon: string, label: string, onPress: function }} props
+ * @param {{ icon: string, label: string, value?: string, onPress: function }} props
  */
-function MenuRow({ icon, label, onPress }) {
+function MenuRow({ icon, label, value, onPress }) {
   return (
     <Pressable style={rowStyles.row} onPress={onPress}>
       <Ionicons name={icon} size={20} color={colors.primary} />
       <Text style={rowStyles.label}>{label}</Text>
+      {value ? <Text style={rowStyles.value}>{value}</Text> : null}
       <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
     </Pressable>
   );
+}
+
+/**
+ * Format a backend painLocation enum value for display.
+ * @param {string|null} value
+ * @returns {string}
+ */
+function formatPainLocation(value) {
+  if (!value) return 'Not set';
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 var rowStyles = StyleSheet.create({
@@ -46,6 +60,11 @@ var rowStyles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     color: colors.textDark,
+  },
+  value: {
+    fontSize: 14,
+    color: colors.textMedium,
+    marginRight: 4,
   },
 });
 
@@ -70,6 +89,27 @@ export default function ProfileScreen({ navigation }) {
   const { signOut } = useClerk();
   var insets = useSafeAreaInsets();
   var patient = usePatient();
+  var [isBodyPartModalOpen, setIsBodyPartModalOpen] = useState(false);
+  var [isSavingBodyPart, setIsSavingBodyPart] = useState(false);
+  var [bodyPartError, setBodyPartError] = useState(null);
+
+  async function handleSelectBodyPart(value) {
+    if (isSavingBodyPart) return;
+    setBodyPartError(null);
+    setIsSavingBodyPart(true);
+    var result = await updatePatientProfile({ painLocation: value });
+    setIsSavingBodyPart(false);
+    if (result.success) {
+      // Refresh PatientContext so the new value reflects on this row
+      // (the modal closes; the next render reads patient.painLocation).
+      if (typeof patient.refresh === 'function') {
+        patient.refresh();
+      }
+      setIsBodyPartModalOpen(false);
+    } else {
+      setBodyPartError(result.error || 'Failed to update body part');
+    }
+  }
 
   async function handleLogout() {
     Alert.alert('Log out', 'Are you sure you want to log out?', [
@@ -116,6 +156,12 @@ export default function ProfileScreen({ navigation }) {
         {/* ── MENU ── */}
         <View style={styles.menuSection}>
           <MenuRow
+            icon="body-outline"
+            label="Primary body part"
+            value={formatPainLocation(patient.painLocation)}
+            onPress={function () { setIsBodyPartModalOpen(true); }}
+          />
+          <MenuRow
             icon="person-outline"
             label="Personal Information"
             onPress={handleComingSoon}
@@ -147,6 +193,59 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
         </ScrollView>
+
+        {/* ── BODY-PART MODAL ── */}
+        <Modal
+          visible={isBodyPartModalOpen}
+          animationType="fade"
+          transparent={true}
+          onRequestClose={function () { setIsBodyPartModalOpen(false); }}
+        >
+          <Pressable
+            style={styles.modalBackdrop}
+            onPress={function () { setIsBodyPartModalOpen(false); }}
+          >
+            <Pressable style={styles.modalCard} onPress={function () {}}>
+              <Text style={styles.modalTitle}>Primary body part</Text>
+              <Text style={styles.modalSubtitle}>Used to tailor your clinical assessment.</Text>
+              <View style={styles.modalGrid}>
+                {BACKEND_BODY_PARTS.map(function (option) {
+                  var isCurrent = patient.painLocation === option;
+                  return (
+                    <Pressable
+                      key={option}
+                      style={[
+                        styles.modalOption,
+                        isCurrent ? styles.modalOptionSelected : null,
+                      ]}
+                      onPress={function () { handleSelectBodyPart(option); }}
+                      disabled={isSavingBodyPart}
+                    >
+                      <Text
+                        style={[
+                          styles.modalOptionLabel,
+                          isCurrent ? styles.modalOptionLabelSelected : null,
+                        ]}
+                      >
+                        {formatPainLocation(option)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {isSavingBodyPart ? (
+                <ActivityIndicator
+                  size="small"
+                  color={colors.primary}
+                  style={styles.modalSpinner}
+                />
+              ) : null}
+              {bodyPartError ? (
+                <Text style={styles.modalError}>{bodyPartError}</Text>
+              ) : null}
+            </Pressable>
+          </Pressable>
+        </Modal>
       </SafeAreaView>
     </TabScreenWrapper>
   );
@@ -241,5 +340,66 @@ var styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: colors.danger,
+  },
+
+  // Body-part modal
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: colors.background,
+    borderRadius: 16,
+    padding: 20,
+  },
+  modalTitle: {
+    fontFamily: fonts.heading.regular,
+    fontSize: 20,
+    lineHeight: 20 * 1.35,
+    color: colors.textDark,
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: fonts.sm,
+    color: colors.textMedium,
+    marginBottom: 16,
+  },
+  modalGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  modalOption: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    backgroundColor: colors.surface,
+  },
+  modalOptionSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  modalOptionLabel: {
+    fontSize: fonts.sm,
+    color: colors.textDark,
+  },
+  modalOptionLabelSelected: {
+    color: colors.textOnPrimary,
+    fontWeight: '600',
+  },
+  modalSpinner: {
+    marginTop: 12,
+  },
+  modalError: {
+    fontSize: fonts.sm,
+    color: colors.danger,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });

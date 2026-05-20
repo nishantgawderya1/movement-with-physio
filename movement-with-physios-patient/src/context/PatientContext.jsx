@@ -9,6 +9,9 @@ import { tokenProvider } from '../lib/tokenProvider';
 const EMPTY_PATIENT = {
   name: '',
   email: '',
+  // Phase 3 — primary body part. Null until the patient has captured one.
+  // Booking flow falls back to 'general' on null so this is safe.
+  painLocation: null,
   streak: 0,
   adherence: 0,
   todayPlan: { title: '', minutes: 0, exercises: 0 },
@@ -43,6 +46,8 @@ export function PatientProvider({ children }) {
           return Object.assign({}, prev, {
             name: res.data.name || '',
             email: res.data.email || '',
+            // Phase 3 — surface painLocation so ProfileScreen can show + update it.
+            painLocation: res.data.painLocation || null,
           });
         });
         if (typeof res.data.onboardingCompleted === 'boolean') {
