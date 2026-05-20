@@ -89,12 +89,33 @@ describe('Patient painLocation — service persistence', () => {
     expect(updated.painLocation).toBeNull();
   });
 
-  // NOTE: `completeOnboarding` service-level integration test omitted —
-  // patient.service.completeOnboarding calls User.findOneAndUpdate with
-  // a `phone` field, which triggers mongoose-field-encryption's update
-  // hook. That hook is incompatible with Mongoose 8.x (calls `this.update`
-  // which is undefined in v8). The Joi validator above proves
-  // completeOnboarding accepts painLocation, and the round-trip tests
-  // above prove findOneAndUpdate persists it; the cross-product is the
-  // unrelated plugin bug. Tracked separately.
+  // Encryption rewritten in Phase 3A.1 (AES-GCM helper, Mongoose 8 compatible).
+  // This test now exercises the full completeOnboarding flow including phone
+  // encryption — proves the pre('findOneAndUpdate') hook on the new plugin
+  // both encrypts the phone payload AND post('init') decrypts it on the
+  // returned document, while the new painLocation field still persists.
+  test('completeOnboarding can include painLocation alongside an encrypted phone', async () => {
+    const clerkId = 'pat3_' + Date.now();
+    await User.create({
+      email: 'pat3@x.com', role: ROLES.PATIENT,
+      clerkId, name: 'Pat3',
+    });
+
+    const result = await patientService.completeOnboarding(clerkId, {
+      name: 'Pat3',
+      phone: '+919876543210',
+      painLocation: 'shoulder',
+    });
+    expect(result.painLocation).toBe('shoulder');
+    expect(result.onboardingCompleted).toBe(true);
+    // The Mongoose doc that completeOnboarding returns should expose the
+    // decrypted phone (post('init') fired during findOneAndUpdate's hydration).
+    expect(result.phone).toBe('+919876543210');
+
+    // But the raw DB doc should hold ciphertext — proof the pre-update hook
+    // encrypted before persistence.
+    const raw = await User.db.collection('users').findOne({ clerkId });
+    expect(raw.phone).toMatch(/^v1:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+$/);
+    expect(raw.phone).not.toBe('+919876543210');
+  });
 });
