@@ -9,11 +9,9 @@ const createCall = {
   }),
 };
 
-const getCall = {
-  params: Joi.object().keys({
-    callId: Joi.string().hex().length(24).required(),
-  }),
-};
+const getCall = Joi.object().keys({
+  callId: Joi.string().hex().length(24).required(),
+});
 
 module.exports = {
   createCall,

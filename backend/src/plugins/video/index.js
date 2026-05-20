@@ -27,7 +27,7 @@ class VideoPlugin extends PluginBase {
     // version pre-Phase-2 returned a populated mongoose doc without
     // participant enforcement; nothing in the live mobile apps depended
     // on the old shape so we're upgrading in-place).
-    router.get('/calls/:callId', authMiddleware, validate(videoValidation.getCall), videoCallController.getCall);
+    router.get('/calls/:callId', authMiddleware, validate(videoValidation.getCall, { source: 'params' }), videoCallController.getCall);
     router.post('/calls/:callId/end', authMiddleware, auditLog('END_VIDEO_CALL', 'video'), controller.endCall);
     router.get('/turn-credentials', authMiddleware, controller.getTurnCredentials);
 
@@ -55,6 +55,7 @@ class VideoPlugin extends PluginBase {
     videoNamespace.on('connection', (socket) => {
       const userId = socket.data.user?.id;
       if (!userId) return;
+      socket.join(`user:${userId}`);
 
       logger.info({ event: 'VIDEO_SOCKET_CONNECTED', userId, socketId: socket.id });
 
