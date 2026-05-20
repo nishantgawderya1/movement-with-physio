@@ -204,7 +204,7 @@ const leaveCall = asyncHandler(async (req, res) => {
         await addJob(
           JOB_NAMES.GENERATE_ASSESSMENT_PDF,
           { assessmentId: String(assessment._id) },
-          { jobId: `pdf:${assessment._id}` }
+          { jobId: `pdf-${assessment._id}` } // no ":" — BullMQ rejects colons in custom jobIds
         );
         logger.info({ event: 'PDF_JOB_ENQUEUED', source: 'leaveCall', assessmentId: assessment._id });
       } catch (err) {

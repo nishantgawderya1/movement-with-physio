@@ -225,7 +225,7 @@ async function completeAssessment(assessmentId, { painScore, notes }) {
       await addJob(
         JOB_NAMES.GENERATE_ASSESSMENT_PDF,
         { assessmentId: String(assessment._id) },
-        { jobId: `pdf:${assessment._id}` } // BullMQ dedup
+        { jobId: `pdf-${assessment._id}` } // BullMQ dedup (no ":" — BullMQ rejects colons in custom jobIds)
       );
     } catch (err) {
       logger.warn({ event: 'PDF_JOB_ENQUEUE_FAILED', source: 'completeAssessment', err: err.message });
