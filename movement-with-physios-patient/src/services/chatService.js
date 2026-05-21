@@ -27,15 +27,31 @@ import { tokenProvider } from '../lib/tokenProvider';
 /**
  * Identify the "other" participant in a direct chat for the patient view.
  * Falls back to the first participant when myId is unknown.
- * @param {Array} participants - populated User docs from backend
+ *
+ * `participants` may arrive in TWO shapes depending on the producing endpoint:
+ *   - GET /chat/rooms          → populated User docs (objects with `_id`)
+ *   - POST /chat/rooms (new)   → raw ObjectId strings (NOT populated)
+ * Both forms are handled — `idOf` normalizes the comparison.
+ *
+ * TODO(backend): make POST /chat/rooms `.populate('participants')` to match
+ * the GET shape. Once that lands, this dual-shape handling + the matching
+ * defensive branch in `normalizeRoom` below can be removed.
+ *
+ * @param {Array} participants - populated User docs OR raw ObjectId strings
  * @param {string|null} myId
- * @returns {object|null}
+ * @returns {object|string|null}
  */
 function pickTherapist(participants, myId) {
   if (!Array.isArray(participants) || participants.length === 0) return null;
+  function idOf(p) {
+    if (!p) return null;
+    if (typeof p === 'object') return p._id;
+    return p;
+  }
   if (myId) {
     var other = participants.find(function (p) {
-      return String(p && p._id) !== String(myId);
+      var pid = idOf(p);
+      return pid && String(pid) !== String(myId);
     });
     if (other) return other;
   }
@@ -44,6 +60,11 @@ function pickTherapist(participants, myId) {
 
 /**
  * Map a backend ChatRoom into the UI's Conversation shape.
+ *
+ * Tolerates both `pickTherapist` return shapes (populated user object OR
+ * raw ObjectId string) — see TODO above re: backend POST /chat/rooms
+ * populate symmetry.
+ *
  * @param {object} room
  * @param {string|null} myId
  * @returns {object|null}
@@ -51,11 +72,12 @@ function pickTherapist(participants, myId) {
 function normalizeRoom(room, myId) {
   if (!room) return null;
   var therapist = pickTherapist(room.participants, myId);
+  var isObj = therapist && typeof therapist === 'object';
   return {
     roomId: String(room._id),
-    therapistId: therapist ? String(therapist._id) : '',
-    therapistName: therapist ? (therapist.name || therapist.email || 'Therapist') : 'Therapist',
-    therapistAvatar: therapist && therapist.avatarUrl ? therapist.avatarUrl : null,
+    therapistId: isObj ? String(therapist._id || '') : (therapist ? String(therapist) : ''),
+    therapistName: isObj ? (therapist.name || therapist.email || 'Therapist') : 'Therapist',
+    therapistAvatar: isObj && therapist.avatarUrl ? therapist.avatarUrl : null,
     lastMessage: room.lastMessage && room.lastMessage.text ? room.lastMessage.text : '',
     lastMessageTime: room.lastMessage && room.lastMessage.sentAt
       ? room.lastMessage.sentAt
