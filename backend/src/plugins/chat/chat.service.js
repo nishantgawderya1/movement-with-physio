@@ -30,18 +30,23 @@ class ChatService {
    * @returns {Promise<ChatRoom>}
    */
   async createRoom(participantIds) {
-    // For direct chats, ensure we don't create duplicates
+    // Populate participants to match the contract of getUserRooms / getRoom —
+    // the controller returns this room to the client, which expects participants
+    // as hydrated User objects, not raw ObjectIds.
+    // TODO: lastMessage.sender is also never populated anywhere in this service
+    // — separate concern for a future chat-rendering pass.
     const room = await ChatRoom.findOne({
       participants: { $all: participantIds, $size: participantIds.length },
       type: 'direct',
-    });
+    }).populate('participants', 'name email role');
 
     if (room) return room;
 
-    return ChatRoom.create({
+    const created = await ChatRoom.create({
       participants: participantIds,
       type: 'direct',
     });
+    return created.populate('participants', 'name email role');
   }
 
   /**
