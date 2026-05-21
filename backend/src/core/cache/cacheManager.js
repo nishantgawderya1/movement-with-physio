@@ -1,10 +1,12 @@
 'use strict';
 
+const logger = require('../utils/logger');
+
 let redis = null;
 
 /**
  * Generic Redis cache manager.
- * Provides get/set/invalidate with pattern-based invalidation.
+ * Provides get/set/invalidate.
  *
  * @param {import('ioredis').Redis} redisClient
  */
@@ -44,20 +46,11 @@ async function set(key, value, ttlSeconds) {
  * @param {string} key
  */
 async function invalidate(key) {
+  if (!redis) {
+    logger.warn({ event: 'CACHE_INVALIDATE_SKIPPED', reason: 'redis_not_initialized', key });
+    return;
+  }
   await redis.del(key);
 }
 
-/**
- * Delete all keys matching a pattern (uses SCAN to avoid blocking).
- * @param {string} pattern - e.g. 'exercise:*'
- */
-async function invalidatePattern(pattern) {
-  let cursor = '0';
-  do {
-    const [next, keys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
-    cursor = next;
-    if (keys.length) await redis.del(...keys);
-  } while (cursor !== '0');
-}
-
-module.exports = { init, get, set, invalidate, invalidatePattern };
+module.exports = { init, get, set, invalidate };
