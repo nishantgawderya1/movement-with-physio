@@ -122,7 +122,15 @@ export function useVideoCall({ callId, otherUserId, role = 'patient' }) {
   }, [callId, teardown]);
 
   var join = useCallback(async function () {
-    if (hasJoinedRef.current) return;
+    // Retry path: a prior attempt set hasJoinedRef but surfaced a terminal
+    // error rendered in the overlay. error !== null is the rendering-layer
+    // invariant that the overlay is visible, so it's also the only state
+    // where Retry can be pressed. Tear the old attempt down before fresh.
+    if (hasJoinedRef.current) {
+      if (error === null) return; // genuine double-join — no-op
+      teardown();
+      hasJoinedRef.current = false;
+    }
     hasJoinedRef.current = true;
     setCallStatus('connecting');
     setError(null);
@@ -286,7 +294,7 @@ export function useVideoCall({ callId, otherUserId, role = 'patient' }) {
       hasMadeOfferRef.current = false;
       teardown();
     }
-  }, [callId, otherUserId, teardown]);
+  }, [callId, otherUserId, teardown, error]);
 
   var toggleMute = useCallback(function () {
     var stream = localStreamRef.current;
