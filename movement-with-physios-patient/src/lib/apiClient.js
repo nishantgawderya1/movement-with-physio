@@ -52,7 +52,7 @@ function withQuery(url, params) {
  * Core request runner.
  * @param {string} method - GET | POST | DELETE | PATCH
  * @param {string} path
- * @param {{ body?: any, query?: Object, signal?: AbortSignal }} [opts]
+ * @param {{ body?: any, query?: Object, signal?: AbortSignal, idempotencyKey?: string }} [opts]
  * @returns {Promise<{ success: boolean, data?: any, error?: string, status?: number }>}
  */
 async function request(method, path, opts) {
@@ -61,6 +61,7 @@ async function request(method, path, opts) {
 
   var headers = { Accept: 'application/json', 'ngrok-skip-browser-warning': 'true' };
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
+  if (options.idempotencyKey) headers['Idempotency-Key'] = options.idempotencyKey;
 
   var token = await tokenProvider.getToken();
   if (token) headers.Authorization = 'Bearer ' + token;
@@ -99,7 +100,25 @@ async function request(method, path, opts) {
 export var apiClient = {
   baseUrl: function () { return BASE_URL; },
   get: function (path, query, signal) { return request('GET', path, { query: query, signal: signal }); },
-  post: function (path, body) { return request('POST', path, { body: body }); },
-  patch: function (path, body) { return request('PATCH', path, { body: body }); },
+  /**
+   * @param {string} path
+   * @param {*} body
+   * @param {{ idempotencyKey?: string }} [options]
+   */
+  post: function (path, body, options) {
+    var opts = { body: body };
+    if (options && options.idempotencyKey) opts.idempotencyKey = options.idempotencyKey;
+    return request('POST', path, opts);
+  },
+  /**
+   * @param {string} path
+   * @param {*} body
+   * @param {{ idempotencyKey?: string }} [options]
+   */
+  patch: function (path, body, options) {
+    var opts = { body: body };
+    if (options && options.idempotencyKey) opts.idempotencyKey = options.idempotencyKey;
+    return request('PATCH', path, opts);
+  },
   del: function (path) { return request('DELETE', path); },
 };

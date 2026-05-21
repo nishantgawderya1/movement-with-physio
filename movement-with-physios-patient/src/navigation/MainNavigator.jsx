@@ -32,16 +32,32 @@ const Tab = createBottomTabNavigator();
  * MESSAGES tab uses MessagesStack so ChatRoomScreen slides inside it.
  */
 /**
- * Returns true when the focused screen inside a tab's nested stack
- * is ChatRoomScreen — used to hide the tab bar so it does not
- * overlap the chat composer.
+ * Routes inside any tab's nested stack that take over the full screen
+ * (chat composer, video call surfaces) and therefore require the tab
+ * bar — including its elevated CenterTabButton — to disappear.
  *
- * @param {object} route  — route object passed from Tab.Screen screenOptions
+ * Phase 4: video call routes live inside HomeStack (not MessagesStack),
+ * so the tabBar prop below must inspect BOTH the Home and Messages
+ * tabs' focused routes.
+ */
+var HIDE_TAB_BAR_ON = new Set([
+  PATIENT_ROUTES.CHAT_ROOM,
+  PATIENT_ROUTES.PRE_CALL_LOBBY,
+  PATIENT_ROUTES.VIDEO_CALL,
+  PATIENT_ROUTES.SESSION_ENDED,
+  PATIENT_ROUTES.WAITING_FOR_THERAPIST,
+]);
+
+/**
+ * Returns true when the focused screen inside a tab's nested stack is
+ * one of the full-screen takeover routes (chat room, video call surfaces).
+ *
+ * @param {object} route — route object passed from Tab.Screen screenOptions
  * @returns {boolean}
  */
 function isTabBarHidden(route) {
   var focusedRoute = getFocusedRouteNameFromRoute(route);
-  return focusedRoute === PATIENT_ROUTES.CHAT_ROOM;
+  return HIDE_TAB_BAR_ON.has(focusedRoute);
 }
 
 export default function MainNavigator() {
@@ -60,13 +76,19 @@ export default function MainNavigator() {
     <Animated.View style={{ flex: 1, opacity: fadeIn }}>
       <Tab.Navigator
         tabBar={function (props) {
-          // Detect if the focused route inside the Messages stack is ChatRoom.
-          // When true, suppress the entire tab bar (including CenterTabButton)
-          // so it cannot overlap the chat composer.
+          // Suppress the entire tab bar (including CenterTabButton) when
+          // the focused route in either the Messages stack (ChatRoom) or
+          // the Home stack (video call surfaces) is a full-screen takeover.
           var messagesRoute = props.state.routes.find(
             function (r) { return r.name === PATIENT_ROUTES.MESSAGES; }
           );
-          if (messagesRoute && isTabBarHidden(messagesRoute)) {
+          var homeRoute = props.state.routes.find(
+            function (r) { return r.name === PATIENT_ROUTES.HOME; }
+          );
+          if (
+            (messagesRoute && isTabBarHidden(messagesRoute)) ||
+            (homeRoute && isTabBarHidden(homeRoute))
+          ) {
             return null;
           }
           return <AnimatedTabBar {...props} />;
