@@ -207,7 +207,7 @@ export default function WaitingForTherapistScreen({ navigation, route }) {
             <Text style={styles.primaryBtnText}>Retry</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.secondaryBtn} onPress={handleBackToHome}>
-            <Text style={styles.secondaryBtnText}>Back to Home</Text>
+            <Text style={styles.secondaryBtnText}>Back to Messages</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -227,7 +227,7 @@ export default function WaitingForTherapistScreen({ navigation, route }) {
           <Text style={styles.title}>Therapist couldn't take the call</Text>
           <Text style={styles.subtitle}>Try scheduling a session instead.</Text>
           <TouchableOpacity style={styles.primaryBtn} onPress={handleBackToHome}>
-            <Text style={styles.primaryBtnText}>Back to Home</Text>
+            <Text style={styles.primaryBtnText}>Back to Messages</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -244,7 +244,7 @@ export default function WaitingForTherapistScreen({ navigation, route }) {
           </View>
           <Text style={styles.title}>Call request cancelled</Text>
           <TouchableOpacity style={styles.primaryBtn} onPress={handleBackToHome}>
-            <Text style={styles.primaryBtnText}>Back to Home</Text>
+            <Text style={styles.primaryBtnText}>Back to Messages</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

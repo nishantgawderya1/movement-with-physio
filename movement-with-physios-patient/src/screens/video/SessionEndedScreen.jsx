@@ -56,7 +56,7 @@ export default function SessionEndedScreen({ navigation, route }) {
         <Text style={styles.duration}>Duration: {formatDuration(durationSeconds)}</Text>
 
         <TouchableOpacity style={styles.secondaryBtn} onPress={handleBackToHome}>
-          <Text style={styles.secondaryBtnText}>Back to Home</Text>
+          <Text style={styles.secondaryBtnText}>Back to Messages</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
