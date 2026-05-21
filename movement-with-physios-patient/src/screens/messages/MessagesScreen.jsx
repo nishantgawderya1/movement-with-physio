@@ -74,6 +74,7 @@ export default function MessagesScreen({ navigation }) {
     }
     navigation.navigate(PATIENT_ROUTES.CHAT_ROOM, {
       roomId: res.data.roomId,
+      therapistId: res.data.therapistId || (therapist && therapist.id) || null,
       therapistName: res.data.therapistName || therapist.name,
       therapistAvatar: res.data.therapistAvatar,
       isOnline: res.data.isOnline,
@@ -85,6 +86,7 @@ export default function MessagesScreen({ navigation }) {
   function handleConversationPress(conv) {
     navigation.navigate(PATIENT_ROUTES.CHAT_ROOM, {
       roomId: conv.roomId,
+      therapistId: conv.therapistId,
       therapistName: conv.therapistName,
       therapistAvatar: conv.therapistAvatar,
       isOnline: conv.isOnline,

@@ -111,3 +111,20 @@ export async function requestInstantCall(args) {
   }
   return { success: true, data: response.data };
 }
+
+/**
+ * PATCH /api/v1/bookings/:id/cancel — cancel a booking (patient-initiated).
+ * Used from WaitingForTherapistScreen when the patient bails out of an
+ * instant request before the therapist accepts.
+ *
+ * @param {string} bookingId
+ * @param {string} [reason]
+ * @returns {Promise<{ success: boolean, data?: object, error?: string }>}
+ */
+export async function cancelBooking(bookingId, reason) {
+  var response = await apiClient.patch('/bookings/' + bookingId + '/cancel', { reason: reason }, {});
+  if (!response.success) {
+    return { success: false, error: response.error || 'Failed to cancel booking' };
+  }
+  return { success: true, data: response.data };
+}
