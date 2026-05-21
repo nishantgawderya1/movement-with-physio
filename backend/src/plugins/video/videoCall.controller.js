@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const asyncHandler = require('../../core/utils/asyncHandler');
 const apiResponse = require('../../core/utils/apiResponse');
 const logger = require('../../core/utils/logger');
+const { resolveMongoUserId } = require('../../core/utils/resolveMongoUserId');
 const env = require('../../config/env');
 const VideoCall = require('../../models/VideoCall.model');
 const Assessment = require('../../models/Assessment.model');
@@ -18,21 +19,6 @@ const { getIceConfig } = require('./iceConfig.controller');
 
 const JOIN_WINDOW_MS = () => env.VIDEO_CALL_JOIN_WINDOW_MINUTES * 60 * 1000;
 const TIMEOUT_MS = () => env.VIDEO_CALL_TIMEOUT_MINUTES * 60 * 1000;
-
-/**
- * Resolve the Mongo User._id for the request. Mirrors chat/booking helpers.
- */
-async function resolveMongoUserId(req) {
-  if (req.user && req.user.mongoId) return req.user.mongoId;
-  const dbUser = await User.findOne({ clerkId: req.user.id }).select('_id').lean();
-  if (!dbUser) {
-    const err = new Error('User profile not found');
-    err.statusCode = 404;
-    throw err;
-  }
-  req.user.mongoId = String(dbUser._id);
-  return req.user.mongoId;
-}
 
 /**
  * Verify the requester is a participant on the call.

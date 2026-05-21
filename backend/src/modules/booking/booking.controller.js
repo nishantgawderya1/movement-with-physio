@@ -3,24 +3,7 @@
 const bookingService = require('./booking.service');
 const apiResponse = require('../../core/utils/apiResponse');
 const asyncHandler = require('../../core/utils/asyncHandler');
-const User = require('../../models/User.model');
-
-/**
- * Resolve the Mongo User._id for the current request from the Clerk session.
- * Mirrors the chat plugin pattern — needed because Booking stores ObjectIds,
- * not Clerk IDs.
- */
-async function resolveMongoUserId(req) {
-  if (req.user && req.user.mongoId) return req.user.mongoId;
-  const dbUser = await User.findOne({ clerkId: req.user.id }).select('_id').lean();
-  if (!dbUser) {
-    const err = new Error('User profile not found');
-    err.statusCode = 404;
-    throw err;
-  }
-  req.user.mongoId = String(dbUser._id);
-  return req.user.mongoId;
-}
+const { resolveMongoUserId } = require('../../core/utils/resolveMongoUserId');
 
 /**
  * GET /api/v1/bookings/slots

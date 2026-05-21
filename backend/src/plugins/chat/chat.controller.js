@@ -2,26 +2,7 @@
 
 const catchAsync = require('../../core/utils/asyncHandler');
 const responseHelper = require('../../core/utils/apiResponse');
-const User = require('../../models/User.model');
-
-/**
- * Resolve the current request's Mongo User._id from the Clerk session userId.
- * The chat schema stores ObjectIds, so we must translate before persisting
- * or comparing against participants/sender.
- * @param {import('express').Request} req
- * @returns {Promise<string>} Mongo ObjectId as string
- */
-async function resolveMongoUserId(req) {
-  if (req.user && req.user.mongoId) return req.user.mongoId;
-  const user = await User.findOne({ clerkId: req.user.id }).select('_id').lean();
-  if (!user) {
-    const err = new Error('User profile not found');
-    err.statusCode = 404;
-    throw err;
-  }
-  req.user.mongoId = String(user._id);
-  return req.user.mongoId;
-}
+const { resolveMongoUserId } = require('../../core/utils/resolveMongoUserId');
 
 const createController = (container) => {
   const chatService = require('./chat.service')(container);

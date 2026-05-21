@@ -1,29 +1,11 @@
 'use strict';
 
 const Assessment = require('../../models/Assessment.model');
-const User = require('../../models/User.model');
 const assessmentService = require('./assessment.service');
 const apiResponse = require('../../core/utils/apiResponse');
 const asyncHandler = require('../../core/utils/asyncHandler');
+const { resolveActor } = require('../../core/utils/resolveMongoUserId');
 const { getStorage } = require('../../core/storage');
-
-/**
- * Resolve Mongo user id for the request — mirrors chat/booking helpers.
- */
-async function resolveActor(req) {
-  if (req.user && req.user.mongoId) {
-    return { mongoId: req.user.mongoId, role: req.user.role };
-  }
-  const dbUser = await User.findOne({ clerkId: req.user.id }).select('_id role').lean();
-  if (!dbUser) {
-    const err = new Error('User profile not found');
-    err.statusCode = 404;
-    throw err;
-  }
-  req.user.mongoId = String(dbUser._id);
-  req.user.role = req.user.role || dbUser.role;
-  return { mongoId: String(dbUser._id), role: req.user.role || dbUser.role };
-}
 
 const getBodyParts = asyncHandler(async (req, res) => {
   const parts = await assessmentService.getBodyParts();
