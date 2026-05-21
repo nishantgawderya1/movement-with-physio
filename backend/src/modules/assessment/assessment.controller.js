@@ -4,7 +4,7 @@ const Assessment = require('../../models/Assessment.model');
 const assessmentService = require('./assessment.service');
 const apiResponse = require('../../core/utils/apiResponse');
 const asyncHandler = require('../../core/utils/asyncHandler');
-const { resolveActor } = require('../../core/utils/resolveMongoUserId');
+const { resolveMongoUserId, resolveActor } = require('../../core/utils/resolveMongoUserId');
 const { getStorage } = require('../../core/storage');
 
 const getBodyParts = asyncHandler(async (req, res) => {
@@ -20,7 +20,7 @@ const getQuestions = asyncHandler(async (req, res) => {
 
 const createAssessment = asyncHandler(async (req, res) => {
   const { bodyParts } = req.body;
-  const patientId = req.user._id || req.user.id;
+  const patientId = await resolveMongoUserId(req);
   const therapistId = req.body.therapistId || null;
   const assessment = await assessmentService.createAssessment({ patientId, therapistId, bodyParts });
   return apiResponse.success(res, assessment, 201);
@@ -41,7 +41,7 @@ const getAssessment = asyncHandler(async (req, res) => {
 
 const listAssessments = asyncHandler(async (req, res) => {
   const { status, cursor, limit } = req.query;
-  const patientId = req.user._id || req.user.id;
+  const patientId = await resolveMongoUserId(req);
   const result = await assessmentService.listAssessments({ patientId, status, cursor, limit: Number(limit) || 20 });
   return apiResponse.paginated(res, result.data, result.pagination);
 });
@@ -100,7 +100,7 @@ const getAssessmentPdf = asyncHandler(async (req, res) => {
 
 const getHistory = asyncHandler(async (req, res) => {
   const { cursor, limit } = req.query;
-  const patientId = req.user._id || req.user.id;
+  const patientId = await resolveMongoUserId(req);
   const result = await assessmentService.getHistory({ patientId, cursor, limit: Number(limit) || 20 });
   return apiResponse.paginated(res, result.data, result.pagination);
 });
@@ -108,7 +108,7 @@ const getHistory = asyncHandler(async (req, res) => {
 // ── Tracking Sessions ─────────────────────────────────────────
 
 const createTrackingSession = asyncHandler(async (req, res) => {
-  const patientId = req.user._id || req.user.id;
+  const patientId = await resolveMongoUserId(req);
   const { bookingId, assessmentId, exercises, painScoreBefore } = req.body;
   const session = await assessmentService.createTrackingSession({
     patientId,
@@ -128,7 +128,7 @@ const completeTrackingSession = asyncHandler(async (req, res) => {
 
 const listTrackingSessions = asyncHandler(async (req, res) => {
   const { cursor, limit } = req.query;
-  const patientId = req.user._id || req.user.id;
+  const patientId = await resolveMongoUserId(req);
   const result = await assessmentService.listTrackingSessions({ patientId, cursor, limit: Number(limit) || 20 });
   return apiResponse.paginated(res, result.data, result.pagination);
 });

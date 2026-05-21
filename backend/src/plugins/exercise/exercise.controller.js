@@ -3,6 +3,7 @@
 const exerciseService = require('./exercise.service');
 const apiResponse = require('../../core/utils/apiResponse');
 const asyncHandler = require('../../core/utils/asyncHandler');
+const { resolveMongoUserId } = require('../../core/utils/resolveMongoUserId');
 
 /**
  * Factory: creates controller bound to a storage provider from DI.
@@ -29,7 +30,8 @@ function createController(container) {
   });
 
   const createExercise = asyncHandler(async (req, res) => {
-    const data = { ...req.body, createdBy: req.user._id || req.user.id };
+    const createdBy = await resolveMongoUserId(req);
+    const data = { ...req.body, createdBy };
     const exercise = await exerciseService.createExercise(data);
     return apiResponse.success(res, exercise, 201);
   });
@@ -46,7 +48,7 @@ function createController(container) {
 
   const assignExercise = asyncHandler(async (req, res) => {
     const { patientId } = req.body;
-    const therapistId = req.user._id || req.user.id;
+    const therapistId = await resolveMongoUserId(req);
     const result = await exerciseService.assignExercise(req.params.id, patientId, therapistId);
     return apiResponse.success(res, result, 201);
   });

@@ -3,6 +3,7 @@
 const { getClient } = require('../../config/redis');
 const { REDIS_TTL } = require('../utils/constants');
 const logger = require('../utils/logger');
+const { resolveMongoUserId } = require('../utils/resolveMongoUserId');
 
 /**
  * Idempotency key middleware.
@@ -25,7 +26,8 @@ async function idempotency(req, res, next) {
     });
   }
 
-  const redisKey = `idempotent:${req.user._id || req.user.id}:${key}`;
+  const userId = await resolveMongoUserId(req);
+  const redisKey = `idempotent:${userId}:${key}`;
   const redis = getClient(process.env.REDIS_URL);
 
   try {

@@ -135,6 +135,9 @@ async function assignExercise(exerciseId, patientId, therapistId) {
     throw err;
   }
   // The assignment itself lives in TrackingSession; here we just validate and return
+  // FIXME(assignExercise-stub): endpoint returns 201 but never persists.
+  // Tracked as Phase A Item 5. Service synthesizes the response in memory;
+  // no Exercise / TrackingSession write occurs.
   return { exerciseId, patientId, therapistId, assignedAt: new Date() };
 }
 
