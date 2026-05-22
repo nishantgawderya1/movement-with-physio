@@ -35,10 +35,8 @@ class VideoPlugin extends PluginBase {
     // on the old shape so we're upgrading in-place).
     router.get('/calls/:callId', authMiddleware, validate(videoValidation.getCall, { source: 'params' }), videoCallController.getCall);
     router.post('/calls/:callId/end', authMiddleware, auditLog('END_VIDEO_CALL', 'video'), controller.endCall);
-    router.get('/turn-credentials', authMiddleware, controller.getTurnCredentials);
 
-    // Phase 2: Metered ICE config endpoint — returns short-lived TURN
-    // credentials. Replaces the legacy /turn-credentials for new clients.
+    // Metered ICE config endpoint — returns short-lived TURN credentials.
     router.get('/ice-config', authMiddleware, getIceConfig);
 
     // Phase 2: call lifecycle — join records the participant and returns

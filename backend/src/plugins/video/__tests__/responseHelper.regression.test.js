@@ -1,8 +1,6 @@
 'use strict';
 
 const { connect, close, clearDb } = require('../../../../tests/setup');
-const mongoose = require('mongoose');
-const VideoCall = require('../../../models/VideoCall.model');
 const User = require('../../../models/User.model');
 const { VIDEO_CALL_STATUS, ROLES } = require('../../../core/utils/constants');
 
@@ -13,17 +11,10 @@ jest.mock('../../../core/jobs/jobQueue', () => ({
   addJob: (...args) => mockAddJob(...args),
 }));
 
-// container.video.getTurnCredentials is the only provider call exercised
-// by this suite; return a deterministic credentials object.
-const fakeTurnCredentials = {
-  iceServers: [{ urls: 'stun:stun.example.com:3478' }],
-  ttlSeconds: 3600,
-};
 const mockMessaging = { emitToRoom: jest.fn() };
 const container = {
   messaging: mockMessaging,
   notification: { sendPush: jest.fn() },
-  video: { getTurnCredentials: jest.fn().mockResolvedValue(fakeTurnCredentials) },
 };
 
 const { createController } = require('../video.controller');
@@ -55,7 +46,6 @@ describe('video controller — responseHelper signature regression (S-followup-3
     await clearDb();
     mockAddJob.mockClear();
     mockMessaging.emitToRoom.mockClear();
-    container.video.getTurnCredentials.mockClear();
     alice = await User.create({
       clerkId: 'clerk_alice', email: 'alice@example.com', name: 'Alice', role: ROLES.THERAPIST,
     });
@@ -87,33 +77,4 @@ describe('video controller — responseHelper signature regression (S-followup-3
     expect(mockAddJob).toHaveBeenCalledTimes(1);
   });
 
-  test('getCall: returns 200 with { success: true, data: <call> } envelope', async () => {
-    const call = await VideoCall.create({
-      participants: [alice._id, bob._id],
-      initiatedBy: alice._id,
-      status: VIDEO_CALL_STATUS.INITIATED,
-    });
-    const req = { params: { callId: String(call._id) } };
-    const { status, body } = await runController(controller.getCall, req);
-    expect(status).toBe(200);
-    expect(body.success).toBe(true);
-    expect(String(body.data._id)).toBe(String(call._id));
-    // Populated participants — VideoService.getCall calls .populate('participants', 'name role')
-    expect(Array.isArray(body.data.participants)).toBe(true);
-    expect(body.data.participants).toHaveLength(2);
-    expect(body.data.participants[0]).toEqual(expect.objectContaining({
-      _id: expect.anything(),
-      name: expect.any(String),
-      role: expect.any(String),
-    }));
-  });
-
-  test('getTurnCredentials: returns 200 with { success: true, data: <credentials> } envelope', async () => {
-    const req = { user: { id: String(alice._id) } };
-    const { status, body } = await runController(controller.getTurnCredentials, req);
-    expect(status).toBe(200);
-    expect(body.success).toBe(true);
-    expect(body.data).toEqual(fakeTurnCredentials);
-    expect(container.video.getTurnCredentials).toHaveBeenCalledTimes(1);
-  });
 });

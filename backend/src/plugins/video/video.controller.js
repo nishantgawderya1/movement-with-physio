@@ -13,27 +13,15 @@ const createController = (container) => {
     return responseHelper.success(res, call, 201);
   });
 
-  const getCall = catchAsync(async (req, res) => {
-    const call = await videoService.getCall(req.params.callId);
-    return responseHelper.success(res, call);
-  });
-
   const endCall = catchAsync(async (req, res) => {
     const { call, userId } = await loadCallForParticipant(req);
     await videoService.endCall(call._id, userId);
     return responseHelper.success(res, { message: 'Call ended' });
   });
 
-  const getTurnCredentials = catchAsync(async (req, res) => {
-    const credentials = await videoService.getTurnCredentials();
-    return responseHelper.success(res, credentials);
-  });
-
   return {
     createCall,
-    getCall,
     endCall,
-    getTurnCredentials,
   };
 };
 
