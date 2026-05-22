@@ -103,8 +103,12 @@ class ChatPlugin extends PluginBase {
       });
 
       socket.on('mark_read', async ({ roomId }) => {
-        await chatService.markRead(roomId, mongoUserId);
-        socket.to(roomId).emit('read_by', { roomId, userId: mongoUserId });
+        try {
+          await chatService.markRead(roomId, mongoUserId);
+          socket.to(roomId).emit('read_by', { roomId, userId: mongoUserId });
+        } catch (err) {
+          socket.emit('error', { message: err.message });
+        }
       });
 
       socket.on('disconnect', () => {

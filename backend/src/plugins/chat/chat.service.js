@@ -180,6 +180,21 @@ class ChatService {
    * @param {string} userId
    */
   async markRead(roomId, userId) {
+    const room = await ChatRoom.findById(roomId);
+    if (!room) {
+      const err = new Error('Chat room not found'); err.statusCode = 404; throw err;
+    }
+
+    // Compare ObjectIds via string form — Array#includes uses ===, which
+    // fails on Mongoose ObjectIds even when the values match. Same pattern
+    // as sendMessage above.
+    const isParticipant = room.participants.some(
+      (p) => p.toString() === String(userId)
+    );
+    if (!isParticipant) {
+      const err = new Error('You are not a participant in this room'); err.statusCode = 403; throw err;
+    }
+
     await Message.updateMany(
       { roomId, 'readBy.userId': { $ne: userId } },
       { $push: { readBy: { userId, readAt: new Date() } } }
