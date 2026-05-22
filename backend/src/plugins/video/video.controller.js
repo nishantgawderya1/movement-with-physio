@@ -10,28 +10,23 @@ const createController = (container) => {
   const createCall = catchAsync(async (req, res) => {
     const { participantIds, roomId } = req.body;
     const call = await videoService.createCall(req.user.id, participantIds, roomId);
-    res.status(201).send(responseHelper.success(call));
+    return responseHelper.success(res, call, 201);
   });
 
   const getCall = catchAsync(async (req, res) => {
     const call = await videoService.getCall(req.params.callId);
-    res.send(responseHelper.success(call));
+    return responseHelper.success(res, call);
   });
 
   const endCall = catchAsync(async (req, res) => {
     const { call, userId } = await loadCallForParticipant(req);
     await videoService.endCall(call._id, userId);
-    // responseHelper.success signature is (res, data, statusCode) — it
-    // calls res.status().json() internally. The other handlers in this
-    // file call it as responseHelper.success(data), which is a
-    // pre-existing bug out of S4 scope. Fix this site since S4 wires
-    // a participant gate that now actually exercises the response path.
     return responseHelper.success(res, { message: 'Call ended' });
   });
 
   const getTurnCredentials = catchAsync(async (req, res) => {
     const credentials = await videoService.getTurnCredentials();
-    res.send(responseHelper.success(credentials));
+    return responseHelper.success(res, credentials);
   });
 
   return {
