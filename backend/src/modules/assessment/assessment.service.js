@@ -187,9 +187,9 @@ function validateAnswerShape(question, answer) {
 async function respondToQuestion(assessmentId, questionId, answer, { answeredBy = null } = {}) {
   const assessment = await Assessment.findById(assessmentId);
   if (!assessment) {
-    const err = new Error('Assessment not found');
-    err.statusCode = 404;
-    throw err;
+    throw Object.assign(new Error('Assessment not found'), {
+      statusCode: 404, code: 'ASSESSMENT_NOT_FOUND',
+    });
   }
   if (assessment.status === 'completed') {
     const err = new Error('Assessment is already completed');
@@ -248,9 +248,9 @@ async function completeAssessment(assessmentId, { painScore, notes }) {
     { new: true }
   );
   if (!assessment) {
-    const err = new Error('Assessment not found');
-    err.statusCode = 404;
-    throw err;
+    throw Object.assign(new Error('Assessment not found'), {
+      statusCode: 404, code: 'ASSESSMENT_NOT_FOUND',
+    });
   }
   logger.info({ event: 'ASSESSMENT_COMPLETED', assessmentId, mode: assessment.mode });
 
@@ -460,9 +460,9 @@ async function createTrackingSession({ patientId, bookingId, assessmentId, exerc
 async function completeTrackingSession(sessionId, { exercises, painScoreAfter, notes }, actor) {
   const existing = await TrackingSession.findById(sessionId).select('patientId').lean();
   if (!existing) {
-    const err = new Error('Tracking session not found');
-    err.statusCode = 404;
-    throw err;
+    throw Object.assign(new Error('Tracking session not found'), {
+      statusCode: 404, code: 'TRACKING_SESSION_NOT_FOUND',
+    });
   }
   authorizeTrackingSessionAction(existing, actor, 'complete');
 
@@ -480,9 +480,9 @@ async function completeTrackingSession(sessionId, { exercises, painScoreAfter, n
   // Race-tolerant 404 — between the read and the write, the session
   // could be soft-deleted or removed by another process.
   if (!session) {
-    const err = new Error('Tracking session not found');
-    err.statusCode = 404;
-    throw err;
+    throw Object.assign(new Error('Tracking session not found'), {
+      statusCode: 404, code: 'TRACKING_SESSION_NOT_FOUND',
+    });
   }
   logger.info({ event: 'TRACKING_SESSION_COMPLETED', sessionId });
   return session;

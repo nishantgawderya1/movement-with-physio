@@ -31,10 +31,13 @@ function paginated(res, data, pagination) {
  * @param {string} message
  * @param {number} statusCode
  * @param {string} [correlationId]
+ * @param {string} [code] - typed error code (e.g. ASSESSMENT_NOT_FOUND);
+ *   parity with errorHandler's .code forwarding for thrown errors (01e2db3).
  */
-function error(res, message, statusCode = 500, correlationId) {
+function error(res, message, statusCode = 500, correlationId, code) {
   const payload = { success: false, error: message };
   if (correlationId) payload.correlationId = correlationId;
+  if (code) payload.code = code;
   return res.status(statusCode).json(payload);
 }
 

@@ -28,7 +28,7 @@ const createAssessment = asyncHandler(async (req, res) => {
 
 const getAssessment = asyncHandler(async (req, res) => {
   const assessment = await Assessment.findById(req.params.id);
-  if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId);
+  if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId, 'ASSESSMENT_NOT_FOUND');
 
   const actor = await resolveActor(req);
   const { scope } = assessmentService.authorizeAssessmentAction(assessment, actor, 'read');
@@ -50,7 +50,7 @@ const respondToQuestion = asyncHandler(async (req, res) => {
   const { questionId, answer } = req.body;
 
   const assessment = await Assessment.findById(req.params.id).select('mode patientId therapistId').lean();
-  if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId);
+  if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId, 'ASSESSMENT_NOT_FOUND');
 
   const actor = await resolveActor(req);
   assessmentService.authorizeAssessmentAction(assessment, actor, 'respond');
@@ -65,7 +65,7 @@ const completeAssessment = asyncHandler(async (req, res) => {
   const { painScore, notes } = req.body;
 
   const assessment = await Assessment.findById(req.params.id).select('mode patientId therapistId').lean();
-  if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId);
+  if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId, 'ASSESSMENT_NOT_FOUND');
 
   const actor = await resolveActor(req);
   assessmentService.authorizeAssessmentAction(assessment, actor, 'complete');
@@ -84,7 +84,7 @@ const getAssessmentPdf = asyncHandler(async (req, res) => {
   const assessment = await Assessment.findById(req.params.id)
     .select('mode patientId therapistId pdfKey pdfGeneratedAt')
     .lean();
-  if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId);
+  if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId, 'ASSESSMENT_NOT_FOUND');
 
   const actor = await resolveActor(req);
   assessmentService.authorizeAssessmentAction(assessment, actor, 'pdf');
