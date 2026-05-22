@@ -26,7 +26,7 @@ function createController(sessionService) {
     const { bookingId } = req.params;
     const note = await sessionService.getNoteByBooking(bookingId, req.user.id, req.user.role);
     if (!note) {
-      return apiResponse.error(res, 'Session note not found', 404);
+      return apiResponse.error(res, 'Session note not found', 404, req.correlationId, 'SESSION_NOTE_NOT_FOUND');
     }
     return apiResponse.success(res, note);
   });

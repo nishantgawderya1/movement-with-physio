@@ -72,7 +72,9 @@ class ChatService {
     const room = await ChatRoom.findOne({ _id: roomId, participants: userId, isActive: true })
       .populate('participants', 'name email role');
     if (!room) {
-      const err = new Error('Chat room not found'); err.statusCode = 404; throw err;
+      throw Object.assign(new Error('Chat room not found'), {
+        statusCode: 404, code: 'CHAT_ROOM_NOT_FOUND',
+      });
     }
     return room;
   }
@@ -89,7 +91,11 @@ class ChatService {
       { new: true }
     );
     if (!room) {
-      const err = new Error('Chat room not found or unauthorized'); err.statusCode = 404; throw err;
+      // Fused 404+403 to avoid existence oracle: a non-participant probing
+      // a real roomId vs a fake roomId should see the same response.
+      throw Object.assign(new Error('Chat room not found or unauthorized'), {
+        statusCode: 404, code: 'CHAT_ROOM_NOT_FOUND',
+      });
     }
   }
 
@@ -103,7 +109,9 @@ class ChatService {
   async sendMessage(roomId, senderId, text) {
     const room = await ChatRoom.findById(roomId);
     if (!room) {
-      const err = new Error('Chat room not found'); err.statusCode = 404; throw err;
+      throw Object.assign(new Error('Chat room not found'), {
+        statusCode: 404, code: 'CHAT_ROOM_NOT_FOUND',
+      });
     }
 
     // Compare ObjectIds via string form — Array#includes uses ===, which
@@ -112,7 +120,9 @@ class ChatService {
       (p) => p.toString() === String(senderId)
     );
     if (!isParticipant) {
-      const err = new Error('You are not a participant in this room'); err.statusCode = 403; throw err;
+      throw Object.assign(new Error('You are not a participant in this room'), {
+        statusCode: 403, code: 'NOT_PARTICIPANT',
+      });
     }
 
     // Atomic increment for sequence number
@@ -196,7 +206,9 @@ class ChatService {
   async markRead(roomId, userId) {
     const room = await ChatRoom.findById(roomId);
     if (!room) {
-      const err = new Error('Chat room not found'); err.statusCode = 404; throw err;
+      throw Object.assign(new Error('Chat room not found'), {
+        statusCode: 404, code: 'CHAT_ROOM_NOT_FOUND',
+      });
     }
 
     // Compare ObjectIds via string form — Array#includes uses ===, which
@@ -206,7 +218,9 @@ class ChatService {
       (p) => p.toString() === String(userId)
     );
     if (!isParticipant) {
-      const err = new Error('You are not a participant in this room'); err.statusCode = 403; throw err;
+      throw Object.assign(new Error('You are not a participant in this room'), {
+        statusCode: 403, code: 'NOT_PARTICIPANT',
+      });
     }
 
     await Message.updateMany(

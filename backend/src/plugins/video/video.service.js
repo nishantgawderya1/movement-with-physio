@@ -81,7 +81,7 @@ class VideoService {
   async getCall(callId) {
     const call = await VideoCall.findById(callId).populate('participants', 'name role');
     if (!call) {
-      throw new ApiError(404, 'Video call not found');
+      throw new ApiError(404, 'Video call not found', { code: 'CALL_NOT_FOUND' });
     }
     return call;
   }

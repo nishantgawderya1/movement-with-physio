@@ -28,16 +28,22 @@ const TIMEOUT_MS = () => env.VIDEO_CALL_TIMEOUT_MINUTES * 60 * 1000;
 async function loadCallForParticipant(req) {
   const callId = req.params.callId;
   if (!mongoose.isValidObjectId(callId)) {
-    const e = new Error('Invalid call id'); e.statusCode = 400; throw e;
+    throw Object.assign(new Error('Invalid call id'), {
+      statusCode: 400, code: 'BAD_CALL_ID',
+    });
   }
   const call = await VideoCall.findById(callId);
   if (!call) {
-    const e = new Error('Video call not found'); e.statusCode = 404; throw e;
+    throw Object.assign(new Error('Video call not found'), {
+      statusCode: 404, code: 'CALL_NOT_FOUND',
+    });
   }
   const userId = await resolveMongoUserId(req);
   const isParticipant = call.participants.some((p) => String(p) === String(userId));
   if (!isParticipant) {
-    const e = new Error('Forbidden'); e.statusCode = 403; throw e;
+    throw Object.assign(new Error('Forbidden'), {
+      statusCode: 403, code: 'NOT_PARTICIPANT',
+    });
   }
   return { call, userId };
 }
@@ -111,7 +117,7 @@ const joinCall = asyncHandler(async (req, res, next) => {
 
   const now = new Date();
   if (!computeCanJoin(call, now)) {
-    return apiResponse.error(res, 'Cannot join call right now', 409, req.correlationId);
+    return apiResponse.error(res, 'Cannot join call right now', 409, req.correlationId, 'CALL_NOT_JOINABLE');
   }
 
   // Initialize joinState entry for this user (preserve any prior entry).
