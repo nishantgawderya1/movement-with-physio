@@ -3,7 +3,7 @@
 const bookingService = require('./booking.service');
 const apiResponse = require('../../core/utils/apiResponse');
 const asyncHandler = require('../../core/utils/asyncHandler');
-const { resolveMongoUserId } = require('../../core/utils/resolveMongoUserId');
+const { resolveMongoUserId, resolveActor } = require('../../core/utils/resolveMongoUserId');
 
 /**
  * GET /api/v1/bookings/slots
@@ -126,10 +126,8 @@ const listBookings = asyncHandler(async (req, res) => {
  */
 const cancelBooking = asyncHandler(async (req, res) => {
   const { reason } = req.body;
-  const booking = await bookingService.cancelBooking(req.params.id, {
-    reason,
-    cancelledBy: req.user.role,
-  });
+  const actor = await resolveActor(req);
+  const booking = await bookingService.cancelBooking(req.params.id, actor, reason);
   return apiResponse.success(res, booking);
 });
 
@@ -138,7 +136,8 @@ const cancelBooking = asyncHandler(async (req, res) => {
  * Therapist marks a session as completed.
  */
 const completeBooking = asyncHandler(async (req, res) => {
-  const booking = await bookingService.completeBooking(req.params.id);
+  const therapistId = await resolveMongoUserId(req);
+  const booking = await bookingService.completeBooking(req.params.id, therapistId);
   return apiResponse.success(res, booking);
 });
 
