@@ -5,11 +5,17 @@ const { createController } = require('./video.controller');
 const { getIceConfig } = require('./iceConfig.controller');
 const videoCallController = require('./videoCall.controller');
 const authMiddleware = require('../../core/middleware/authMiddleware');
+const socketAuthMiddleware = require('../../core/middleware/socketAuthMiddleware');
 const validate = require('../../core/middleware/validate');
 const videoValidation = require('./video.validation');
 const PluginBase = require('../../core/plugins/PluginBase');
 const auditLog = require('../../core/middleware/auditLog');
 const logger = require('../../core/utils/logger');
+const {
+  resolveMongoUserIdForSocket,
+  forgetSocketIdentity,
+} = require('../../core/utils/socketIdentity');
+const { gateJoinCall } = require('./video.service');
 
 class VideoPlugin extends PluginBase {
   get name() { return 'video'; }
@@ -45,43 +51,93 @@ class VideoPlugin extends PluginBase {
     // Socket.IO Handlers
     const io = app.get('io');
     if (io) {
-      this.setupSocketHandlers(io, videoService);
+      this.setupSocketHandlers(io, videoService, container.auth);
     }
   }
 
-  setupSocketHandlers(io, videoService) {
+  setupSocketHandlers(io, videoService, authProvider) {
     const videoNamespace = io.of('/video');
 
-    videoNamespace.on('connection', (socket) => {
-      const userId = socket.data.user?.id;
-      if (!userId) return;
-      socket.join(`user:${userId}`);
+    // Namespace middleware does NOT cascade from root io.use() — see
+    // chat/index.js:64. Without this, socket.data.user is undefined and
+    // every connection silently bails at the `if (!userId) return;` below.
+    videoNamespace.use(socketAuthMiddleware(authProvider));
 
-      logger.info({ event: 'VIDEO_SOCKET_CONNECTED', userId, socketId: socket.id });
+    videoNamespace.on('connection', async (socket) => {
+      const clerkId = socket.data.user?.id;
+      if (!clerkId) return;
 
-      socket.on('join_call', ({ callId }) => {
-        socket.join(`call:${callId}`);
-        logger.info({ event: 'VIDEO_JOIN_CALL', userId, callId });
-        socket.to(`call:${callId}`).emit('user_joined', { userId });
+      // Resolve Clerk → Mongo once per socket lifetime; cache on socket.data
+      // so every downstream handler has the participant identity available
+      // without another DB hit. Drop the connection if the Clerk user has
+      // no Mongo profile.
+      let mongoId;
+      try {
+        mongoId = await resolveMongoUserIdForSocket(socket);
+      } catch (err) {
+        logger.warn({ event: 'VIDEO_SOCKET_NO_PROFILE', clerkId, err: err.message });
+        socket.disconnect(true);
+        return;
+      }
+      socket.data.mongoId = mongoId;
+      socket.join(`user:${mongoId}`);
+
+      logger.info({ event: 'VIDEO_SOCKET_CONNECTED', userId: mongoId, socketId: socket.id });
+
+      socket.on('join_call', async ({ callId }) => {
+        try {
+          await gateJoinCall(callId, mongoId);
+          socket.join(`call:${callId}`);
+          logger.info({ event: 'VIDEO_JOIN_CALL', userId: mongoId, callId });
+          socket.to(`call:${callId}`).emit('user_joined', { userId: mongoId });
+        } catch (err) {
+          logger.warn({
+            event: 'VIDEO_JOIN_REJECTED',
+            userId: mongoId,
+            callId,
+            code: err.code,
+            statusCode: err.statusCode,
+          });
+          socket.emit('error', { code: err.code || 'JOIN_FAILED', message: err.message });
+        }
       });
 
-      // WebRTC Signaling
+      // WebRTC signaling — gated on socket-room membership. Since join_call
+      // is the only path that adds a socket to a call:* room (verified via
+      // grep across backend/src/), membership implies the participant check
+      // already passed. Out-of-room events are silently dropped (after a
+      // warn-level log) rather than broadcast — otherwise a spoofed
+      // signaling event from an unverified socket could leak SDP/ICE.
+      const signalingDrop = (eventName, callId) => {
+        logger.warn({
+          event: 'VIDEO_SIGNALING_FROM_OUT_OF_ROOM_SOCKET',
+          socketEventName: eventName,
+          callId,
+          mongoId,
+        });
+      };
+
       socket.on('offer', ({ callId, to, offer }) => {
-        socket.to(`call:${callId}`).emit('offer', { from: userId, offer, to });
+        if (!socket.rooms.has(`call:${callId}`)) return signalingDrop('offer', callId);
+        socket.to(`call:${callId}`).emit('offer', { from: mongoId, offer, to });
       });
 
       socket.on('answer', ({ callId, to, answer }) => {
-        socket.to(`call:${callId}`).emit('answer', { from: userId, answer, to });
+        if (!socket.rooms.has(`call:${callId}`)) return signalingDrop('answer', callId);
+        socket.to(`call:${callId}`).emit('answer', { from: mongoId, answer, to });
       });
 
       socket.on('ice_candidate', ({ callId, to, candidate }) => {
-        socket.to(`call:${callId}`).emit('ice_candidate', { from: userId, candidate, to });
+        if (!socket.rooms.has(`call:${callId}`)) return signalingDrop('ice_candidate', callId);
+        socket.to(`call:${callId}`).emit('ice_candidate', { from: mongoId, candidate, to });
       });
 
       socket.on('end_call', async ({ callId }) => {
-        // endCall now broadcasts call_ended via messaging.emitToRoom — no
-        // duplicate socket.to(...) emit needed.
-        await videoService.endCall(callId, userId);
+        if (!socket.rooms.has(`call:${callId}`)) return signalingDrop('end_call', callId);
+        // endCall broadcasts call_ended via messaging.emitToRoom — no
+        // duplicate socket.to(...) emit needed. Pass the Mongo id (not the
+        // Clerk id) so joinState keys agree with the REST /leave path.
+        await videoService.endCall(callId, mongoId);
       });
 
       socket.on('disconnect', async () => {
@@ -93,13 +149,14 @@ class VideoPlugin extends PluginBase {
           if (typeof room === 'string' && room.startsWith('call:')) {
             const callId = room.slice('call:'.length);
             try {
-              await videoService.endCall(callId, userId);
+              await videoService.endCall(callId, mongoId);
             } catch (e) {
               logger.warn({ event: 'VIDEO_DISCONNECT_END_FAILED', callId, err: e.message });
             }
           }
         }
-        logger.info({ event: 'VIDEO_SOCKET_DISCONNECTED', userId, socketId: socket.id });
+        forgetSocketIdentity(clerkId);
+        logger.info({ event: 'VIDEO_SOCKET_DISCONNECTED', userId: mongoId, socketId: socket.id });
       });
     });
   }

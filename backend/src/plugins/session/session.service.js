@@ -20,13 +20,42 @@ module.exports = function createSessionService(container) {
    * @returns {Promise<SessionNote>}
    */
   async function createNote(therapistId, data) {
+    const User = require('../../models/User.model');
+    const Booking = require('../../models/Booking.model');
+    const { BOOKING_STATUS } = require('../../core/utils/constants');
+
+    // Resolve Clerk IDs → Mongo ObjectIds for the relationship gate.
+    // Patient lookup is reused for the push notification below.
+    const [therapist, patient] = await Promise.all([
+      User.findOne({ clerkId: therapistId }).select('_id').lean(),
+      User.findOne({ clerkId: data.patientId }).select('_id fcmToken').lean(),
+    ]);
+    if (!therapist || !patient) {
+      throw Object.assign(new Error('Therapist or patient not found'), { statusCode: 404 });
+    }
+
+    // Ownership gate — therapist must have a CONFIRMED or COMPLETED booking
+    // with this patient, and the bookingId must belong to that pair. Mirrors
+    // booking.service.js createInstantBooking prior-relationship gate.
+    const hasRelationship = await Booking.exists({
+      _id: data.bookingId,
+      therapistId: therapist._id,
+      patientId: patient._id,
+      status: { $in: [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED] },
+      isDeleted: false,
+    });
+    if (!hasRelationship) {
+      throw Object.assign(
+        new Error('You do not have an active booking with this patient.'),
+        { statusCode: 403, code: 'NO_PATIENT_RELATIONSHIP' }
+      );
+    }
+
     const note = await SessionNote.create({ therapistId, ...data });
 
-    // Push trigger — notify patient
+    // Push trigger — notify patient. Patient already resolved above.
     try {
-      const User = require('../../models/User.model');
-      const patient = await User.findOne({ clerkId: data.patientId }).lean();
-      if (patient?.fcmToken && container?.notification) {
+      if (patient.fcmToken && container?.notification) {
         await container.notification.sendPush({
           token: patient.fcmToken,
           title: 'Session Notes Available',

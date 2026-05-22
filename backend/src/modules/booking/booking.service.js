@@ -339,12 +339,25 @@ async function listBookings({ userId, role, status, cursor, limit }) {
 }
 
 /**
- * Cancel a booking.
+ * Cancel a booking. 3-role gate per route-layer rbac (patient/therapist/
+ * admin); each role has a distinct ownership predicate:
+ *   - patient: must match booking.patientId
+ *   - therapist: must match booking.therapistId
+ *   - admin: bypass (admin can cancel anything by design)
+ *   - any other role: 403 BOOKING_CANCEL_ROLE (defense in depth)
+ *
+ * Without this gate, any authenticated patient/therapist can cancel any
+ * other patient/therapist's booking by guessing bookingId, AND the
+ * attacker-controlled `reason` field lands in the victim's notification
+ * feed.
+ *
  * @param {string} bookingId
- * @param {{ reason: string, cancelledBy: string }} options
+ * @param {{ mongoId: string, role: string }} actor - resolved from resolveActor(req)
+ * @param {string|null} reason
  */
-async function cancelBooking(bookingId, { reason, cancelledBy }) {
-  const booking = await Booking.findById(bookingId);
+async function cancelBooking(bookingId, actor, reason) {
+  // Soft-delete-aware fetch — matches acceptInstantBooking convention.
+  const booking = await Booking.findOne({ _id: bookingId, isDeleted: false });
   if (!booking) {
     const err = new Error('Booking not found');
     err.statusCode = 404;
@@ -361,10 +374,33 @@ async function cancelBooking(bookingId, { reason, cancelledBy }) {
     throw err;
   }
 
+  // Ownership gate — 3-role branching. Route-layer rbac filters to
+  // patient/therapist/admin; this is the service-layer chokepoint.
+  if (actor.role === ROLES.PATIENT) {
+    if (String(booking.patientId) !== String(actor.mongoId)) {
+      throw Object.assign(new Error('Forbidden — not your booking'), {
+        statusCode: 403, code: 'BOOKING_NOT_PARTICIPANT',
+      });
+    }
+  } else if (actor.role === ROLES.THERAPIST) {
+    if (String(booking.therapistId) !== String(actor.mongoId)) {
+      throw Object.assign(new Error('Forbidden — not your booking'), {
+        statusCode: 403, code: 'BOOKING_NOT_PARTICIPANT',
+      });
+    }
+  } else if (actor.role !== ROLES.ADMIN) {
+    // Defense in depth: rbac already filters to the three roles above;
+    // reject anything else explicitly.
+    throw Object.assign(new Error('Forbidden'), {
+      statusCode: 403, code: 'BOOKING_CANCEL_ROLE',
+    });
+  }
+  // admin: bypass — can cancel any booking
+
   booking.status = BOOKING_STATUS.CANCELLED;
   booking.cancellationReason = reason || null;
   booking.cancelledAt = new Date();
-  booking.cancelledBy = cancelledBy;
+  booking.cancelledBy = actor.role;
   await booking.save();
 
   // Invalidate slots cache
@@ -381,25 +417,45 @@ async function cancelBooking(bookingId, { reason, cancelledBy }) {
     data: { bookingId: String(booking._id) },
   });
 
-  logger.info({ event: 'BOOKING_CANCELLED', bookingId, cancelledBy });
+  logger.info({ event: 'BOOKING_CANCELLED', bookingId, cancelledBy: actor.role });
   return booking;
 }
 
 /**
- * Mark a booking as completed.
+ * Mark a booking as completed. Therapist-only by route-layer rbac;
+ * service-layer gate verifies caller is the booking's therapist.
+ *
+ * Rewritten from findByIdAndUpdate to read-first/check/write-after,
+ * mirroring acceptInstantBooking (booking.service.js:522). Without this
+ * gate, any authenticated therapist can flip any other therapist's
+ * CONFIRMED booking to COMPLETED via guessed bookingId.
+ *
  * @param {string} bookingId
+ * @param {string} therapistId - resolved from resolveMongoUserId(req)
  */
-async function completeBooking(bookingId) {
-  const booking = await Booking.findByIdAndUpdate(
-    bookingId,
-    { status: BOOKING_STATUS.COMPLETED, completedAt: new Date() },
-    { new: true }
-  );
+async function completeBooking(bookingId, therapistId) {
+  const booking = await Booking.findOne({ _id: bookingId, isDeleted: false });
   if (!booking) {
     const err = new Error('Booking not found');
     err.statusCode = 404;
     throw err;
   }
+  if (String(booking.therapistId) !== String(therapistId)) {
+    throw Object.assign(new Error('Forbidden — not your booking'), {
+      statusCode: 403, code: 'BOOKING_NOT_THERAPIST',
+    });
+  }
+  // Idempotency precondition — consistency with cancel's already-cancelled
+  // / already-completed preconditions.
+  if (booking.status === BOOKING_STATUS.COMPLETED) {
+    throw Object.assign(new Error('Booking is already completed'), {
+      statusCode: 400, code: 'BOOKING_ALREADY_COMPLETED',
+    });
+  }
+
+  booking.status = BOOKING_STATUS.COMPLETED;
+  booking.completedAt = new Date();
+  await booking.save();
   logger.info({ event: 'BOOKING_COMPLETED', bookingId });
   return booking;
 }

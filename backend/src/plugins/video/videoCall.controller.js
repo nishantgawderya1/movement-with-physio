@@ -213,4 +213,5 @@ module.exports = {
   leaveCall,
   // exported for tests
   computeCanJoin,
+  loadCallForParticipant,
 };

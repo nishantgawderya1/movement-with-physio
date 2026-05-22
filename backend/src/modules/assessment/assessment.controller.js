@@ -122,7 +122,10 @@ const createTrackingSession = asyncHandler(async (req, res) => {
 
 const completeTrackingSession = asyncHandler(async (req, res) => {
   const { exercises, painScoreAfter, notes } = req.body;
-  const session = await assessmentService.completeTrackingSession(req.params.id, { exercises, painScoreAfter, notes });
+  const actor = await resolveActor(req);
+  const session = await assessmentService.completeTrackingSession(
+    req.params.id, { exercises, painScoreAfter, notes }, actor
+  );
   return apiResponse.success(res, session);
 });
 
