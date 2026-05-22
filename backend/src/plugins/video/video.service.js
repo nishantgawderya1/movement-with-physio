@@ -136,14 +136,6 @@ class VideoService {
     this.messaging.emitToRoom(`call:${callId}`, 'call_ended', { callId, endedBy: endedByUserId });
     return call;
   }
-
-  /**
-   * Get TURN credentials for the client.
-   * @returns {Promise<object>}
-   */
-  async getTurnCredentials() {
-    return this.videoProvider.getTurnCredentials();
-  }
 }
 
 module.exports = (container) => new VideoService(container);

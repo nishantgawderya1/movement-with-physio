@@ -11,17 +11,10 @@ jest.mock('../../../core/jobs/jobQueue', () => ({
   addJob: (...args) => mockAddJob(...args),
 }));
 
-// container.video.getTurnCredentials is the only provider call exercised
-// by this suite; return a deterministic credentials object.
-const fakeTurnCredentials = {
-  iceServers: [{ urls: 'stun:stun.example.com:3478' }],
-  ttlSeconds: 3600,
-};
 const mockMessaging = { emitToRoom: jest.fn() };
 const container = {
   messaging: mockMessaging,
   notification: { sendPush: jest.fn() },
-  video: { getTurnCredentials: jest.fn().mockResolvedValue(fakeTurnCredentials) },
 };
 
 const { createController } = require('../video.controller');
@@ -53,7 +46,6 @@ describe('video controller — responseHelper signature regression (S-followup-3
     await clearDb();
     mockAddJob.mockClear();
     mockMessaging.emitToRoom.mockClear();
-    container.video.getTurnCredentials.mockClear();
     alice = await User.create({
       clerkId: 'clerk_alice', email: 'alice@example.com', name: 'Alice', role: ROLES.THERAPIST,
     });
@@ -85,12 +77,4 @@ describe('video controller — responseHelper signature regression (S-followup-3
     expect(mockAddJob).toHaveBeenCalledTimes(1);
   });
 
-  test('getTurnCredentials: returns 200 with { success: true, data: <credentials> } envelope', async () => {
-    const req = { user: { id: String(alice._id) } };
-    const { status, body } = await runController(controller.getTurnCredentials, req);
-    expect(status).toBe(200);
-    expect(body.success).toBe(true);
-    expect(body.data).toEqual(fakeTurnCredentials);
-    expect(container.video.getTurnCredentials).toHaveBeenCalledTimes(1);
-  });
 });

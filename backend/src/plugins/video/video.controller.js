@@ -19,15 +19,9 @@ const createController = (container) => {
     return responseHelper.success(res, { message: 'Call ended' });
   });
 
-  const getTurnCredentials = catchAsync(async (req, res) => {
-    const credentials = await videoService.getTurnCredentials();
-    return responseHelper.success(res, credentials);
-  });
-
   return {
     createCall,
     endCall,
-    getTurnCredentials,
   };
 };
 
