@@ -1,8 +1,6 @@
 'use strict';
 
 const { connect, close, clearDb } = require('../../../../tests/setup');
-const mongoose = require('mongoose');
-const VideoCall = require('../../../models/VideoCall.model');
 const User = require('../../../models/User.model');
 const { VIDEO_CALL_STATUS, ROLES } = require('../../../core/utils/constants');
 
@@ -85,27 +83,6 @@ describe('video controller — responseHelper signature regression (S-followup-3
     expect(body.data.status).toBe(VIDEO_CALL_STATUS.INITIATED);
     // Sanity: the job was enqueued for the non-initiator participant.
     expect(mockAddJob).toHaveBeenCalledTimes(1);
-  });
-
-  test('getCall: returns 200 with { success: true, data: <call> } envelope', async () => {
-    const call = await VideoCall.create({
-      participants: [alice._id, bob._id],
-      initiatedBy: alice._id,
-      status: VIDEO_CALL_STATUS.INITIATED,
-    });
-    const req = { params: { callId: String(call._id) } };
-    const { status, body } = await runController(controller.getCall, req);
-    expect(status).toBe(200);
-    expect(body.success).toBe(true);
-    expect(String(body.data._id)).toBe(String(call._id));
-    // Populated participants — VideoService.getCall calls .populate('participants', 'name role')
-    expect(Array.isArray(body.data.participants)).toBe(true);
-    expect(body.data.participants).toHaveLength(2);
-    expect(body.data.participants[0]).toEqual(expect.objectContaining({
-      _id: expect.anything(),
-      name: expect.any(String),
-      role: expect.any(String),
-    }));
   });
 
   test('getTurnCredentials: returns 200 with { success: true, data: <credentials> } envelope', async () => {
