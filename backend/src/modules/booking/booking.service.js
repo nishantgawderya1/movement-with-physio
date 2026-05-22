@@ -206,9 +206,10 @@ async function createBooking(data) {
   // 1. Acquire Redis lock
   const locked = await acquireSlotLock(therapistId, utcSlot);
   if (!locked) {
-    const err = new Error('This slot is currently being booked by another user. Please try again.');
-    err.statusCode = 409;
-    throw err;
+    throw Object.assign(
+      new Error('This slot is currently being booked by another user. Please try again.'),
+      { statusCode: 409, code: 'BOOKING_SLOT_LOCKED' }
+    );
   }
 
   try {
@@ -220,9 +221,9 @@ async function createBooking(data) {
     });
 
     if (existing) {
-      const err = new Error('This slot is already booked.');
-      err.statusCode = 409;
-      throw err;
+      throw Object.assign(new Error('This slot is already booked.'), {
+        statusCode: 409, code: 'BOOKING_SLOT_TAKEN',
+      });
     }
 
     // 3. Verify therapist exists and is verified
@@ -339,9 +340,9 @@ async function getBooking(bookingId, actor) {
     .lean();
 
   if (!booking) {
-    const err = new Error('Booking not found');
-    err.statusCode = 404;
-    throw err;
+    throw Object.assign(new Error('Booking not found'), {
+      statusCode: 404, code: 'BOOKING_NOT_FOUND',
+    });
   }
 
   if (actor.role === ROLES.PATIENT) {
@@ -407,9 +408,9 @@ async function cancelBooking(bookingId, actor, reason) {
   // Soft-delete-aware fetch — matches acceptInstantBooking convention.
   const booking = await Booking.findOne({ _id: bookingId, isDeleted: false });
   if (!booking) {
-    const err = new Error('Booking not found');
-    err.statusCode = 404;
-    throw err;
+    throw Object.assign(new Error('Booking not found'), {
+      statusCode: 404, code: 'BOOKING_NOT_FOUND',
+    });
   }
   if (booking.status === BOOKING_STATUS.CANCELLED) {
     const err = new Error('Booking is already cancelled');
@@ -491,9 +492,9 @@ async function cancelBooking(bookingId, actor, reason) {
 async function completeBooking(bookingId, therapistId) {
   const booking = await Booking.findOne({ _id: bookingId, isDeleted: false });
   if (!booking) {
-    const err = new Error('Booking not found');
-    err.statusCode = 404;
-    throw err;
+    throw Object.assign(new Error('Booking not found'), {
+      statusCode: 404, code: 'BOOKING_NOT_FOUND',
+    });
   }
   if (String(booking.therapistId) !== String(therapistId)) {
     throw Object.assign(new Error('Forbidden — not your booking'), {
@@ -633,7 +634,9 @@ async function createInstantBooking({
 async function acceptInstantBooking({ bookingId, therapistId }) {
   const booking = await Booking.findOne({ _id: bookingId, isDeleted: false });
   if (!booking) {
-    const e = new Error('Booking not found'); e.statusCode = 404; throw e;
+    throw Object.assign(new Error('Booking not found'), {
+      statusCode: 404, code: 'BOOKING_NOT_FOUND',
+    });
   }
   if (String(booking.therapistId) !== String(therapistId)) {
     throw Object.assign(new Error('Forbidden — not your booking'), {
@@ -641,12 +644,16 @@ async function acceptInstantBooking({ bookingId, therapistId }) {
     });
   }
   if (booking.status !== BOOKING_STATUS.INSTANT_PENDING) {
-    const e = new Error('Booking is not in instant_pending state'); e.statusCode = 409; throw e;
+    throw Object.assign(new Error('Booking is not in instant_pending state'), {
+      statusCode: 409, code: 'BOOKING_NOT_INSTANT_PENDING',
+    });
   }
   if (booking.instantExpiresAt && booking.instantExpiresAt < new Date()) {
     booking.status = BOOKING_STATUS.INSTANT_DECLINED;
     await booking.save();
-    const e = new Error('Instant request has expired'); e.statusCode = 410; throw e;
+    throw Object.assign(new Error('Instant request has expired'), {
+      statusCode: 410, code: 'INSTANT_REQUEST_EXPIRED',
+    });
   }
 
   booking.status = BOOKING_STATUS.CONFIRMED;
@@ -681,7 +688,9 @@ async function acceptInstantBooking({ bookingId, therapistId }) {
 async function declineInstantBooking({ bookingId, therapistId }) {
   const booking = await Booking.findOne({ _id: bookingId, isDeleted: false });
   if (!booking) {
-    const e = new Error('Booking not found'); e.statusCode = 404; throw e;
+    throw Object.assign(new Error('Booking not found'), {
+      statusCode: 404, code: 'BOOKING_NOT_FOUND',
+    });
   }
   if (String(booking.therapistId) !== String(therapistId)) {
     throw Object.assign(new Error('Forbidden — not your booking'), {
@@ -689,7 +698,9 @@ async function declineInstantBooking({ bookingId, therapistId }) {
     });
   }
   if (booking.status !== BOOKING_STATUS.INSTANT_PENDING) {
-    const e = new Error('Booking is not in instant_pending state'); e.statusCode = 409; throw e;
+    throw Object.assign(new Error('Booking is not in instant_pending state'), {
+      statusCode: 409, code: 'BOOKING_NOT_INSTANT_PENDING',
+    });
   }
 
   booking.status = BOOKING_STATUS.INSTANT_DECLINED;
