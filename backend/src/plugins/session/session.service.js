@@ -31,7 +31,9 @@ module.exports = function createSessionService(container) {
       User.findOne({ clerkId: data.patientId }).select('_id fcmToken').lean(),
     ]);
     if (!therapist || !patient) {
-      throw Object.assign(new Error('Therapist or patient not found'), { statusCode: 404 });
+      throw Object.assign(new Error('Therapist or patient not found'), {
+        statusCode: 404, code: 'USER_NOT_FOUND',
+      });
     }
 
     // Ownership gate — therapist must have a CONFIRMED or COMPLETED booking
@@ -102,7 +104,15 @@ module.exports = function createSessionService(container) {
       { new: true, runValidators: true }
     ).lean();
 
-    if (!note) throw Object.assign(new Error('Session note not found or access denied'), { statusCode: 404 });
+    // Fused 404+403: query is { _id: noteId, therapistId }, so a miss
+    // could be "doesn't exist" or "not your note". Keeping single code
+    // (SESSION_NOTE_NOT_FOUND, not SESSION_NOTE_FORBIDDEN) preserves
+    // oracle-resistance — same code regardless of which condition failed.
+    if (!note) {
+      throw Object.assign(new Error('Session note not found or access denied'), {
+        statusCode: 404, code: 'SESSION_NOTE_NOT_FOUND',
+      });
+    }
 
     logger.info({ event: 'SESSION_NOTE_UPDATED', noteId, therapistId });
     return note;

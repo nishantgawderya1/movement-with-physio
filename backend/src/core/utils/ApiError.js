@@ -9,7 +9,7 @@
  * file but it was missing on disk — see Phase 2A foundation work.
  */
 class ApiError extends Error {
-  constructor(statusCode, message, { isOperational = true, details, cause } = {}) {
+  constructor(statusCode, message, { isOperational = true, details, cause, code } = {}) {
     super(message);
     this.name = 'ApiError';
     this.statusCode = statusCode;
@@ -17,6 +17,7 @@ class ApiError extends Error {
     this.isOperational = isOperational;
     if (details !== undefined) this.details = details;
     if (cause !== undefined) this.cause = cause;
+    if (code !== undefined) this.code = code;
     Error.captureStackTrace?.(this, this.constructor);
   }
 }

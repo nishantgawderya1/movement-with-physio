@@ -34,6 +34,10 @@ function errorHandler(err, req, res, next) {
     correlationId: req.correlationId,
   };
 
+  if (err.code !== undefined) {
+    payload.code = err.code;
+  }
+
   if (!isProduction) {
     payload.stack = err.stack;
   }
