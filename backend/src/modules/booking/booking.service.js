@@ -456,11 +456,18 @@ async function cancelBooking(bookingId, actor, reason) {
   const dateStr = format(toZonedTime(booking.slotStart, timezone), 'yyyy-MM-dd', { timeZone: timezone });
   await cacheManager.invalidate(`slots:${booking.therapistId}:${dateStr}`);
 
-  // Notify patient
+  // Notify patient. Body is the canonical static string regardless of
+  // caller-supplied `reason` — the cancelling therapist could otherwise
+  // inject URL phishing / social-engineering text into the patient's
+  // notification feed via FCM push (S-followup-6). Reason is still
+  // persisted on booking.cancellationReason above for admin diagnostic
+  // and future UX; `data` carries only `bookingId` so any future renderer
+  // must read the reason from the booking doc with proper escaping
+  // context, not from the notification payload.
   await addJob('send_notification', {
     userId: String(booking.patientId),
     title: 'Booking Cancelled',
-    body: reason ? `Your booking was cancelled: ${reason}` : 'Your booking has been cancelled.',
+    body: 'Your booking has been cancelled.',
     type: NOTIFICATION_TYPES.BOOKING_CANCELLED,
     data: { bookingId: String(booking._id) },
   });
