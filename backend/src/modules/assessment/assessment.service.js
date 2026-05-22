@@ -2,12 +2,14 @@
 
 const Assessment = require('../../models/Assessment.model');
 const TrackingSession = require('../../models/TrackingSession.model');
+const Booking = require('../../models/Booking.model');
 const cacheManager = require('../../core/cache/cacheManager');
 const paginate = require('../../core/utils/paginator');
 const { addJob } = require('../../core/jobs/jobQueue');
 const {
   NOTIFICATION_TYPES, REDIS_TTL,
   ASSESSMENT_MODE, JOB_NAMES, ROLES,
+  BOOKING_STATUS,
 } = require('../../core/utils/constants');
 const logger = require('../../core/utils/logger');
 
@@ -59,8 +61,40 @@ async function getQuestions(bodyPart) {
 
 /**
  * Create a new assessment session.
+ *
+ * Relationship gate (S-followup-5): when a `therapistId` is supplied, the
+ * caller patient must have a CONFIRMED or COMPLETED Booking with that
+ * therapist. Without the gate a patient could plant an Assessment
+ * attributed to any stranger user id — polluting the therapist's
+ * downstream join queries (`Assessment.find({therapistId})`) and
+ * corrupting analytics.
+ *
+ * The gate is wrapped in `if (therapistId)` so the legitimate unlinked
+ * self-assessment path (therapistId === null) still works as before.
+ *
+ * Existence-oracle policy: non-existent therapistId, wrong-role user id,
+ * or any "no booking" case all collapse to the same 403 with code
+ * `NO_THERAPIST_RELATIONSHIP` — never leak whether a given user id exists
+ * via a 404-vs-403 distinction. Mirrors S2 createNote
+ * (session.service.js:40-52) and S-followup-7 getBooking existence
+ * handling.
  */
 async function createAssessment({ patientId, therapistId, bodyParts }) {
+  if (therapistId) {
+    const hasRelationship = await Booking.exists({
+      patientId,
+      therapistId,
+      status: { $in: [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED] },
+      isDeleted: false,
+    });
+    if (!hasRelationship) {
+      throw Object.assign(
+        new Error('You do not have an active booking with this therapist.'),
+        { statusCode: 403, code: 'NO_THERAPIST_RELATIONSHIP' }
+      );
+    }
+  }
+
   const firstBodyPart = bodyParts?.[0] || 'full_body';
   const questions = getQuestionsForBodyPart(firstBodyPart);
 
