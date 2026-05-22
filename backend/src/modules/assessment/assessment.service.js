@@ -391,11 +391,48 @@ async function getHistory({ patientId, cursor, limit }) {
 
 /**
  * Create a new tracking session.
+ *
+ * Cross-link ownership gates (S-followup-4): both `bookingId` and
+ * `assessmentId` are optional refs supplied from req.body. Without
+ * ownership checks, an attacker patient could plant a TrackingSession
+ * with `patientId: attacker, bookingId: victimBooking` — pollutes any
+ * downstream join query like TrackingSession.find({bookingId}) with
+ * cross-tenant noise. Symmetric to S-followup-5's therapistId
+ * relationship gate on createAssessment.
+ *
+ * Each gate is wrapped in a null guard so legitimate null/omitted
+ * inputs still work (the schema treats both refs as optional).
+ *
+ * Existence-oracle policy (same as S-followup-5): non-existent IDs
+ * collapse to the same 403 as wrong-owner IDs — never leak existence
+ * via 404-vs-403. Uses Booking.exists / Assessment.exists primitive.
+ *
+ * Note: the service previously accepted a `therapistId` parameter the
+ * controller never passes — dropped here as vestigial. If a future
+ * caller needs it, add it back with its own relationship gate.
  */
-async function createTrackingSession({ patientId, therapistId, bookingId, assessmentId, exercises, painScoreBefore }) {
+async function createTrackingSession({ patientId, bookingId, assessmentId, exercises, painScoreBefore }) {
+  if (bookingId) {
+    const ok = await Booking.exists({ _id: bookingId, patientId, isDeleted: false });
+    if (!ok) {
+      throw Object.assign(
+        new Error('Booking not found or not owned by you.'),
+        { statusCode: 403, code: 'TRACKING_SESSION_BOOKING_NOT_OWNED' }
+      );
+    }
+  }
+  if (assessmentId) {
+    const ok = await Assessment.exists({ _id: assessmentId, patientId, isDeleted: false });
+    if (!ok) {
+      throw Object.assign(
+        new Error('Assessment not found or not owned by you.'),
+        { statusCode: 403, code: 'TRACKING_SESSION_ASSESSMENT_NOT_OWNED' }
+      );
+    }
+  }
+
   const session = await TrackingSession.create({
     patientId,
-    therapistId: therapistId || null,
     bookingId: bookingId || null,
     assessmentId: assessmentId || null,
     exercises: exercises || [],
