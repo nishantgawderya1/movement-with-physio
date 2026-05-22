@@ -1,8 +1,38 @@
+const mongoose = require('mongoose');
 const VideoCall = require('../../models/VideoCall.model');
 const ApiError = require('../../core/utils/ApiError');
 const logger = require('../../core/utils/logger');
 const { NOTIFICATION_TYPES } = require('../../core/utils/constants');
 const { addJob } = require('../../core/jobs/jobQueue');
+
+/**
+ * Authorization primitive for the socket `join_call` handler. Loads the
+ * VideoCall and verifies `mongoId` is in its participants. Extracted as
+ * a pure async function so the gate is unit-testable without standing up
+ * a Socket.IO server.
+ *
+ * Throws with a `statusCode` and `code` so the caller can translate to
+ * either an HTTP response or a socket `error` emit uniformly.
+ *
+ * @param {string} callId
+ * @param {string} mongoId - caller's Mongo User._id (string)
+ * @returns {Promise<{ call: VideoCall }>}
+ * @throws { statusCode: 400 | 403 | 404, code: string }
+ */
+async function gateJoinCall(callId, mongoId) {
+  if (!mongoose.isValidObjectId(callId)) {
+    throw Object.assign(new Error('Invalid call id'), { statusCode: 400, code: 'BAD_CALL_ID' });
+  }
+  const call = await VideoCall.findById(callId).select('participants').lean();
+  if (!call) {
+    throw Object.assign(new Error('Video call not found'), { statusCode: 404, code: 'CALL_NOT_FOUND' });
+  }
+  const isParticipant = call.participants.some((p) => String(p) === String(mongoId));
+  if (!isParticipant) {
+    throw Object.assign(new Error('Not a participant'), { statusCode: 403, code: 'NOT_PARTICIPANT' });
+  }
+  return { call };
+}
 
 class VideoService {
   constructor(container) {
@@ -94,3 +124,4 @@ class VideoService {
 }
 
 module.exports = (container) => new VideoService(container);
+module.exports.gateJoinCall = gateJoinCall;

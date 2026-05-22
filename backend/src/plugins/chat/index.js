@@ -9,25 +9,10 @@ const chatValidation = require('./chat.validation');
 const PluginBase = require('../../core/plugins/PluginBase');
 const auditLog = require('../../core/middleware/auditLog');
 const logger = require('../../core/utils/logger');
-const User = require('../../models/User.model');
-
-/**
- * Cache of Clerk userId → Mongo User._id, populated lazily per socket
- * connection. Avoids a DB hit on every socket event.
- * @type {Map<string, string>}
- */
-const _socketUserIdCache = new Map();
-
-async function resolveMongoIdForSocket(socket) {
-  const clerkId = socket.data.user.id;
-  let mongoId = _socketUserIdCache.get(clerkId);
-  if (mongoId) return mongoId;
-  const user = await User.findOne({ clerkId }).select('_id').lean();
-  if (!user) throw new Error('User profile not found');
-  mongoId = String(user._id);
-  _socketUserIdCache.set(clerkId, mongoId);
-  return mongoId;
-}
+const {
+  resolveMongoUserIdForSocket,
+  forgetSocketIdentity,
+} = require('../../core/utils/socketIdentity');
 
 class ChatPlugin extends PluginBase {
   get name() { return 'chat'; }
@@ -76,7 +61,7 @@ class ChatPlugin extends PluginBase {
 
       let mongoUserId;
       try {
-        mongoUserId = await resolveMongoIdForSocket(socket);
+        mongoUserId = await resolveMongoUserIdForSocket(socket);
       } catch (err) {
         logger.warn({ event: 'CHAT_SOCKET_NO_PROFILE', clerkId, err: err.message });
         socket.disconnect(true);
@@ -112,7 +97,7 @@ class ChatPlugin extends PluginBase {
       });
 
       socket.on('disconnect', () => {
-        _socketUserIdCache.delete(clerkId);
+        forgetSocketIdentity(clerkId);
         logger.info({ event: 'CHAT_SOCKET_DISCONNECTED', userId: mongoUserId, socketId: socket.id });
       });
     });
