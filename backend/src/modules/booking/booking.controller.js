@@ -98,10 +98,13 @@ const declineInstantBooking = asyncHandler(async (req, res) => {
 
 /**
  * GET /api/v1/bookings/:id
+ * 3-role participant gate enforced at service layer; see
+ * bookingService.getBooking JSDoc for the populated-subdoc gotcha.
+ * 404 / 403 thrown from service; asyncHandler forwards to errorHandler.
  */
 const getBooking = asyncHandler(async (req, res) => {
-  const booking = await bookingService.getBooking(req.params.id);
-  if (!booking) return apiResponse.error(res, 'Booking not found', 404, req.correlationId);
+  const actor = await resolveActor(req);
+  const booking = await bookingService.getBooking(req.params.id, actor);
   return apiResponse.success(res, booking);
 });
 

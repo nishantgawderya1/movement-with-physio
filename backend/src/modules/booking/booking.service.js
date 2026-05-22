@@ -308,14 +308,62 @@ async function createBooking(data) {
 }
 
 /**
- * Get a booking by ID.
+ * Get a booking by ID. 3-role gate per route-layer rbac (patient/therapist/
+ * admin); each role has a distinct ownership predicate:
+ *   - patient: must match booking.patientId._id (populated subdoc)
+ *   - therapist: must match booking.therapistId._id (populated subdoc)
+ *   - admin: bypass (admin can read any booking by design)
+ *   - any other role: 403 BOOKING_GET_ROLE (defense in depth)
+ *
+ * Soft-delete-aware fetch (findOne with isDeleted: false) mirrors the
+ * cancel/complete convention (booking.service.js:360, 437). Soft-deleted
+ * bookings 404 instead of being readable.
+ *
+ * IMPORTANT — populated-doc gotcha (divergence from S6 cancel/complete):
+ * cancel/complete load unpopulated patientId/therapistId so String(...)
+ * comparison works on bare ObjectIds. getBooking populates both fields
+ * (the 200 response shape requires keeping populate), so after .lean()
+ * those fields are { _id, name, ... } subdocuments. Comparison MUST use
+ * String(booking.patientId._id), NOT String(booking.patientId) — the
+ * latter stringifies to "[object Object]" and 403s every legitimate
+ * request silently. Tests in getBooking.security.test.js include positive
+ * shape assertions on cases 1-3 that lock in the populated-subdoc contract.
+ *
  * @param {string} bookingId
+ * @param {{ mongoId: string, role: string }} actor - resolved via resolveActor(req)
  */
-async function getBooking(bookingId) {
-  return Booking.findById(bookingId)
+async function getBooking(bookingId, actor) {
+  const booking = await Booking.findOne({ _id: bookingId, isDeleted: false })
     .populate('therapistId', 'name specialty rating')
     .populate('patientId', 'name email')
     .lean();
+
+  if (!booking) {
+    const err = new Error('Booking not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (actor.role === ROLES.PATIENT) {
+    if (String(booking.patientId._id) !== String(actor.mongoId)) {
+      throw Object.assign(new Error('Forbidden — not your booking'), {
+        statusCode: 403, code: 'BOOKING_NOT_PARTICIPANT',
+      });
+    }
+  } else if (actor.role === ROLES.THERAPIST) {
+    if (String(booking.therapistId._id) !== String(actor.mongoId)) {
+      throw Object.assign(new Error('Forbidden — not your booking'), {
+        statusCode: 403, code: 'BOOKING_NOT_PARTICIPANT',
+      });
+    }
+  } else if (actor.role !== ROLES.ADMIN) {
+    throw Object.assign(new Error('Forbidden'), {
+      statusCode: 403, code: 'BOOKING_GET_ROLE',
+    });
+  }
+  // admin: bypass
+
+  return booking;
 }
 
 /**
