@@ -289,6 +289,40 @@ function authorizeAssessmentAction(assessment, actor, action) {
 }
 
 /**
+ * Authorization helper for TrackingSession actions. Parallel to
+ * authorizeAssessmentAction but mode-free — tracking sessions are patient-
+ * owned by design, with no respond / pdf actions. Route layer already
+ * enforces patientOnly rbac on the complete endpoint; this gate is the
+ * service-layer chokepoint enforcing ownership within the role.
+ *
+ * Returns { ok: true, scope: 'full' } or throws { statusCode: 403, code }.
+ *
+ * @param {object} session - mongoose doc or lean object with patientId
+ * @param {{ mongoId, role }} actor
+ * @param {'read'|'complete'} action
+ */
+function authorizeTrackingSessionAction(session, actor, action) {
+  const isPatient = String(session.patientId) === String(actor.mongoId);
+  const isAdmin = actor.role === ROLES.ADMIN;
+
+  if (action === 'complete') {
+    if (!isPatient) {
+      const e = new Error('Only the patient may complete this tracking session.');
+      e.statusCode = 403;
+      e.code = 'TRACKING_SESSION_PATIENT_ONLY';
+      throw e;
+    }
+    return { ok: true, scope: 'full' };
+  }
+
+  // read (future): patient or admin
+  if (!isPatient && !isAdmin) {
+    const e = new Error('Forbidden'); e.statusCode = 403; e.code = 'NOT_PARTICIPANT'; throw e;
+  }
+  return { ok: true, scope: 'full' };
+}
+
+/**
  * Strip questions/responses out of an assessment for the metadata view.
  */
 function toMetadataView(assessment) {
@@ -339,9 +373,28 @@ async function createTrackingSession({ patientId, therapistId, bookingId, assess
 }
 
 /**
- * Complete a tracking session.
+ * Complete a tracking session. Patient-only by contract (route layer
+ * enforces patientOnly; this service-layer gate enforces ownership
+ * within the role).
+ *
+ * Read-then-authorize-then-update — the existing record must be loaded
+ * to verify caller ownership before the wholesale-overwrite update.
+ * Without this gate, any authenticated patient could clobber another
+ * patient's exercises[] / status / completedAt by sessionId.
+ *
+ * @param {string} sessionId
+ * @param {object} payload
+ * @param {{ mongoId, role }} actor - resolved from resolveActor(req)
  */
-async function completeTrackingSession(sessionId, { exercises, painScoreAfter, notes }) {
+async function completeTrackingSession(sessionId, { exercises, painScoreAfter, notes }, actor) {
+  const existing = await TrackingSession.findById(sessionId).select('patientId').lean();
+  if (!existing) {
+    const err = new Error('Tracking session not found');
+    err.statusCode = 404;
+    throw err;
+  }
+  authorizeTrackingSessionAction(existing, actor, 'complete');
+
   const session = await TrackingSession.findByIdAndUpdate(
     sessionId,
     {
@@ -353,6 +406,8 @@ async function completeTrackingSession(sessionId, { exercises, painScoreAfter, n
     },
     { new: true }
   );
+  // Race-tolerant 404 — between the read and the write, the session
+  // could be soft-deleted or removed by another process.
   if (!session) {
     const err = new Error('Tracking session not found');
     err.statusCode = 404;
@@ -387,6 +442,7 @@ module.exports = {
   listTrackingSessions,
   // Phase 2 — RBAC + view helpers
   authorizeAssessmentAction,
+  authorizeTrackingSessionAction,
   toMetadataView,
   validateAnswerShape,
 };
