@@ -87,17 +87,40 @@ class VideoService {
   }
 
   /**
-   * End a video call. Idempotent — short-circuits if already ended.
-   * Optionally records the leaver in joinState so HTTP /leave and socket
-   * end_call agree on per-participant state.
+   * Ends a video call.
    *
-   * @param {string} callId
-   * @param {string} [endedByUserId] - participant who ended the call
+   * @param {string|ObjectId} callId
+   * @param {string|null} endedByUserId - When non-null, the caller is
+   *   treated as an external (user-initiated) request and must be a
+   *   participant of the call; throws 403 NOT_PARTICIPANT otherwise.
+   *   When null, the caller is treated as internal (lifecycle
+   *   reconciliation, scheduled cleanup, etc.) and the participant
+   *   check is bypassed by contract. Internal callers MUST verify
+   *   their own authority before invoking this with null.
    * @returns {Promise<VideoCall|null>}
    */
   async endCall(callId, endedByUserId = null) {
     const call = await VideoCall.findById(callId);
     if (!call || call.status === 'ended') return call;
+
+    // Defense in depth — REST controller and socket handler both gate
+    // via loadCallForParticipant / socket.rooms membership before
+    // reaching here. This is the backstop for any future caller that
+    // forgets. The call doc is already loaded, so the check is in-memory
+    // at zero extra DB cost. Internal callers (endedByUserId === null)
+    // bypass by contract; see JSDoc above.
+    if (endedByUserId) {
+      const isParticipant = call.participants.some(
+        (p) => String(p) === String(endedByUserId)
+      );
+      if (!isParticipant) {
+        throw Object.assign(new Error('Not a participant'), {
+          statusCode: 403,
+          code: 'NOT_PARTICIPANT',
+        });
+      }
+    }
+
     call.status = 'ended';
     call.endedAt = new Date();
     if (call.startedAt) {
