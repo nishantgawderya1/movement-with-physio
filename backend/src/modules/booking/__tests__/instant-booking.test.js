@@ -129,3 +129,71 @@ describe('createInstantBooking', () => {
     );
   });
 });
+
+// S-followup-8: acceptInstantBooking + declineInstantBooking previously threw
+// bare `Forbidden` 403s with no typed .code field, inconsistent with the rest
+// of the booking module post-S6/S7. Both now carry `code: 'BOOKING_NOT_THERAPIST'`
+// (same code as completeBooking — byte-identical condition + identical client
+// semantics). Cosmetic consistency fix; regression assertions verify the gate
+// fires BEFORE any state mutation.
+describe('acceptInstantBooking / declineInstantBooking — therapist ownership gate (S-followup-8)', () => {
+  let therapistA, therapistB, patientUser, pendingBooking;
+
+  // Sibling describe — lifecycle hooks don't cascade. Same gotcha as
+  // S-followup-6's notification-injection block in cancelBooking.security.test.js.
+  beforeAll(async () => { await connect(); });
+  afterAll(async () => { await close(); });
+
+  beforeEach(async () => {
+    await clearDb();
+    mockAddJob.mockClear();
+    therapistA = await User.create({
+      email: 'ta@x.com', role: ROLES.THERAPIST, clerkId: 'ta_' + Date.now(),
+      isVerified: true,
+    });
+    therapistB = await User.create({
+      email: 'tb@x.com', role: ROLES.THERAPIST, clerkId: 'tb_' + Date.now() + '_b',
+      isVerified: true,
+    });
+    patientUser = await User.create({
+      email: 'p_s8@x.com', role: ROLES.PATIENT, clerkId: 'p_s8_' + Date.now(),
+    });
+    pendingBooking = await Booking.create({
+      therapistId: therapistA._id, patientId: patientUser._id,
+      slotStart: new Date(Date.now() + 10 * 60 * 1000),
+      durationMinutes: 30, timezone: 'Asia/Kolkata',
+      status: BOOKING_STATUS.INSTANT_PENDING,
+      meetingType: MEETING_TYPE.VIDEO,
+      scheduledMode: SCHEDULED_MODE.INSTANT,
+      instantRequestedAt: new Date(),
+      instantExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    });
+  });
+
+  test('non-owning therapist tries to accept → 403 BOOKING_NOT_THERAPIST + state unchanged (regression)', async () => {
+    await expect(
+      bookingService.acceptInstantBooking({
+        bookingId: pendingBooking._id, therapistId: therapistB._id,
+      })
+    ).rejects.toMatchObject({ statusCode: 403, code: 'BOOKING_NOT_THERAPIST' });
+
+    // Regression: confirm 403 fires BEFORE the status flip. Pre-fix this was
+    // already correct (gate-then-mutate ordering), but the test locks the
+    // ordering invariant for any future refactor.
+    const reloaded = await Booking.findById(pendingBooking._id);
+    expect(reloaded.status).toBe(BOOKING_STATUS.INSTANT_PENDING);
+    expect(reloaded.videoCallId).toBeFalsy();
+    expect(reloaded.assessmentId).toBeFalsy();
+  });
+
+  test('non-owning therapist tries to decline → 403 BOOKING_NOT_THERAPIST + state unchanged (regression)', async () => {
+    await expect(
+      bookingService.declineInstantBooking({
+        bookingId: pendingBooking._id, therapistId: therapistB._id,
+      })
+    ).rejects.toMatchObject({ statusCode: 403, code: 'BOOKING_NOT_THERAPIST' });
+
+    const reloaded = await Booking.findById(pendingBooking._id);
+    expect(reloaded.status).toBe(BOOKING_STATUS.INSTANT_PENDING);
+  });
+});

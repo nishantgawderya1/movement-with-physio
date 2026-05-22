@@ -636,7 +636,9 @@ async function acceptInstantBooking({ bookingId, therapistId }) {
     const e = new Error('Booking not found'); e.statusCode = 404; throw e;
   }
   if (String(booking.therapistId) !== String(therapistId)) {
-    const e = new Error('Forbidden'); e.statusCode = 403; throw e;
+    throw Object.assign(new Error('Forbidden — not your booking'), {
+      statusCode: 403, code: 'BOOKING_NOT_THERAPIST',
+    });
   }
   if (booking.status !== BOOKING_STATUS.INSTANT_PENDING) {
     const e = new Error('Booking is not in instant_pending state'); e.statusCode = 409; throw e;
@@ -682,7 +684,9 @@ async function declineInstantBooking({ bookingId, therapistId }) {
     const e = new Error('Booking not found'); e.statusCode = 404; throw e;
   }
   if (String(booking.therapistId) !== String(therapistId)) {
-    const e = new Error('Forbidden'); e.statusCode = 403; throw e;
+    throw Object.assign(new Error('Forbidden — not your booking'), {
+      statusCode: 403, code: 'BOOKING_NOT_THERAPIST',
+    });
   }
   if (booking.status !== BOOKING_STATUS.INSTANT_PENDING) {
     const e = new Error('Booking is not in instant_pending state'); e.statusCode = 409; throw e;
