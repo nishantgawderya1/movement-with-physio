@@ -2,6 +2,8 @@
 
 const { Router } = require('express');
 const controller = require('./assessment.controller');
+const schemas = require('./assessment.validation');
+const validate = require('../../core/middleware/validate');
 const authMiddleware = require('../../core/middleware/authMiddleware');
 const rbac = require('../../core/middleware/rbac');
 const { defaultLimiter } = require('../../core/middleware/rateLimiter');
@@ -49,7 +51,7 @@ router.get('/history', ...patientOnly, controller.getHistory);
  *     tags: [Assessment]
  *     summary: Start a new assessment session
  */
-router.post('/', ...patientOnly, controller.createAssessment);
+router.post('/', ...patientOnly, validate(schemas.createAssessment), controller.createAssessment);
 
 /**
  * @openapi
@@ -81,7 +83,7 @@ router.get('/:id', ...auth, controller.getAssessment);
  *       respond; patient calls return 403 THERAPIST_ONLY. Enforced by the
  *       service-level authorizeAssessmentAction.
  */
-router.post('/:id/respond', ...respondOrComplete, controller.respondToQuestion);
+router.post('/:id/respond', ...respondOrComplete, validate(schemas.respondToQuestion), controller.respondToQuestion);
 
 /**
  * @openapi
@@ -93,7 +95,7 @@ router.post('/:id/respond', ...respondOrComplete, controller.respondToQuestion);
  *       therapist_driven mode → therapist completes; PDF worker is enqueued.
  *       patient_self mode → patient completes (legacy behavior preserved).
  */
-router.patch('/:id/complete', ...respondOrComplete, controller.completeAssessment);
+router.patch('/:id/complete', ...respondOrComplete, validate(schemas.completeAssessment), controller.completeAssessment);
 
 /**
  * @openapi
@@ -126,7 +128,7 @@ router.get('/tracking/sessions', ...patientOnly, controller.listTrackingSessions
  *     tags: [Assessment]
  *     summary: Create a new tracking session
  */
-router.post('/tracking/sessions', ...patientOnly, controller.createTrackingSession);
+router.post('/tracking/sessions', ...patientOnly, validate(schemas.createTrackingSession), controller.createTrackingSession);
 
 /**
  * @openapi
@@ -135,6 +137,6 @@ router.post('/tracking/sessions', ...patientOnly, controller.createTrackingSessi
  *     tags: [Assessment]
  *     summary: Complete a tracking session
  */
-router.patch('/tracking/sessions/:id/complete', ...patientOnly, controller.completeTrackingSession);
+router.patch('/tracking/sessions/:id/complete', ...patientOnly, validate(schemas.completeTrackingSession), controller.completeTrackingSession);
 
 module.exports = router;
