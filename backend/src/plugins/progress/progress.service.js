@@ -68,7 +68,7 @@ module.exports = function createProgressService(container) {
       patientObjId
         ? Booking.countDocuments({ patientId: patientObjId, status: 'completed' })
         : Promise.resolve(0),
-      // SessionNote.patientId is String (Clerk ID) — use patientId directly
+      // FIXME(legacy): SessionNote.patientId is a raw clerkId String (not ObjectId). All queries against this collection use the String form.
       SessionNote.countDocuments({ patientId }),
     ]);
 
@@ -142,7 +142,11 @@ module.exports = function createProgressService(container) {
           as: 'exercise',
         },
       },
-      { $unwind: { path: '$exercise', preserveNullAndEmpty: true } },
+      // preserveNullAndEmptyArrays — keeps rows whose $lookup didn't match
+      // (typo'd as preserveNullAndEmpty in the original; never tested so the
+      // bug went undetected. Fixed incidentally in S7 since the new
+      // therapist tests exercise this code path for the first time.)
+      { $unwind: { path: '$exercise', preserveNullAndEmptyArrays: true } },
       {
         $project: {
           exerciseId: '$_id',

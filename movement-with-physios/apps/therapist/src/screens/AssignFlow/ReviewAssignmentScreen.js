@@ -177,6 +177,9 @@ const ReviewAssignmentScreen = ({ navigation, route }) => {
   const handleAssign = () => {
     // ── MOCK — Backend developer: replace this block only ────────────────────
     // TODO: call AssignmentService.assignExercises({ exercises: selectedExercises, clientId: selectedClient.id, schedule: scheduleConfig })
+    // TODO: backend exercise plugin was deleted in Phase A Item 5 cleanup
+    // (run `git log -- backend/src/plugins/exercise/` to find the deletion);
+    // re-wire to a new assignment endpoint when product spec is ready.
     // ─────────────────────────────────────────────────────────────────────────
     setShowSuccess(true);
   };

@@ -10,3 +10,7 @@ coverage/
 .nyc_output/
 .DS_Store
 graphify-out/.graphify_python
+
+# Local-disk storage driver (assessment PDFs etc. when STORAGE_DRIVER=local).
+# Anchored to repo root so it does NOT match src/core/storage/ source code.
+/storage/

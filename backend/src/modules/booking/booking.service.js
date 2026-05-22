@@ -1,14 +1,95 @@
 'use strict';
 
-const { zonedTimeToUtc, utcToZonedTime, format } = require('date-fns-tz');
+const { fromZonedTime, toZonedTime, format } = require('date-fns-tz');
 const Booking = require('../../models/Booking.model');
 const User = require('../../models/User.model');
+const Assessment = require('../../models/Assessment.model');
+const AssessmentQuestionTemplate = require('../../models/AssessmentQuestionTemplate.model');
+const VideoCall = require('../../models/VideoCall.model');
 const { getClient } = require('../../config/redis');
 const cacheManager = require('../../core/cache/cacheManager');
 const { addJob } = require('../../core/jobs/jobQueue');
 const paginate = require('../../core/utils/paginator');
-const { BOOKING_STATUS, NOTIFICATION_TYPES, REDIS_TTL } = require('../../core/utils/constants');
+const {
+  BOOKING_STATUS, NOTIFICATION_TYPES, REDIS_TTL,
+  MEETING_TYPE, SCHEDULED_MODE, VIDEO_CALL_STATUS,
+  ASSESSMENT_MODE, INSTANT_DELAY_MINUTES, INSTANT_REQUEST_TIMEOUT_MS,
+  JOB_NAMES, ROLES,
+} = require('../../core/utils/constants');
 const logger = require('../../core/utils/logger');
+
+/**
+ * Snapshot question templates for the given body part into an assessment.
+ * Falls back to the 'general' bank if the requested body part has no questions.
+ * Returns an array of { questionId, questionText, answerType, options }.
+ *
+ * Snapshotting (not referencing) ensures future edits to the template
+ * collection don't retroactively change historical assessments.
+ */
+async function snapshotQuestionsForBodyPart(bodyPart) {
+  const primary = await AssessmentQuestionTemplate.find({ bodyPart, isActive: true })
+    .sort({ order: 1 })
+    .lean();
+  const source = primary.length > 0
+    ? primary
+    : await AssessmentQuestionTemplate.find({ bodyPart: 'general', isActive: true })
+        .sort({ order: 1 })
+        .lean();
+  return source.map((t) => ({
+    questionId: t.questionId,
+    questionText: t.questionText,
+    answerType: t.answerType,
+    options: t.options || [],
+  }));
+}
+
+/**
+ * Create the linked VideoCall + Assessment for a video meeting.
+ * Shared between scheduled video bookings (createBooking with meetingType='video')
+ * and accepted instant bookings (acceptInstantBooking).
+ *
+ * @param {object} booking - persisted Booking document (will be mutated to link
+ *   the videoCallId + assessmentId and saved).
+ * @returns {Promise<{ videoCall, assessment }>}
+ */
+async function attachVideoCallAndAssessment(booking) {
+  // patient.painLocation is the patient's primary body part (set during
+  // onboarding once that field lands). Today it's not on the User schema so
+  // .select('painLocation') yields undefined and we fall through to 'general'.
+  const patient = await User.findById(booking.patientId).select('painLocation').lean();
+  const bodyPart = (patient?.painLocation || 'general').toString().toLowerCase();
+
+  const videoCall = await VideoCall.create({
+    participants: [booking.patientId, booking.therapistId],
+    initiatedBy: booking.patientId,
+    status: VIDEO_CALL_STATUS.SCHEDULED,
+    scheduledAt: booking.slotStart,
+    bookingId: booking._id,
+  });
+
+  const questions = await snapshotQuestionsForBodyPart(bodyPart);
+
+  const assessment = await Assessment.create({
+    patientId: booking.patientId,
+    therapistId: booking.therapistId,
+    bodyParts: [bodyPart],
+    mode: ASSESSMENT_MODE.THERAPIST_DRIVEN,
+    bookingId: booking._id,
+    videoCallId: videoCall._id,
+    status: 'pending',
+    questions,
+    responses: [],
+  });
+
+  booking.videoCallId = videoCall._id;
+  booking.assessmentId = assessment._id;
+  await booking.save();
+
+  videoCall.assessmentId = assessment._id;
+  await videoCall.save();
+
+  return { videoCall, assessment };
+}
 
 const SLOT_LOCK_TTL_SECONDS = 10; // 10s SETNX lock while booking is processed
 
@@ -49,7 +130,7 @@ async function releaseSlotLock(therapistId, slotStart) {
  * @returns {Date} UTC Date
  */
 function toUTC(dateTimeStr, timezone) {
-  return zonedTimeToUtc(dateTimeStr, timezone);
+  return fromZonedTime(dateTimeStr, timezone);
 }
 
 /**
@@ -90,7 +171,7 @@ async function listSlots(therapistId, date, timezone = 'Asia/Kolkata', durationM
 
   const available = slots.map((utcSlot) => ({
     utc: utcSlot.toISOString(),
-    local: format(utcToZonedTime(utcSlot, timezone), 'yyyy-MM-dd HH:mm', { timeZone: timezone }),
+    local: format(toZonedTime(utcSlot, timezone), 'yyyy-MM-dd HH:mm', { timeZone: timezone }),
     available: !bookedTimes.has(utcSlot.getTime()),
   }));
 
@@ -114,7 +195,11 @@ async function listSlots(therapistId, date, timezone = 'Asia/Kolkata', durationM
  * @param {string} [data.idempotencyKey]
  */
 async function createBooking(data) {
-  const { therapistId, patientId, slotStart, timezone, durationMinutes = 60, notes, idempotencyKey } = data;
+  const {
+    therapistId, patientId, slotStart, timezone, durationMinutes = 60, notes,
+    idempotencyKey,
+    meetingType = MEETING_TYPE.IN_PERSON,
+  } = data;
 
   const utcSlot = new Date(slotStart);
 
@@ -157,34 +242,65 @@ async function createBooking(data) {
       timezone,
       notes,
       status: BOOKING_STATUS.CONFIRMED,
+      meetingType,
+      scheduledMode: SCHEDULED_MODE.SLOT_BOOKING,
       idempotencyKey: idempotencyKey || null,
     });
 
-    logger.info({ event: 'BOOKING_CREATED', bookingId: booking._id, therapistId, patientId });
+    logger.info({
+      event: 'BOOKING_CREATED',
+      bookingId: booking._id,
+      therapistId,
+      patientId,
+      meetingType: booking.meetingType,
+    });
 
     // 5. Invalidate slots cache for this therapist+date
-    const dateStr = format(utcToZonedTime(utcSlot, timezone), 'yyyy-MM-dd', { timeZone: timezone });
+    const dateStr = format(toZonedTime(utcSlot, timezone), 'yyyy-MM-dd', { timeZone: timezone });
     await cacheManager.invalidate(`slots:${therapistId}:${dateStr}`);
 
-    // 6. Enqueue notification for patient
-    await addJob('send_notification', {
+    // 6. Video meetings get a linked VideoCall + therapist-driven Assessment.
+    let videoCall = null;
+    let assessment = null;
+    if (booking.meetingType === MEETING_TYPE.VIDEO) {
+      const linked = await attachVideoCallAndAssessment(booking);
+      videoCall = linked.videoCall;
+      assessment = linked.assessment;
+    }
+
+    // 7. Notification: patient
+    const isVideo = booking.meetingType === MEETING_TYPE.VIDEO;
+    await addJob(JOB_NAMES.SEND_NOTIFICATION, {
       userId: patientId,
-      title: 'Booking Confirmed!',
-      body: `Your session with ${therapist.name || 'your therapist'} is confirmed.`,
-      type: NOTIFICATION_TYPES.BOOKING_CONFIRMED,
-      data: { bookingId: String(booking._id), slotStart: utcSlot.toISOString() },
+      title: isVideo ? 'Video Call Scheduled' : 'Booking Confirmed!',
+      body: isVideo
+        ? `Your video session with ${therapist.name || 'your therapist'} is scheduled.`
+        : `Your session with ${therapist.name || 'your therapist'} is confirmed.`,
+      type: isVideo
+        ? NOTIFICATION_TYPES.VIDEO_CALL_SCHEDULED
+        : NOTIFICATION_TYPES.BOOKING_CONFIRMED,
+      data: {
+        bookingId: String(booking._id),
+        slotStart: utcSlot.toISOString(),
+        ...(videoCall ? { videoCallId: String(videoCall._id) } : {}),
+      },
     });
 
-    // 7. Notify therapist too
-    await addJob('send_notification', {
+    // 8. Notification: therapist
+    await addJob(JOB_NAMES.SEND_NOTIFICATION, {
       userId: therapistId,
-      title: 'New Booking',
-      body: `A new session has been booked.`,
-      type: NOTIFICATION_TYPES.BOOKING_CONFIRMED,
-      data: { bookingId: String(booking._id) },
+      title: isVideo ? 'New Video Session' : 'New Booking',
+      body: isVideo ? 'A new video session has been booked.' : 'A new session has been booked.',
+      type: isVideo
+        ? NOTIFICATION_TYPES.VIDEO_CALL_SCHEDULED
+        : NOTIFICATION_TYPES.BOOKING_CONFIRMED,
+      data: {
+        bookingId: String(booking._id),
+        ...(videoCall ? { videoCallId: String(videoCall._id) } : {}),
+      },
     });
 
-    return booking;
+    return { booking, videoCall, assessment };
   } finally {
     // Always release the lock
     await releaseSlotLock(therapistId, utcSlot);
@@ -192,14 +308,62 @@ async function createBooking(data) {
 }
 
 /**
- * Get a booking by ID.
+ * Get a booking by ID. 3-role gate per route-layer rbac (patient/therapist/
+ * admin); each role has a distinct ownership predicate:
+ *   - patient: must match booking.patientId._id (populated subdoc)
+ *   - therapist: must match booking.therapistId._id (populated subdoc)
+ *   - admin: bypass (admin can read any booking by design)
+ *   - any other role: 403 BOOKING_GET_ROLE (defense in depth)
+ *
+ * Soft-delete-aware fetch (findOne with isDeleted: false) mirrors the
+ * cancel/complete convention (booking.service.js:360, 437). Soft-deleted
+ * bookings 404 instead of being readable.
+ *
+ * IMPORTANT — populated-doc gotcha (divergence from S6 cancel/complete):
+ * cancel/complete load unpopulated patientId/therapistId so String(...)
+ * comparison works on bare ObjectIds. getBooking populates both fields
+ * (the 200 response shape requires keeping populate), so after .lean()
+ * those fields are { _id, name, ... } subdocuments. Comparison MUST use
+ * String(booking.patientId._id), NOT String(booking.patientId) — the
+ * latter stringifies to "[object Object]" and 403s every legitimate
+ * request silently. Tests in getBooking.security.test.js include positive
+ * shape assertions on cases 1-3 that lock in the populated-subdoc contract.
+ *
  * @param {string} bookingId
+ * @param {{ mongoId: string, role: string }} actor - resolved via resolveActor(req)
  */
-async function getBooking(bookingId) {
-  return Booking.findById(bookingId)
+async function getBooking(bookingId, actor) {
+  const booking = await Booking.findOne({ _id: bookingId, isDeleted: false })
     .populate('therapistId', 'name specialty rating')
     .populate('patientId', 'name email')
     .lean();
+
+  if (!booking) {
+    const err = new Error('Booking not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (actor.role === ROLES.PATIENT) {
+    if (String(booking.patientId._id) !== String(actor.mongoId)) {
+      throw Object.assign(new Error('Forbidden — not your booking'), {
+        statusCode: 403, code: 'BOOKING_NOT_PARTICIPANT',
+      });
+    }
+  } else if (actor.role === ROLES.THERAPIST) {
+    if (String(booking.therapistId._id) !== String(actor.mongoId)) {
+      throw Object.assign(new Error('Forbidden — not your booking'), {
+        statusCode: 403, code: 'BOOKING_NOT_PARTICIPANT',
+      });
+    }
+  } else if (actor.role !== ROLES.ADMIN) {
+    throw Object.assign(new Error('Forbidden'), {
+      statusCode: 403, code: 'BOOKING_GET_ROLE',
+    });
+  }
+  // admin: bypass
+
+  return booking;
 }
 
 /**
@@ -223,12 +387,25 @@ async function listBookings({ userId, role, status, cursor, limit }) {
 }
 
 /**
- * Cancel a booking.
+ * Cancel a booking. 3-role gate per route-layer rbac (patient/therapist/
+ * admin); each role has a distinct ownership predicate:
+ *   - patient: must match booking.patientId
+ *   - therapist: must match booking.therapistId
+ *   - admin: bypass (admin can cancel anything by design)
+ *   - any other role: 403 BOOKING_CANCEL_ROLE (defense in depth)
+ *
+ * Without this gate, any authenticated patient/therapist can cancel any
+ * other patient/therapist's booking by guessing bookingId, AND the
+ * attacker-controlled `reason` field lands in the victim's notification
+ * feed.
+ *
  * @param {string} bookingId
- * @param {{ reason: string, cancelledBy: string }} options
+ * @param {{ mongoId: string, role: string }} actor - resolved from resolveActor(req)
+ * @param {string|null} reason
  */
-async function cancelBooking(bookingId, { reason, cancelledBy }) {
-  const booking = await Booking.findById(bookingId);
+async function cancelBooking(bookingId, actor, reason) {
+  // Soft-delete-aware fetch — matches acceptInstantBooking convention.
+  const booking = await Booking.findOne({ _id: bookingId, isDeleted: false });
   if (!booking) {
     const err = new Error('Booking not found');
     err.statusCode = 404;
@@ -245,47 +422,290 @@ async function cancelBooking(bookingId, { reason, cancelledBy }) {
     throw err;
   }
 
+  // Ownership gate — 3-role branching. Route-layer rbac filters to
+  // patient/therapist/admin; this is the service-layer chokepoint.
+  if (actor.role === ROLES.PATIENT) {
+    if (String(booking.patientId) !== String(actor.mongoId)) {
+      throw Object.assign(new Error('Forbidden — not your booking'), {
+        statusCode: 403, code: 'BOOKING_NOT_PARTICIPANT',
+      });
+    }
+  } else if (actor.role === ROLES.THERAPIST) {
+    if (String(booking.therapistId) !== String(actor.mongoId)) {
+      throw Object.assign(new Error('Forbidden — not your booking'), {
+        statusCode: 403, code: 'BOOKING_NOT_PARTICIPANT',
+      });
+    }
+  } else if (actor.role !== ROLES.ADMIN) {
+    // Defense in depth: rbac already filters to the three roles above;
+    // reject anything else explicitly.
+    throw Object.assign(new Error('Forbidden'), {
+      statusCode: 403, code: 'BOOKING_CANCEL_ROLE',
+    });
+  }
+  // admin: bypass — can cancel any booking
+
   booking.status = BOOKING_STATUS.CANCELLED;
   booking.cancellationReason = reason || null;
   booking.cancelledAt = new Date();
-  booking.cancelledBy = cancelledBy;
+  booking.cancelledBy = actor.role;
   await booking.save();
 
   // Invalidate slots cache
   const timezone = booking.timezone || 'Asia/Kolkata';
-  const dateStr = format(utcToZonedTime(booking.slotStart, timezone), 'yyyy-MM-dd', { timeZone: timezone });
+  const dateStr = format(toZonedTime(booking.slotStart, timezone), 'yyyy-MM-dd', { timeZone: timezone });
   await cacheManager.invalidate(`slots:${booking.therapistId}:${dateStr}`);
 
-  // Notify patient
+  // Notify patient. Body is the canonical static string regardless of
+  // caller-supplied `reason` — the cancelling therapist could otherwise
+  // inject URL phishing / social-engineering text into the patient's
+  // notification feed via FCM push (S-followup-6). Reason is still
+  // persisted on booking.cancellationReason above for admin diagnostic
+  // and future UX; `data` carries only `bookingId` so any future renderer
+  // must read the reason from the booking doc with proper escaping
+  // context, not from the notification payload.
   await addJob('send_notification', {
     userId: String(booking.patientId),
     title: 'Booking Cancelled',
-    body: reason ? `Your booking was cancelled: ${reason}` : 'Your booking has been cancelled.',
+    body: 'Your booking has been cancelled.',
     type: NOTIFICATION_TYPES.BOOKING_CANCELLED,
     data: { bookingId: String(booking._id) },
   });
 
-  logger.info({ event: 'BOOKING_CANCELLED', bookingId, cancelledBy });
+  logger.info({ event: 'BOOKING_CANCELLED', bookingId, cancelledBy: actor.role });
   return booking;
 }
 
 /**
- * Mark a booking as completed.
+ * Mark a booking as completed. Therapist-only by route-layer rbac;
+ * service-layer gate verifies caller is the booking's therapist.
+ *
+ * Rewritten from findByIdAndUpdate to read-first/check/write-after,
+ * mirroring acceptInstantBooking (booking.service.js:522). Without this
+ * gate, any authenticated therapist can flip any other therapist's
+ * CONFIRMED booking to COMPLETED via guessed bookingId.
+ *
  * @param {string} bookingId
+ * @param {string} therapistId - resolved from resolveMongoUserId(req)
  */
-async function completeBooking(bookingId) {
-  const booking = await Booking.findByIdAndUpdate(
-    bookingId,
-    { status: BOOKING_STATUS.COMPLETED, completedAt: new Date() },
-    { new: true }
-  );
+async function completeBooking(bookingId, therapistId) {
+  const booking = await Booking.findOne({ _id: bookingId, isDeleted: false });
   if (!booking) {
     const err = new Error('Booking not found');
     err.statusCode = 404;
     throw err;
   }
+  if (String(booking.therapistId) !== String(therapistId)) {
+    throw Object.assign(new Error('Forbidden — not your booking'), {
+      statusCode: 403, code: 'BOOKING_NOT_THERAPIST',
+    });
+  }
+  // Idempotency precondition — consistency with cancel's already-cancelled
+  // / already-completed preconditions.
+  if (booking.status === BOOKING_STATUS.COMPLETED) {
+    throw Object.assign(new Error('Booking is already completed'), {
+      statusCode: 400, code: 'BOOKING_ALREADY_COMPLETED',
+    });
+  }
+
+  booking.status = BOOKING_STATUS.COMPLETED;
+  booking.completedAt = new Date();
+  await booking.save();
   logger.info({ event: 'BOOKING_COMPLETED', bookingId });
   return booking;
+}
+
+/**
+ * Patient requests an instant video call with a therapist they've previously
+ * worked with. Booking sits in `instant_pending` until the therapist accepts
+ * (turns into `confirmed`) or 5 minutes pass (cron flips to `instant_declined`).
+ *
+ * Validation gates (in order, each throws with .statusCode + .code):
+ *   1) delay must be 15 or 30
+ *   2) patient must have at least one prior CONFIRMED/COMPLETED booking with this therapist
+ *   3) therapist must have availableNow=true
+ *   4) patient must not already have an INSTANT_PENDING request anywhere
+ */
+async function createInstantBooking({
+  therapistId, patientId, instantDelayMinutes, idempotencyKey,
+}) {
+  if (!INSTANT_DELAY_MINUTES.includes(Number(instantDelayMinutes))) {
+    const err = new Error('Invalid instantDelayMinutes — must be 15 or 30');
+    err.statusCode = 400;
+    err.code = 'INVALID_DELAY';
+    throw err;
+  }
+
+  // Idempotency short-circuit
+  if (idempotencyKey) {
+    const existing = await Booking.findOne({ idempotencyKey });
+    if (existing) return { booking: existing, videoCall: null, assessment: null };
+  }
+
+  // Validation 1: prior patient↔therapist relationship
+  const priorBooking = await Booking.findOne({
+    patientId, therapistId,
+    status: { $in: [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED] },
+    isDeleted: false,
+  }).select('_id').lean();
+  if (!priorBooking) {
+    const err = new Error('Instant calls are available only with therapists you have previously booked.');
+    err.statusCode = 403;
+    err.code = 'NO_PRIOR_RELATIONSHIP';
+    throw err;
+  }
+
+  // Validation 2: therapist availableNow
+  const therapist = await User.findById(therapistId).select('availableNow role name').lean();
+  if (!therapist || therapist.role !== ROLES.THERAPIST || !therapist.availableNow) {
+    const err = new Error('Therapist is not available for instant calls right now.');
+    err.statusCode = 409;
+    err.code = 'THERAPIST_NOT_AVAILABLE';
+    throw err;
+  }
+
+  // Validation 3: no other pending instant request from this patient
+  const pendingInstant = await Booking.findOne({
+    patientId,
+    status: BOOKING_STATUS.INSTANT_PENDING,
+    isDeleted: false,
+  }).select('_id').lean();
+  if (pendingInstant) {
+    const err = new Error('You already have a pending instant call request.');
+    err.statusCode = 409;
+    err.code = 'INSTANT_ALREADY_PENDING';
+    throw err;
+  }
+
+  const now = new Date();
+  const slotStart = new Date(now.getTime() + Number(instantDelayMinutes) * 60 * 1000);
+
+  const booking = await Booking.create({
+    therapistId, patientId,
+    slotStart,
+    durationMinutes: 30,
+    timezone: 'Asia/Kolkata',
+    status: BOOKING_STATUS.INSTANT_PENDING,
+    meetingType: MEETING_TYPE.VIDEO,
+    scheduledMode: SCHEDULED_MODE.INSTANT,
+    instantDelayMinutes: Number(instantDelayMinutes),
+    instantRequestedAt: now,
+    instantExpiresAt: new Date(now.getTime() + INSTANT_REQUEST_TIMEOUT_MS),
+    idempotencyKey: idempotencyKey || undefined,
+  });
+
+  logger.info({
+    event: 'INSTANT_BOOKING_REQUESTED',
+    bookingId: booking._id, therapistId, patientId, instantDelayMinutes,
+  });
+
+  // Notify therapist
+  await addJob(JOB_NAMES.SEND_NOTIFICATION, {
+    userId: therapistId,
+    title: 'Instant Call Request',
+    body: `A patient wants to start a video call in ${instantDelayMinutes} minutes.`,
+    type: NOTIFICATION_TYPES.VIDEO_CALL_REQUESTED,
+    data: {
+      bookingId: String(booking._id),
+      patientId: String(patientId),
+      delayMinutes: String(instantDelayMinutes),
+    },
+  });
+  try {
+      const messaging = require('../../container').container.messaging;
+      messaging.emitToUserOnNamespace('/video', therapistId.toString(), 'video_call_requested', {
+        bookingId: booking._id.toString(),
+        patientId: patientId.toString(),
+        delayMinutes: Number(instantDelayMinutes),
+      });
+    } catch (err) {
+      logger.warn({ event: 'INSTANT_CALL_SOCKET_EMIT_FAILED', err: err?.message });
+    }
+
+  return { booking, videoCall: null, assessment: null };
+}
+
+/**
+ * Therapist accepts an instant call request.
+ * Transitions INSTANT_PENDING → CONFIRMED and creates the linked
+ * VideoCall + Assessment (same shape as a scheduled video booking).
+ */
+async function acceptInstantBooking({ bookingId, therapistId }) {
+  const booking = await Booking.findOne({ _id: bookingId, isDeleted: false });
+  if (!booking) {
+    const e = new Error('Booking not found'); e.statusCode = 404; throw e;
+  }
+  if (String(booking.therapistId) !== String(therapistId)) {
+    throw Object.assign(new Error('Forbidden — not your booking'), {
+      statusCode: 403, code: 'BOOKING_NOT_THERAPIST',
+    });
+  }
+  if (booking.status !== BOOKING_STATUS.INSTANT_PENDING) {
+    const e = new Error('Booking is not in instant_pending state'); e.statusCode = 409; throw e;
+  }
+  if (booking.instantExpiresAt && booking.instantExpiresAt < new Date()) {
+    booking.status = BOOKING_STATUS.INSTANT_DECLINED;
+    await booking.save();
+    const e = new Error('Instant request has expired'); e.statusCode = 410; throw e;
+  }
+
+  booking.status = BOOKING_STATUS.CONFIRMED;
+  await booking.save();
+
+  const { videoCall, assessment } = await attachVideoCallAndAssessment(booking);
+
+  logger.info({
+    event: 'INSTANT_BOOKING_ACCEPTED',
+    bookingId, therapistId, videoCallId: videoCall._id, assessmentId: assessment._id,
+  });
+
+  await addJob(JOB_NAMES.SEND_NOTIFICATION, {
+    userId: String(booking.patientId),
+    title: 'Therapist Accepted',
+    body: 'Your therapist accepted the instant call.',
+    type: NOTIFICATION_TYPES.VIDEO_CALL_SCHEDULED,
+    data: {
+      bookingId: String(booking._id),
+      videoCallId: String(videoCall._id),
+      scheduledAt: booking.slotStart.toISOString(),
+    },
+  });
+
+  return { booking, videoCall, assessment };
+}
+
+/**
+ * Therapist declines an instant call request.
+ * Sets status to INSTANT_DECLINED and notifies the patient.
+ */
+async function declineInstantBooking({ bookingId, therapistId }) {
+  const booking = await Booking.findOne({ _id: bookingId, isDeleted: false });
+  if (!booking) {
+    const e = new Error('Booking not found'); e.statusCode = 404; throw e;
+  }
+  if (String(booking.therapistId) !== String(therapistId)) {
+    throw Object.assign(new Error('Forbidden — not your booking'), {
+      statusCode: 403, code: 'BOOKING_NOT_THERAPIST',
+    });
+  }
+  if (booking.status !== BOOKING_STATUS.INSTANT_PENDING) {
+    const e = new Error('Booking is not in instant_pending state'); e.statusCode = 409; throw e;
+  }
+
+  booking.status = BOOKING_STATUS.INSTANT_DECLINED;
+  await booking.save();
+
+  logger.info({ event: 'INSTANT_BOOKING_DECLINED', bookingId, therapistId });
+
+  await addJob(JOB_NAMES.SEND_NOTIFICATION, {
+    userId: String(booking.patientId),
+    title: 'Instant Call Declined',
+    body: 'Your therapist is not available right now. You can try booking a regular slot.',
+    type: NOTIFICATION_TYPES.VIDEO_CALL_DECLINED,
+    data: { bookingId: String(booking._id) },
+  });
+
+  return { booking };
 }
 
 module.exports = {
@@ -295,4 +715,10 @@ module.exports = {
   listBookings,
   cancelBooking,
   completeBooking,
+  createInstantBooking,
+  acceptInstantBooking,
+  declineInstantBooking,
+  // Exported for tests/consumers that need the snapshot logic directly.
+  attachVideoCallAndAssessment,
+  snapshotQuestionsForBodyPart,
 };

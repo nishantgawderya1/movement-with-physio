@@ -74,7 +74,11 @@ export default function MessagesScreen({ navigation }) {
     }
     navigation.navigate(PATIENT_ROUTES.CHAT_ROOM, {
       roomId: res.data.roomId,
-      therapistName: res.data.therapistName || therapist.name,
+      therapistId: res.data.therapistId || (therapist && therapist.id) || null,
+      // Prefer the picker therapist's name — chatService.normalizeRoom returns
+      // the placeholder 'Therapist' when POST /chat/rooms returns unpopulated
+      // participants (see TODO in chatService.js).
+      therapistName: (therapist && therapist.name) || res.data.therapistName || 'Therapist',
       therapistAvatar: res.data.therapistAvatar,
       isOnline: res.data.isOnline,
     });
@@ -85,6 +89,7 @@ export default function MessagesScreen({ navigation }) {
   function handleConversationPress(conv) {
     navigation.navigate(PATIENT_ROUTES.CHAT_ROOM, {
       roomId: conv.roomId,
+      therapistId: conv.therapistId,
       therapistName: conv.therapistName,
       therapistAvatar: conv.therapistAvatar,
       isOnline: conv.isOnline,

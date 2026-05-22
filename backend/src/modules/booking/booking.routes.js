@@ -8,7 +8,12 @@ const idempotency = require('../../core/middleware/idempotency');
 const validate = require('../../core/middleware/validate');
 const auditLog = require('../../core/middleware/auditLog');
 const { defaultLimiter } = require('../../core/middleware/rateLimiter');
-const { createBookingSchema, cancelBookingSchema, listSlotsSchema } = require('./booking.validation');
+const {
+  createBookingSchema,
+  cancelBookingSchema,
+  listSlotsSchema,
+  requestInstantBookingSchema,
+} = require('./booking.validation');
 
 const router = Router();
 
@@ -72,6 +77,26 @@ router.post(
 
 /**
  * @openapi
+ * /api/v1/bookings/instant:
+ *   post:
+ *     tags: [Booking]
+ *     summary: Patient requests an instant video call with a prior therapist
+ *     security:
+ *       - BearerAuth: []
+ */
+router.post(
+  '/instant',
+  authMiddleware,
+  rbac('patient'),
+  idempotency,
+  validate(requestInstantBookingSchema),
+  auditLog('REQUEST_INSTANT_BOOKING', 'booking'),
+  defaultLimiter,
+  controller.requestInstantBooking
+);
+
+/**
+ * @openapi
  * /api/v1/bookings/{id}:
  *   get:
  *     tags: [Booking]
@@ -114,6 +139,42 @@ router.patch(
   rbac('therapist'),
   auditLog('COMPLETE_BOOKING', 'booking'),
   controller.completeBooking
+);
+
+/**
+ * @openapi
+ * /api/v1/bookings/{id}/accept:
+ *   post:
+ *     tags: [Booking]
+ *     summary: Therapist accepts an instant call request
+ *     security:
+ *       - BearerAuth: []
+ */
+router.post(
+  '/:id/accept',
+  authMiddleware,
+  rbac('therapist'),
+  auditLog('ACCEPT_INSTANT_BOOKING', 'booking'),
+  defaultLimiter,
+  controller.acceptInstantBooking
+);
+
+/**
+ * @openapi
+ * /api/v1/bookings/{id}/decline:
+ *   post:
+ *     tags: [Booking]
+ *     summary: Therapist declines an instant call request
+ *     security:
+ *       - BearerAuth: []
+ */
+router.post(
+  '/:id/decline',
+  authMiddleware,
+  rbac('therapist'),
+  auditLog('DECLINE_INSTANT_BOOKING', 'booking'),
+  defaultLimiter,
+  controller.declineInstantBooking
 );
 
 module.exports = router;

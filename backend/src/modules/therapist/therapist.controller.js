@@ -4,9 +4,12 @@ const therapistService = require('./therapist.service');
 const { container } = require('../../container');
 const apiResponse = require('../../core/utils/apiResponse');
 const asyncHandler = require('../../core/utils/asyncHandler');
-const { NOTIFICATION_TYPES } = require('../../core/utils/constants');
+const { NOTIFICATION_TYPES, JOB_NAMES } = require('../../core/utils/constants');
 const { addJob } = require('../../core/jobs/jobQueue');
 const { deleteAccount } = require('../../core/privacy/dataPrivacyService');
+
+// Auto-clear instant availability after this many ms (no manual toggle).
+const INSTANT_AVAILABILITY_AUTO_CLEAR_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 const getProfile = asyncHandler(async (req, res) => {
   const user = await therapistService.getProfile(req.user.id);
@@ -97,6 +100,29 @@ const deleteTherapistAccount = asyncHandler(async (req, res) => {
   return apiResponse.success(res, { message: 'Account deleted successfully.' });
 });
 
+/**
+ * PATCH /api/v1/therapists/me/instant-availability
+ * Body: { availableNow: boolean }
+ *
+ * When turning ON, schedules an auto-clear job 2h out. The worker only flips
+ * availableNow=false if availableNowSince still matches the value at enqueue
+ * time, so a manual re-toggle in between won't be clobbered.
+ */
+const setInstantAvailability = asyncHandler(async (req, res) => {
+  const { availableNow } = req.body;
+  const result = await therapistService.setInstantAvailability(req.user.id, !!availableNow);
+
+  if (result.availableNow && result.availableNowSince) {
+    await addJob(
+      JOB_NAMES.AUTO_CLEAR_AVAILABILITY,
+      { clerkId: req.user.id, availableNowSince: result.availableNowSince.toISOString() },
+      { delay: INSTANT_AVAILABILITY_AUTO_CLEAR_MS }
+    );
+  }
+
+  return apiResponse.success(res, result);
+});
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -109,4 +135,5 @@ module.exports = {
   getDashboard,
   verifyTherapist,
   deleteTherapistAccount,
+  setInstantAvailability,
 };

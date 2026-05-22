@@ -9,6 +9,10 @@ const { defaultLimiter } = require('../../core/middleware/rateLimiter');
 const router = Router();
 const auth = [authMiddleware, rbac('patient', 'therapist', 'admin'), defaultLimiter];
 const patientOnly = [authMiddleware, rbac('patient'), defaultLimiter];
+// Phase 2 — respond/complete now allows therapist (for therapist_driven mode).
+// Service-layer authorizeAssessmentAction enforces the actual rule based on
+// the assessment's `mode`, so patient_self assessments still reject therapist.
+const respondOrComplete = [authMiddleware, rbac('patient', 'therapist', 'admin'), defaultLimiter];
 
 /**
  * @openapi
@@ -71,8 +75,13 @@ router.get('/:id', ...auth, controller.getAssessment);
  *   post:
  *     tags: [Assessment]
  *     summary: Submit an answer to a question
+ *     description: |
+ *       For patient_self assessments only the patient can respond.
+ *       For therapist_driven assessments only the assigned therapist can
+ *       respond; patient calls return 403 THERAPIST_ONLY. Enforced by the
+ *       service-level authorizeAssessmentAction.
  */
-router.post('/:id/respond', ...patientOnly, controller.respondToQuestion);
+router.post('/:id/respond', ...respondOrComplete, controller.respondToQuestion);
 
 /**
  * @openapi
@@ -80,8 +89,24 @@ router.post('/:id/respond', ...patientOnly, controller.respondToQuestion);
  *   patch:
  *     tags: [Assessment]
  *     summary: Complete an assessment
+ *     description: |
+ *       therapist_driven mode → therapist completes; PDF worker is enqueued.
+ *       patient_self mode → patient completes (legacy behavior preserved).
  */
-router.patch('/:id/complete', ...patientOnly, controller.completeAssessment);
+router.patch('/:id/complete', ...respondOrComplete, controller.completeAssessment);
+
+/**
+ * @openapi
+ * /api/v1/assessments/{id}/pdf:
+ *   get:
+ *     tags: [Assessment]
+ *     summary: Get a signed URL for the completed assessment PDF
+ *     description: |
+ *       Returns 202 { status: 'generating' } while the PDF worker hasn't
+ *       finished; 200 { status: 'ready', url } when available (5-min signed URL).
+ *       Patient role on a therapist_driven assessment → 403.
+ */
+router.get('/:id/pdf', ...auth, controller.getAssessmentPdf);
 
 // ── Tracking Sessions ─────────────────────────────────────────
 

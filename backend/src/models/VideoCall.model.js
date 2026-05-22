@@ -2,6 +2,11 @@
 
 const mongoose = require('mongoose');
 
+const JoinStateSchema = new mongoose.Schema({
+  joinedAt: Date,
+  leftAt: Date,
+}, { _id: false });
+
 const VideoCallSchema = new mongoose.Schema({
   participants: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -14,8 +19,8 @@ const VideoCallSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['initiated', 'ongoing', 'ended', 'missed'],
-    default: 'initiated',
+    enum: ['scheduled', 'initiated', 'ongoing', 'ended', 'missed'],
+    default: 'scheduled',
   },
   initiatedBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -28,6 +33,24 @@ const VideoCallSchema = new mongoose.Schema({
   metadata: {
     type: Map,
     of: String,
+  },
+  // ── Phase 2: booking linkage + per-participant join state ──
+  bookingId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Booking',
+    default: null,
+    index: true,
+  },
+  assessmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Assessment',
+    default: null,
+  },
+  scheduledAt: { type: Date, default: null, index: true },
+  joinState: {
+    type: Map,
+    of: JoinStateSchema,
+    default: () => new Map(),
   },
 }, {
   timestamps: true,

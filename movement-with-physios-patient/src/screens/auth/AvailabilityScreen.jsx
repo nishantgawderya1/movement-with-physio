@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useOnboarding } from '../../context/OnboardingContext';
 import OnboardingShell from '../../components/auth/OnboardingShell';
 import { submitOnboarding } from '../../services/auth/mockOnboardingService';
+import { updatePatientProfile, mapUiLabelToBodyPart } from '../../services/auth/patientService';
 import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { PATIENT_ROUTES } from '../../constants/routes';
@@ -68,14 +69,38 @@ export default function AvailabilityScreen({ navigation }) {
     setIsSubmitting(true);
     setSubmitError(null);
 
-    var result = await submitOnboarding(payload);
+    // Phase 3 — push the primary painLocation to the backend in parallel
+    // with the existing mock submit. The mock keeps owning the rest of the
+    // onboarding payload until the full /patient/onboarding swap (P2 in the
+    // audit). We derive the painLocation from the FIRST selected item on
+    // PainLocationScreen, mapped to the backend enum.
+    var firstLocation = Array.isArray(onboardingData.painLocations) && onboardingData.painLocations.length > 0
+      ? onboardingData.painLocations[0]
+      : null;
+    var derivedPainLocation = firstLocation ? mapUiLabelToBodyPart(firstLocation) : null;
+
+    var realProfilePromise = derivedPainLocation
+      ? updatePatientProfile({ painLocation: derivedPainLocation })
+      : Promise.resolve({ success: true, data: null });
+
+    var results = await Promise.all([submitOnboarding(payload), realProfilePromise]);
+    var mockResult = results[0];
+    var profileResult = results[1];
 
     setIsSubmitting(false);
 
-    if (result.success) {
+    // The real-backend painLocation push is best-effort — we log on failure
+    // but don't block onboarding. The patient can update it later from
+    // ProfileScreen, and booking creation falls back to 'general' anyway.
+    if (!profileResult.success) {
+      // eslint-disable-next-line no-console
+      console.warn('[AvailabilityScreen] painLocation backend update failed:', profileResult.error);
+    }
+
+    if (mockResult.success) {
       navigation.replace(PATIENT_ROUTES.ONBOARDING_COMPLETE);
     } else {
-      setSubmitError(result.error || 'Something went wrong. Please try again.');
+      setSubmitError(mockResult.error || 'Something went wrong. Please try again.');
     }
   }
 

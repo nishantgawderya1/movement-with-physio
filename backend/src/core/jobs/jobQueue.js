@@ -72,4 +72,4 @@ async function addJob(jobName, data, opts = {}) {
   return job;
 }
 
-module.exports = { createQueue, getQueue, addJob, QUEUE_NAME };
+module.exports = { createQueue, getQueue, addJob, QUEUE_NAME, getBullMQConnection };

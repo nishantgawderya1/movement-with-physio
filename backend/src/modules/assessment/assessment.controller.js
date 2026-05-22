@@ -1,8 +1,11 @@
 'use strict';
 
+const Assessment = require('../../models/Assessment.model');
 const assessmentService = require('./assessment.service');
 const apiResponse = require('../../core/utils/apiResponse');
 const asyncHandler = require('../../core/utils/asyncHandler');
+const { resolveMongoUserId, resolveActor } = require('../../core/utils/resolveMongoUserId');
+const { getStorage } = require('../../core/storage');
 
 const getBodyParts = asyncHandler(async (req, res) => {
   const parts = await assessmentService.getBodyParts();
@@ -17,40 +20,87 @@ const getQuestions = asyncHandler(async (req, res) => {
 
 const createAssessment = asyncHandler(async (req, res) => {
   const { bodyParts } = req.body;
-  const patientId = req.user._id || req.user.id;
+  const patientId = await resolveMongoUserId(req);
   const therapistId = req.body.therapistId || null;
   const assessment = await assessmentService.createAssessment({ patientId, therapistId, bodyParts });
   return apiResponse.success(res, assessment, 201);
 });
 
 const getAssessment = asyncHandler(async (req, res) => {
-  const assessment = await assessmentService.getAssessment(req.params.id);
+  const assessment = await Assessment.findById(req.params.id);
   if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId);
+
+  const actor = await resolveActor(req);
+  const { scope } = assessmentService.authorizeAssessmentAction(assessment, actor, 'read');
+
+  if (scope === 'metadata') {
+    return apiResponse.success(res, assessmentService.toMetadataView(assessment));
+  }
   return apiResponse.success(res, assessment);
 });
 
 const listAssessments = asyncHandler(async (req, res) => {
   const { status, cursor, limit } = req.query;
-  const patientId = req.user._id || req.user.id;
+  const patientId = await resolveMongoUserId(req);
   const result = await assessmentService.listAssessments({ patientId, status, cursor, limit: Number(limit) || 20 });
   return apiResponse.paginated(res, result.data, result.pagination);
 });
 
 const respondToQuestion = asyncHandler(async (req, res) => {
   const { questionId, answer } = req.body;
-  const assessment = await assessmentService.respondToQuestion(req.params.id, questionId, answer);
-  return apiResponse.success(res, assessment);
+
+  const assessment = await Assessment.findById(req.params.id).select('mode patientId therapistId').lean();
+  if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId);
+
+  const actor = await resolveActor(req);
+  assessmentService.authorizeAssessmentAction(assessment, actor, 'respond');
+
+  const updated = await assessmentService.respondToQuestion(
+    req.params.id, questionId, answer, { answeredBy: actor.mongoId }
+  );
+  return apiResponse.success(res, updated);
 });
 
 const completeAssessment = asyncHandler(async (req, res) => {
   const { painScore, notes } = req.body;
-  const assessment = await assessmentService.completeAssessment(req.params.id, { painScore, notes });
-  return apiResponse.success(res, assessment);
+
+  const assessment = await Assessment.findById(req.params.id).select('mode patientId therapistId').lean();
+  if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId);
+
+  const actor = await resolveActor(req);
+  assessmentService.authorizeAssessmentAction(assessment, actor, 'complete');
+
+  const updated = await assessmentService.completeAssessment(req.params.id, { painScore, notes });
+  return apiResponse.success(res, updated);
+});
+
+/**
+ * GET /api/v1/assessments/:id/pdf
+ * Returns:
+ *   - 202 { status: 'generating' } if PDF not yet created.
+ *   - 200 { status: 'ready', url } with a 5-min signed URL.
+ */
+const getAssessmentPdf = asyncHandler(async (req, res) => {
+  const assessment = await Assessment.findById(req.params.id)
+    .select('mode patientId therapistId pdfKey pdfGeneratedAt')
+    .lean();
+  if (!assessment) return apiResponse.error(res, 'Assessment not found', 404, req.correlationId);
+
+  const actor = await resolveActor(req);
+  assessmentService.authorizeAssessmentAction(assessment, actor, 'pdf');
+
+  if (!assessment.pdfKey) {
+    return res.status(202).json({ success: true, data: { status: 'generating' } });
+  }
+
+  const storage = getStorage();
+  const url = await storage.getSignedUrl(assessment.pdfKey, { expiresInSeconds: 300 });
+  return apiResponse.success(res, { status: 'ready', url, generatedAt: assessment.pdfGeneratedAt });
 });
 
 const getHistory = asyncHandler(async (req, res) => {
   const { cursor, limit } = req.query;
-  const patientId = req.user._id || req.user.id;
+  const patientId = await resolveMongoUserId(req);
   const result = await assessmentService.getHistory({ patientId, cursor, limit: Number(limit) || 20 });
   return apiResponse.paginated(res, result.data, result.pagination);
 });
@@ -58,7 +108,7 @@ const getHistory = asyncHandler(async (req, res) => {
 // ── Tracking Sessions ─────────────────────────────────────────
 
 const createTrackingSession = asyncHandler(async (req, res) => {
-  const patientId = req.user._id || req.user.id;
+  const patientId = await resolveMongoUserId(req);
   const { bookingId, assessmentId, exercises, painScoreBefore } = req.body;
   const session = await assessmentService.createTrackingSession({
     patientId,
@@ -72,13 +122,16 @@ const createTrackingSession = asyncHandler(async (req, res) => {
 
 const completeTrackingSession = asyncHandler(async (req, res) => {
   const { exercises, painScoreAfter, notes } = req.body;
-  const session = await assessmentService.completeTrackingSession(req.params.id, { exercises, painScoreAfter, notes });
+  const actor = await resolveActor(req);
+  const session = await assessmentService.completeTrackingSession(
+    req.params.id, { exercises, painScoreAfter, notes }, actor
+  );
   return apiResponse.success(res, session);
 });
 
 const listTrackingSessions = asyncHandler(async (req, res) => {
   const { cursor, limit } = req.query;
-  const patientId = req.user._id || req.user.id;
+  const patientId = await resolveMongoUserId(req);
   const result = await assessmentService.listTrackingSessions({ patientId, cursor, limit: Number(limit) || 20 });
   return apiResponse.paginated(res, result.data, result.pagination);
 });
@@ -95,4 +148,5 @@ module.exports = {
   createTrackingSession,
   completeTrackingSession,
   listTrackingSessions,
+  getAssessmentPdf,
 };

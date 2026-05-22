@@ -16,6 +16,12 @@ import MessagesScreen from '../screens/messages/MessagesScreen';
 import ChatScreen from '../screens/messages/ChatScreen';
 import ExerciseDetailScreen from '../screens/exercises/ExerciseDetailScreen';
 import AssignFlowNavigator from './AssignFlowNavigator';
+// Phase 3B — bookings + video calling
+import BookingsScreen from '../screens/bookings/BookingsScreen';
+import BookingDetailScreen from '../screens/bookings/BookingDetailScreen';
+import PreCallLobbyScreen from '../screens/video/PreCallLobbyScreen';
+import VideoCallScreen from '../screens/video/VideoCallScreen';
+import SessionEndedScreen from '../screens/video/SessionEndedScreen';
 import { ROUTES } from '../constants/routes';
 
 const SCREEN_OPTIONS = {
@@ -43,6 +49,19 @@ const AppStack = () => (
     <Stack.Screen name="Chat" component={ChatScreen} />
     <Stack.Screen name="ExerciseDetail" component={ExerciseDetailScreen} />
     <Stack.Screen name={ROUTES.ASSIGN_FLOW} component={AssignFlowNavigator} />
+
+    {/* Phase 3B — Bookings tab + video calling flow */}
+    <Stack.Screen name={ROUTES.BOOKINGS} component={BookingsScreen} />
+    <Stack.Screen name={ROUTES.BOOKING_DETAIL} component={BookingDetailScreen} />
+    <Stack.Screen name={ROUTES.PRE_CALL_LOBBY} component={PreCallLobbyScreen} />
+    {/* Disable swipe-back gesture during an active video call so a stray
+        edge swipe can't tear down the session mid-conversation. */}
+    <Stack.Screen
+      name={ROUTES.VIDEO_CALL}
+      component={VideoCallScreen}
+      options={{ gestureEnabled: false }}
+    />
+    <Stack.Screen name={ROUTES.SESSION_ENDED} component={SessionEndedScreen} />
 
     {/* Onboarding (reachable post-signup if needed) */}
     <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />

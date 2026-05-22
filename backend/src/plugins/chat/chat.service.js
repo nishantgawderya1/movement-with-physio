@@ -30,18 +30,23 @@ class ChatService {
    * @returns {Promise<ChatRoom>}
    */
   async createRoom(participantIds) {
-    // For direct chats, ensure we don't create duplicates
+    // Populate participants to match the contract of getUserRooms / getRoom —
+    // the controller returns this room to the client, which expects participants
+    // as hydrated User objects, not raw ObjectIds.
+    // TODO: lastMessage.sender is also never populated anywhere in this service
+    // — separate concern for a future chat-rendering pass.
     const room = await ChatRoom.findOne({
       participants: { $all: participantIds, $size: participantIds.length },
       type: 'direct',
-    });
+    }).populate('participants', 'name email role');
 
     if (room) return room;
 
-    return ChatRoom.create({
+    const created = await ChatRoom.create({
       participants: participantIds,
       type: 'direct',
     });
+    return created.populate('participants', 'name email role');
   }
 
   /**
@@ -175,6 +180,21 @@ class ChatService {
    * @param {string} userId
    */
   async markRead(roomId, userId) {
+    const room = await ChatRoom.findById(roomId);
+    if (!room) {
+      const err = new Error('Chat room not found'); err.statusCode = 404; throw err;
+    }
+
+    // Compare ObjectIds via string form — Array#includes uses ===, which
+    // fails on Mongoose ObjectIds even when the values match. Same pattern
+    // as sendMessage above.
+    const isParticipant = room.participants.some(
+      (p) => p.toString() === String(userId)
+    );
+    if (!isParticipant) {
+      const err = new Error('You are not a participant in this room'); err.statusCode = 403; throw err;
+    }
+
     await Message.updateMany(
       { roomId, 'readBy.userId': { $ne: userId } },
       { $push: { readBy: { userId, readAt: new Date() } } }
