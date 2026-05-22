@@ -2,8 +2,10 @@
 
 const ChatRoom = require('../../models/ChatRoom.model');
 const Message = require('../../models/Message.model');
+const User = require('../../models/User.model');
 const { NOTIFICATION_TYPES } = require('../../core/utils/constants');
 const { addJob } = require('../../core/jobs/jobQueue');
+const sanitizeDisplayName = require('../../core/utils/sanitizeDisplayName');
 
 class ChatService {
   constructor(container) {
@@ -142,13 +144,25 @@ class ChatService {
       this.messaging.emitToRoom(String(roomId), 'new_message', message);
     }
 
-    // Notify other participants (offline push) via job queue
+    // Notify other participants (offline push) via job queue. Push body
+    // must NOT contain raw message text — it's a phishing / social-engineering
+    // surface (OS lock-screen renders verbatim; neither mobile app currently
+    // implements a custom notification handler). Resolve the sender's name
+    // once for the dispatch loop and embed it in a server-controlled string.
+    // The healthcare trust context amplifies the threat: a therapist's name
+    // attached to a malicious-URL preview yields disproportionate phishing
+    // success. See S-followup-11 (mirrors S-followup-6's booking cancellation
+    // fix, commit a2c29b2).
+    const sender = await User.findById(senderId).select('name').lean();
+    const senderName = sanitizeDisplayName(sender?.name, { maxLength: 50 });
+    const pushBody = senderName ? `New message from ${senderName}` : 'New message';
+
     const otherParticipants = room.participants.filter(p => p.toString() !== senderId.toString());
     for (const participantId of otherParticipants) {
       await addJob('send_notification', {
         userId: participantId,
         title: 'New Message',
-        body: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
+        body: pushBody,
         type: NOTIFICATION_TYPES.NEW_MESSAGE,
         data: { roomId: roomId.toString() },
       });
