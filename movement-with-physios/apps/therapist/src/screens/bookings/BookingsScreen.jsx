@@ -184,6 +184,17 @@ export default function BookingsScreen({ navigation }) {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Bookings</Text>
+        <View style={{ flex: 1 }} />
+        {/* P3.4 — propose-session entry point. Mirrors the new-chat
+            button pattern from MessagesScreen.jsx:122-124. */}
+        <TouchableOpacity
+          style={styles.proposeBtn}
+          onPress={function () { navigation.navigate(ROUTES.PROPOSE_SESSION); }}
+          activeOpacity={0.7}
+          accessibilityLabel="Propose a session"
+        >
+          <Ionicons name="add" size={22} color={colors.primary} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.tabsRow}>
@@ -249,9 +260,18 @@ export default function BookingsScreen({ navigation }) {
 var styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 18, paddingTop: 18, paddingBottom: 8,
   },
   headerTitle: { fontSize: fonts.xxl, color: colors.textDark, fontWeight: fonts.bold },
+  // P3.4 — header right "+" button (propose session)
+  proposeBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.background,
+    borderWidth: 1, borderColor: colors.cardBorder,
+  },
 
   tabsRow: {
     flexDirection: 'row',

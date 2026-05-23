@@ -19,6 +19,7 @@ import AssignFlowNavigator from './AssignFlowNavigator';
 // Phase 3B — bookings + video calling
 import BookingsScreen from '../screens/bookings/BookingsScreen';
 import BookingDetailScreen from '../screens/bookings/BookingDetailScreen';
+import ProposeSessionScreen from '../screens/bookings/ProposeSessionScreen';
 import PreCallLobbyScreen from '../screens/video/PreCallLobbyScreen';
 import VideoCallScreen from '../screens/video/VideoCallScreen';
 import SessionEndedScreen from '../screens/video/SessionEndedScreen';
@@ -53,6 +54,8 @@ const AppStack = () => (
     {/* Phase 3B — Bookings tab + video calling flow */}
     <Stack.Screen name={ROUTES.BOOKINGS} component={BookingsScreen} />
     <Stack.Screen name={ROUTES.BOOKING_DETAIL} component={BookingDetailScreen} />
+    {/* P3.4 — therapist propose-session form, pushed from BookingsScreen header */}
+    <Stack.Screen name={ROUTES.PROPOSE_SESSION} component={ProposeSessionScreen} />
     <Stack.Screen name={ROUTES.PRE_CALL_LOBBY} component={PreCallLobbyScreen} />
     {/* Disable swipe-back gesture during an active video call so a stray
         edge swipe can't tear down the session mid-conversation. */}

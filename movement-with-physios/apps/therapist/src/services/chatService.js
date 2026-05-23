@@ -177,14 +177,23 @@ async function createRoomWithPatient(patientUserId) {
 }
 
 /**
- * List patients this therapist can chat with (used by the new-chat sheet).
+ * List patients this therapist can chat with / propose sessions to.
  * Falls back to an empty array on error so the UI can still render.
+ *
+ * `options.includeAll` controls the backend relationship gate:
+ *  - undefined (default) → true → bypass the "must have a prior booking"
+ *    filter. Preserves the existing new-chat-sheet behavior on MessagesScreen
+ *    (chat with any patient while booking flow is still in development).
+ *  - false → respect the gate. Used by PatientPickerSheet for the propose-
+ *    session form (P3.4) so the picker doesn't show patients the
+ *    POST /proposals would 403 on with NO_PRIOR_RELATIONSHIP.
+ *
+ * @param {{ includeAll?: boolean }} [options]
  */
-async function listMyClients() {
-  // includeAll bypasses the "must have a confirmed booking" filter so the
-  // therapist can start a chat with any patient — needed while the booking
-  // flow is still in development.
-  const res = await apiClient.get('/therapists/me/clients', { limit: 50, includeAll: true });
+async function listMyClients(options) {
+  const opts = options || {};
+  const includeAll = opts.includeAll === undefined ? true : !!opts.includeAll;
+  const res = await apiClient.get('/therapists/me/clients', { limit: 50, includeAll: includeAll });
   if (!res.success) return { success: false, error: res.error };
   const arr = Array.isArray(res.data) ? res.data : [];
   return {
