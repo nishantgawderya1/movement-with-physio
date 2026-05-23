@@ -37,6 +37,15 @@ const NOTIFICATION_TYPES = Object.freeze({
   ASSESSMENT_COMPLETED: 'assessment_completed',
 });
 
+// iOS UNNotificationCategory identifiers. These strings MUST match exactly
+// the categories registered via Notifications.setNotificationCategoryAsync()
+// on the mobile apps. Any divergence silently breaks iOS action buttons —
+// the push arrives but no Accept/Decline UI renders. Add new entries here
+// in lockstep with the corresponding mobile registration.
+const NOTIFICATION_CATEGORIES = Object.freeze({
+  PROPOSAL: 'PROPOSAL',
+});
+
 const CRITICAL_NOTIFICATION_TYPES = [
   NOTIFICATION_TYPES.BOOKING_CONFIRMED,
   NOTIFICATION_TYPES.BOOKING_CANCELLED,
@@ -118,6 +127,7 @@ module.exports = {
   ROLES,
   BOOKING_STATUS,
   NOTIFICATION_TYPES,
+  NOTIFICATION_CATEGORIES,
   CRITICAL_NOTIFICATION_TYPES,
   EXERCISE_DIFFICULTY,
   FILE_LIMITS,
