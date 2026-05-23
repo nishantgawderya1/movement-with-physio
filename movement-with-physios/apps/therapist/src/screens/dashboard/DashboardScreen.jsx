@@ -26,6 +26,7 @@ import BottomTabBar from '../../components/BottomTabBar';
 import { ROUTES } from '../../constants/routes';
 import { apiClient } from '../../lib/apiClient';
 import { toggleAvailability } from '../../services/availabilityService';
+import { clearPushToken } from '../../services/notificationService';
 
 /**
  * Format a slot.start ISO timestamp into "10:00 AM" style.
@@ -102,6 +103,12 @@ const DashboardScreen = ({ navigation }) => {
 
   const handleLogout = async () => {
     try {
+      // Clear the registered push token server-side BEFORE Clerk signs out
+      // — once Clerk is signed out, tokenProvider.getToken() returns null
+      // and the PATCH would 401. Fire-and-forget: a transient backend
+      // failure must not block sign-out. The patch fires immediately so
+      // it lands while the JWT is still valid.
+      clearPushToken().catch(() => {});
       await signOut();
       // AppNavigator's useAuth() will flip isSignedIn to false and swap
       // back to AuthNavigator automatically.

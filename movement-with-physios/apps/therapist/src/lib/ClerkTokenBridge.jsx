@@ -4,6 +4,7 @@ import { useAuth, useClerk } from '@clerk/clerk-expo';
 import { tokenProvider } from './tokenProvider';
 import { apiClient } from './apiClient';
 import { chatSocket } from './chatSocket';
+import { registerPushToken } from '../services/notificationService';
 
 /**
  * Wait until tokenProvider.getToken() resolves to a non-null value, or until
@@ -112,6 +113,19 @@ export default function ClerkTokenBridge() {
         }
         chatSocket.connect();
         tokenProvider.setReady(true);
+
+        // Register the device's Expo push token with the backend
+        // (PATCH /users/me/fcm-token, endpoint from P1.1 c8898e7). Fire-and-
+        // forget — a failure here (no permission, simulator, no APNs
+        // entitlement until prebuild lands) must NOT block sign-in. The
+        // backend diff-writes on no-change so calling on every cold-start
+        // is cheap and idempotent.
+        registerPushToken().then((r) => {
+          if (!r.success) {
+            // eslint-disable-next-line no-console
+            console.warn('[ClerkTokenBridge] registerPushToken failed:', r.error);
+          }
+        });
       })();
     } else {
       // Full reset on sign-out — every per-user flag must go back to default

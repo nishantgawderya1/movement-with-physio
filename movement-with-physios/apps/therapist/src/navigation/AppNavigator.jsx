@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet, BackHandler } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { useAuth } from '@clerk/clerk-expo';
@@ -6,6 +6,7 @@ import AuthNavigator from './AuthNavigator';
 import AppStack from './AppStack';
 import IncomingInstantCallModal from '../components/notifications/IncomingInstantCallModal';
 import { colors } from '../constants/colors';
+import { navigationRef } from '../lib/navigationRef';
 
 /**
  * AppNavigator — single NavigationContainer that switches between
@@ -26,7 +27,6 @@ import { colors } from '../constants/colors';
  */
 const AppNavigator = () => {
   const { isLoaded, isSignedIn } = useAuth();
-  const navigationRef = useRef(null);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
