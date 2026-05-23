@@ -15,14 +15,11 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
-import { PATIENT_ROUTES } from '../../constants/routes';
 import { chatService } from '../../services/chatService';
-import { listBookings } from '../../services/bookingService';
 import MessageBubble from '../../components/chat/MessageBubble';
 import TypingIndicator from '../../components/chat/TypingIndicator';
 import ReplyPreview from '../../components/chat/ReplyPreview';
 import AttachmentSheet from '../../components/chat/AttachmentSheet';
-import InstantCallModal from '../../components/booking/InstantCallModal';
 
 /**
  * Generates initials from a therapist's full name for the header avatar.
@@ -63,8 +60,6 @@ export default function ChatRoomScreen({ navigation, route }) {
   var [isTyping, setIsTyping] = useState(false);
   var [keyboardHeight, setKeyboardHeight] = useState(0);
   var [isAttachmentOpen, setIsAttachmentOpen] = useState(false);
-  var [showCallModal, setShowCallModal] = useState(false);
-  var [upcomingVideoBooking, setUpcomingVideoBooking] = useState(null);
 
   var typingTimeout = useRef(null);
   var typingClearTimer = useRef(null);
@@ -176,52 +171,6 @@ export default function ChatRoomScreen({ navigation, route }) {
       unsubscribe();
     };
   }, [roomId]);
-
-  // ── Smart-video-button: probe for a CONFIRMED video booking with this
-  //    therapist within ±30 minutes of now. If found, the header video
-  //    button becomes "Join Call" (filled icon → PreCallLobby). Otherwise
-  //    it stays "Video Call" (outline icon → InstantCallModal).
-  useEffect(function () {
-    if (!therapistId) return;
-    var cancelled = false;
-    async function loadUpcoming() {
-      var resp = await listBookings({ status: 'confirmed', limit: 20 });
-      if (cancelled) return;
-      if (!resp.success || !Array.isArray(resp.data)) return;
-      var nowMs = Date.now();
-      var thirtyMinMs = 30 * 60 * 1000;
-      var match = resp.data.find(function (b) {
-        if (!b || b.meetingType !== 'video') return false;
-        var tId = b.therapistId && b.therapistId._id ? b.therapistId._id : b.therapistId;
-        if (String(tId) !== String(therapistId)) return false;
-        if (!b.slotStart || !b.videoCallId) return false;
-        var slotMs = new Date(b.slotStart).getTime();
-        var diff = slotMs - nowMs;
-        return diff > -thirtyMinMs && diff < thirtyMinMs;
-      });
-      setUpcomingVideoBooking(match || null);
-    }
-    loadUpcoming();
-    return function () { cancelled = true; };
-  }, [therapistId]);
-
-  function handleVideoButton() {
-    if (upcomingVideoBooking) {
-      navigation.navigate(PATIENT_ROUTES.PRE_CALL_LOBBY, {
-        callId: String(upcomingVideoBooking.videoCallId),
-        bookingId: String(upcomingVideoBooking._id),
-      });
-    } else {
-      setShowCallModal(true);
-    }
-  }
-
-  function handleCallModalSuccess(booking) {
-    setShowCallModal(false);
-    navigation.navigate(PATIENT_ROUTES.WAITING_FOR_THERAPIST, {
-      bookingId: String(booking._id),
-    });
-  }
 
   // Emit a "stopped typing" event when the user pauses for >1.5s.
   function notifyTyping(nextText) {
@@ -336,20 +285,6 @@ export default function ChatRoomScreen({ navigation, route }) {
           <Text style={styles.headerName} numberOfLines={1}>{therapistName}</Text>
           <Text style={styles.headerStatus}>{isOnline ? 'Online' : 'Offline'}</Text>
         </View>
-
-        {therapistId ? (
-          <Pressable
-            style={styles.videoBtn}
-            onPress={handleVideoButton}
-            accessibilityLabel={upcomingVideoBooking ? 'Join scheduled video call' : 'Start video call'}
-          >
-            <Ionicons
-              name={upcomingVideoBooking ? 'videocam' : 'videocam-outline'}
-              size={24}
-              color={colors.primary}
-            />
-          </Pressable>
-        ) : null}
       </View>
 
       <View style={styles.headerDivider} />
@@ -441,16 +376,6 @@ export default function ChatRoomScreen({ navigation, route }) {
         onClose={closeAttachmentSheet}
       />
 
-      {/* ── INSTANT CALL MODAL ──────────────────────────────────────────────
-          Mounted unconditionally so the slide animation runs cleanly. When
-          therapistId is null, the modal renders only the Cancel button. */}
-      <InstantCallModal
-        visible={showCallModal}
-        therapist={therapistId ? { _id: therapistId, name: therapistName || 'Therapist' } : null}
-        onClose={function () { setShowCallModal(false); }}
-        onSuccess={handleCallModalSuccess}
-      />
-
     </SafeAreaView>
   );
 }
@@ -523,15 +448,6 @@ var styles = StyleSheet.create({
     fontFamily: fonts.body.regular,
     fontSize: 12,
     color: colors.textMedium,
-  },
-  videoBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.primaryLight,
-    marginRight: 4,
   },
   headerDivider: {
     height: 0.5,
