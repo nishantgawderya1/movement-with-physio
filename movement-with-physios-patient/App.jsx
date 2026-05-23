@@ -92,9 +92,14 @@ export default function App() {
   }, []);
 
   // Tap-on-banner AND tap-on-action-button routing. actionIdentifier
-  // identifies which iOS action was tapped. The actual API call (accept
-  // / decline) is fired from AppointmentsRootScreen in P4.3 once it
-  // exists — for now we just navigate with a hint param.
+  // identifies which iOS action was tapped. AppointmentsRootScreen (P4.4)
+  // consumes the resulting route param and fires the matching API call.
+  //
+  // Cross-stack navigation requires nested { screen, params } syntax for
+  // React Navigation v7 — top-level params don't pass through to child
+  // stack screens. AppointmentsRootScreen lives inside BookStack which
+  // mounts under the BOOK_APPOINTMENT tab in MainNavigator, so the path is
+  // BOOK_APPOINTMENT > APPOINTMENTS.
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = response.notification.request.content.data || {};
@@ -102,17 +107,20 @@ export default function App() {
 
       if (data.type === 'proposal_received' && data.proposalId) {
         if (actionId === 'ACCEPT_PROPOSAL') {
-          navigationRef.current?.navigate(PATIENT_ROUTES.APPOINTMENTS, {
-            acceptProposalId: data.proposalId,
+          navigationRef.current?.navigate(PATIENT_ROUTES.BOOK_APPOINTMENT, {
+            screen: PATIENT_ROUTES.APPOINTMENTS,
+            params: { acceptProposalId: data.proposalId },
           });
         } else if (actionId === 'DECLINE_PROPOSAL') {
-          navigationRef.current?.navigate(PATIENT_ROUTES.APPOINTMENTS, {
-            declineProposalId: data.proposalId,
+          navigationRef.current?.navigate(PATIENT_ROUTES.BOOK_APPOINTMENT, {
+            screen: PATIENT_ROUTES.APPOINTMENTS,
+            params: { declineProposalId: data.proposalId },
           });
         } else {
           // Default tap (notification body, not an action button)
-          navigationRef.current?.navigate(PATIENT_ROUTES.APPOINTMENTS, {
-            focusProposalId: data.proposalId,
+          navigationRef.current?.navigate(PATIENT_ROUTES.BOOK_APPOINTMENT, {
+            screen: PATIENT_ROUTES.APPOINTMENTS,
+            params: { focusProposalId: data.proposalId },
           });
         }
       }
