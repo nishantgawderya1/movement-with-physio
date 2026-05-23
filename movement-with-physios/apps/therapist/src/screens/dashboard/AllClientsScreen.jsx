@@ -115,6 +115,8 @@ const AllClientsScreen = ({ navigation }) => {
       navigation.navigate(ROUTES.EXERCISES);
     } else if (tabId === 'messages') {
       navigation.navigate(ROUTES.MESSAGES);
+    } else if (tabId === 'calendar') {
+      navigation.navigate(ROUTES.BOOKINGS);
     }
   };
 

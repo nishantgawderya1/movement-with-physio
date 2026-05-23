@@ -37,6 +37,11 @@ const MessagesScreen = ({ navigation }) => {
 
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(12)).current;
+  // Guards the mount entrance animation so the focus-refresh refetch
+  // (or any subsequent loading→false transition) does NOT replay the
+  // fade+slide. Without this guard, every pull-to-refresh would flash
+  // the entire list back in.
+  const hasAnimatedRef = useRef(false);
 
   const loadConversations = useCallback(() => {
     chatService.getConversations().then((res) => {
@@ -46,12 +51,25 @@ const MessagesScreen = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim,  { toValue: 1, duration: 300, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
-    ]).start();
     loadConversations();
   }, [loadConversations]);
+
+  // Play the 300ms fade+slide entrance once, when loading flips false and
+  // the <Animated.ScrollView> is actually in the tree. Running it at mount
+  // (the previous behavior) raced the conditional render — animation
+  // finished while the spinner branch was still showing, so the list
+  // appeared at end state with no transition.
+  useEffect(() => {
+    if (!loading && !hasAnimatedRef.current) {
+      fadeAnim.setValue(0);
+      slideAnim.setValue(12);
+      Animated.parallel([
+        Animated.timing(fadeAnim,  { toValue: 1, duration: 300, useNativeDriver: true }),
+        Animated.timing(slideAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
+      ]).start();
+      hasAnimatedRef.current = true;
+    }
+  }, [loading, fadeAnim, slideAnim]);
 
   // Refresh when returning from a chat
   useEffect(() => {
@@ -88,6 +106,7 @@ const MessagesScreen = ({ navigation }) => {
     if (tabId === 'home')     navigation.navigate(ROUTES.DASHBOARD);
     if (tabId === 'clients')  navigation.navigate(ROUTES.CLIENTS);
     if (tabId === 'exercise') navigation.navigate(ROUTES.EXERCISES);
+    if (tabId === 'calendar') navigation.navigate(ROUTES.BOOKINGS);
   };
 
   return (

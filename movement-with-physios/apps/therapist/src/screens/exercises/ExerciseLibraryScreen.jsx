@@ -170,6 +170,8 @@ const ExerciseLibraryScreen = ({ navigation, route }) => {
       navigation.navigate(ROUTES.CLIENTS);
     } else if (tabId === 'messages') {
       navigation.navigate(ROUTES.MESSAGES);
+    } else if (tabId === 'calendar') {
+      navigation.navigate(ROUTES.BOOKINGS);
     }
   };
 
