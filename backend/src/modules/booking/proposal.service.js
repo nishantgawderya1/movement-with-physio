@@ -8,6 +8,7 @@ const { addJob } = require('../../core/jobs/jobQueue');
 const { getClient } = require('../../config/redis');
 const sanitizeDisplayName = require('../../core/utils/sanitizeDisplayName');
 const { attachVideoCallAndAssessment } = require('./booking.service');
+const paginate = require('../../core/utils/paginator');
 const {
   BOOKING_STATUS,
   PROPOSAL_STATUS,
@@ -470,4 +471,238 @@ async function acceptProposal(actor, proposalId) {
   }
 }
 
-module.exports = { createProposal, acceptProposal };
+/**
+ * Patient declines a pending proposal (with optional reason).
+ *
+ * Mirrors acceptProposal's gate ordering and atomic-claim pattern but
+ * skips the Booking creation + Redis lock (decline has no slot-side
+ * effects). Reason persists on proposal.declineReason for the therapist
+ * to read in-app; the push notification body is the canonical static
+ * string and does NOT echo the reason (S-followup-6 a2c29b2 pattern —
+ * patient could otherwise inject phishing text into therapist's FCM push).
+ *
+ * @param {{ mongoId: string, role: string }} actor
+ * @param {string} proposalId
+ * @param {{ reason?: string }} body
+ */
+async function declineProposal(actor, proposalId, body) {
+  if (actor.role !== ROLES.PATIENT) {
+    throw Object.assign(new Error('Patient role required'), {
+      statusCode: 403, code: 'PROPOSAL_ROLE_REQUIRED',
+    });
+  }
+
+  const proposal = await BookingProposal.findById(proposalId).lean();
+  if (!proposal) {
+    throw Object.assign(new Error('Proposal not found'), {
+      statusCode: 404, code: 'PROPOSAL_NOT_FOUND',
+    });
+  }
+  if (String(proposal.patientId) !== String(actor.mongoId)) {
+    throw Object.assign(new Error('Proposal not found'), {
+      statusCode: 403, code: 'PROPOSAL_NOT_RECIPIENT',
+    });
+  }
+  if (proposal.status !== PROPOSAL_STATUS.PENDING) {
+    throw Object.assign(
+      new Error(`Proposal has already been ${proposal.status.replace(/_/g, ' ')}`),
+      { statusCode: 409, code: 'PROPOSAL_ALREADY_RESPONDED' }
+    );
+  }
+  if (proposal.expiresAt <= new Date()) {
+    throw Object.assign(new Error('Proposal has expired'), {
+      statusCode: 410, code: 'PROPOSAL_EXPIRED',
+    });
+  }
+
+  const rawReason = body && body.reason ? String(body.reason).trim() : '';
+  const declineReason = rawReason.length > 0 ? rawReason : null;
+
+  // Atomic claim — status:'pending' predicate guards against concurrent
+  // accept/decline/cancel. Loser gets null → PROPOSAL_ALREADY_RESPONDED.
+  const claimed = await BookingProposal.findOneAndUpdate(
+    { _id: proposalId, status: PROPOSAL_STATUS.PENDING, isDeleted: false },
+    { $set: { status: PROPOSAL_STATUS.DECLINED, respondedAt: new Date(), declineReason } },
+    { new: true }
+  );
+  if (!claimed) {
+    throw Object.assign(new Error('Proposal is no longer pending'), {
+      statusCode: 409, code: 'PROPOSAL_ALREADY_RESPONDED',
+    });
+  }
+
+  logger.info({
+    event: 'PROPOSAL_DECLINED',
+    proposalId: claimed._id,
+    therapistId: claimed.therapistId,
+    patientId: claimed.patientId,
+    hadReason: declineReason !== null,
+  });
+
+  // Notify therapist. Body uses sanitized patient name only — reason is
+  // intentionally omitted (S-followup-6 pattern). Reason lives on
+  // proposal.declineReason where the in-app renderer can escape it safely.
+  // No category — therapist push has no action buttons.
+  const patient = await User.findById(actor.mongoId).select('name').lean();
+  const patientName = sanitizeDisplayName(patient?.name, { maxLength: 50 });
+  const senderLabel = patientName || 'A patient';
+  await addJob(JOB_NAMES.SEND_NOTIFICATION, {
+    userId: String(claimed.therapistId),
+    title: 'Proposal Declined',
+    body: `${senderLabel} declined your session proposal`,
+    type: NOTIFICATION_TYPES.PROPOSAL_DECLINED,
+    data: {
+      proposalId: claimed._id.toString(),
+      patientName: patientName || null,
+      slotStart: claimed.slotStart.toISOString(),
+    },
+  });
+
+  return { proposal: claimed.toObject() };
+}
+
+/**
+ * Role-scoped proposal list with cursor pagination.
+ *
+ * Patient view:    own pending non-expired proposals (incoming).
+ * Therapist view:  own pending proposals + own declined-within-24h
+ *                  (auto-hide window per locked Section 4 design — therapist
+ *                  needs to see fresh declines without UI clutter from
+ *                  long-stale ones).
+ * Admin view:      all proposals (no scoping).
+ *
+ * @param {{ mongoId: string, role: string }} actor
+ * @param {{ status?: string, cursor?: string, limit?: number }} query
+ */
+async function listProposals(actor, query = {}) {
+  const baseQuery = { isDeleted: false };
+  const now = new Date();
+
+  if (actor.role === ROLES.PATIENT) {
+    baseQuery.patientId = actor.mongoId;
+    baseQuery.status = PROPOSAL_STATUS.PENDING;
+    baseQuery.expiresAt = { $gt: now };
+  } else if (actor.role === ROLES.THERAPIST) {
+    baseQuery.therapistId = actor.mongoId;
+    baseQuery.$or = [
+      { status: PROPOSAL_STATUS.PENDING },
+      {
+        status: PROPOSAL_STATUS.DECLINED,
+        respondedAt: { $gt: new Date(now.getTime() - 24 * 60 * 60 * 1000) },
+      },
+    ];
+  } else if (actor.role !== ROLES.ADMIN) {
+    throw Object.assign(new Error('Forbidden'), {
+      statusCode: 403, code: 'PROPOSAL_GET_ROLE',
+    });
+  }
+  // admin: no role scoping
+
+  // Optional status filter — intersect with the allowed-status view. For
+  // patient: only 'pending' is allowed; any other value returns empty by
+  // construction. For therapist: only pending and declined surface. The
+  // filter narrows from "all role-allowed" down to one status.
+  if (query.status) {
+    if (actor.role === ROLES.PATIENT) {
+      if (query.status !== PROPOSAL_STATUS.PENDING) {
+        baseQuery.status = '__never__'; // sentinel — no docs match
+        delete baseQuery.$or;
+      }
+    } else if (actor.role === ROLES.THERAPIST) {
+      // Replace $or with single-status filter to keep the query simple.
+      baseQuery.status = query.status;
+      delete baseQuery.$or;
+      if (query.status !== PROPOSAL_STATUS.DECLINED) {
+        // Therapist asking for non-declined → remove the 24h respondedAt
+        // window (it was specific to the declined branch).
+        delete baseQuery.respondedAt;
+      } else {
+        baseQuery.respondedAt = { $gt: new Date(now.getTime() - 24 * 60 * 60 * 1000) };
+      }
+    } else {
+      // admin
+      baseQuery.status = query.status;
+    }
+  }
+
+  return paginate(BookingProposal, baseQuery, {
+    cursor: query.cursor,
+    limit: query.limit,
+    sort: { slotStart: -1 },
+    populate: (q) => q
+      .populate('therapistId', 'name specialty')
+      .populate('patientId', 'name'),
+  });
+}
+
+/**
+ * Therapist cancels a pending proposal before the patient responds.
+ *
+ * Status flips to 'cancelled_by_therapist' (not hard-deleted — preserves
+ * audit trail). Atomic-claim pattern guards the patient-accept-vs-therapist-
+ * cancel race: if patient already accepted/declined, the findOneAndUpdate
+ * returns null and we surface PROPOSAL_ALREADY_RESPONDED.
+ *
+ * NO notification to patient. A proposal cancellation without patient
+ * action is a "didn't happen" event from the patient's perspective —
+ * surfacing it would confuse the patient (they never saw it acted on).
+ * The proposal disappears from their list on next fetch; that's enough.
+ *
+ * @param {{ mongoId: string, role: string }} actor
+ * @param {string} proposalId
+ */
+async function deleteProposal(actor, proposalId) {
+  if (actor.role !== ROLES.THERAPIST) {
+    throw Object.assign(new Error('Therapist role required'), {
+      statusCode: 403, code: 'PROPOSAL_ROLE_REQUIRED',
+    });
+  }
+
+  const proposal = await BookingProposal.findById(proposalId).lean();
+  if (!proposal) {
+    throw Object.assign(new Error('Proposal not found'), {
+      statusCode: 404, code: 'PROPOSAL_NOT_FOUND',
+    });
+  }
+  if (String(proposal.therapistId) !== String(actor.mongoId)) {
+    // Distinct internal code for logs; benign message identical to NOT_FOUND
+    // (partial existence-oracle collapse per the recipient-gate spec).
+    throw Object.assign(new Error('Proposal not found'), {
+      statusCode: 403, code: 'PROPOSAL_NOT_CREATOR',
+    });
+  }
+  if (proposal.status !== PROPOSAL_STATUS.PENDING) {
+    throw Object.assign(
+      new Error(`Proposal has already been ${proposal.status.replace(/_/g, ' ')}`),
+      { statusCode: 409, code: 'PROPOSAL_ALREADY_RESPONDED' }
+    );
+  }
+
+  const claimed = await BookingProposal.findOneAndUpdate(
+    { _id: proposalId, status: PROPOSAL_STATUS.PENDING, isDeleted: false },
+    { $set: { status: PROPOSAL_STATUS.CANCELLED_BY_THERAPIST, respondedAt: new Date() } },
+    { new: true }
+  );
+  if (!claimed) {
+    throw Object.assign(new Error('Proposal is no longer pending'), {
+      statusCode: 409, code: 'PROPOSAL_ALREADY_RESPONDED',
+    });
+  }
+
+  logger.info({
+    event: 'PROPOSAL_CANCELLED_BY_THERAPIST',
+    proposalId: claimed._id,
+    therapistId: claimed.therapistId,
+    patientId: claimed.patientId,
+  });
+
+  return { proposal: claimed.toObject() };
+}
+
+module.exports = {
+  createProposal,
+  acceptProposal,
+  declineProposal,
+  listProposals,
+  deleteProposal,
+};

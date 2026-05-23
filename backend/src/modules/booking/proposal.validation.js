@@ -19,4 +19,26 @@ const createProposalSchema = Joi.object({
   notes: Joi.string().trim().max(500).allow(null, '').optional(),
 });
 
-module.exports = { createProposalSchema };
+// Decline reason: optional free text capped at 500 chars (matches
+// cancelBookingSchema convention). Persists on proposal.declineReason;
+// never echoed in push body (S-followup-6 sanitization).
+const declineProposalSchema = Joi.object({
+  reason: Joi.string().trim().max(500).allow(null, '').optional(),
+});
+
+// Query params for GET /api/v1/bookings/proposals. status enum mirrors
+// PROPOSAL_STATUS — kept as literals here to avoid a circular import
+// (validation file is tiny; constants file pulls a lot of unrelated state).
+const listProposalsSchema = Joi.object({
+  status: Joi.string()
+    .valid('pending', 'accepted', 'declined', 'expired', 'cancelled_by_therapist')
+    .optional(),
+  cursor: Joi.string().optional(),
+  limit: Joi.number().integer().min(1).max(50).default(20),
+});
+
+module.exports = {
+  createProposalSchema,
+  declineProposalSchema,
+  listProposalsSchema,
+};
