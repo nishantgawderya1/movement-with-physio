@@ -14,6 +14,7 @@ const { mountFinalHandlers } = require('./app');
 const socketAuthMiddleware = require('./core/middleware/socketAuthMiddleware');
 const { startUnifiedWorker } = require('./core/jobs/workers/unifiedWorker');
 const { registerInstantExpireRepeat } = require('./core/jobs/workers/availabilityWorker');
+const { registerProposalExpireRepeat } = require('./core/jobs/workers/proposalWorker');
 const corsOptions = require('./config/cors');
 const logger = require('./core/utils/logger');
 const cacheManager = require('./core/cache/cacheManager');
@@ -121,6 +122,14 @@ async function bootstrap() {
     await registerInstantExpireRepeat();
   } catch (err) {
     logger.error({ event: 'EXPIRE_REPEAT_REGISTER_FAILED', err: err.message });
+  }
+
+  // Register the repeat job for proposal expiry (24h pending → expired).
+  // Same pattern as instant-request expiry; idempotent via deterministic jobId.
+  try {
+    await registerProposalExpireRepeat();
+  } catch (err) {
+    logger.error({ event: 'PROPOSAL_EXPIRE_REPEAT_REGISTER_FAILED', err: err.message });
   }
 
   // 10. Start listening

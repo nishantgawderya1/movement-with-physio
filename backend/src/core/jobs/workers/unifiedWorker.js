@@ -12,6 +12,7 @@ const {
   handleAutoClearAvailability,
   handleExpireInstantRequests,
 } = require('./availabilityWorker');
+const { handleExpireProposals } = require('./proposalWorker');
 
 /**
  * Single BullMQ Worker on the shared `mwp-jobs` queue, dispatching by
@@ -28,6 +29,7 @@ const {
  *   generate_assessment_pdf       → pdfHandler
  *   auto_clear_availability       → handleAutoClearAvailability
  *   expire_instant_requests       → handleExpireInstantRequests
+ *   expire_proposals              → handleExpireProposals
  */
 const HANDLERS = {
   send_notification: notificationHandler,
@@ -35,6 +37,7 @@ const HANDLERS = {
   [JOB_NAMES.GENERATE_ASSESSMENT_PDF]: pdfHandler,
   [JOB_NAMES.AUTO_CLEAR_AVAILABILITY]: handleAutoClearAvailability,
   [JOB_NAMES.EXPIRE_INSTANT_REQUESTS]: handleExpireInstantRequests,
+  [JOB_NAMES.EXPIRE_PROPOSALS]: handleExpireProposals,
 };
 
 function startUnifiedWorker() {

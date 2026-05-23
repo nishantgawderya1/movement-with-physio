@@ -142,6 +142,7 @@ const JOB_NAMES = Object.freeze({
   GENERATE_ASSESSMENT_PDF: 'generate_assessment_pdf',
   AUTO_CLEAR_AVAILABILITY: 'auto_clear_availability',
   EXPIRE_INSTANT_REQUESTS: 'expire_instant_requests',
+  EXPIRE_PROPOSALS: 'expire_proposals',
 });
 
 module.exports = {
