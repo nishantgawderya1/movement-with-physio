@@ -1,5 +1,6 @@
 'use strict';
 
+const { LRUCache } = require('lru-cache');
 const User = require('../../models/User.model');
 
 /**
@@ -17,19 +18,22 @@ const User = require('../../models/User.model');
  * plugin's new participant gate can share the same cache rather than
  * fragment lookups.
  *
- * TODO(infra): the cache is currently unbounded — only cleared on
- * `disconnect`. Practical bound ≈ max concurrent sockets, but a long-
- * running process under churn could leak. Replace with a bounded LRU
- * (e.g. lru-cache) as a separate item; not blocking for S3.
+ * Cache is bounded by an LRU with TTL (S-followup-2): 10k entries cap
+ * provides ~10x safety over plausible peak concurrent sockets, and the
+ * 24h TTL aligns with Clerk session/JWT refresh cadence — defense in
+ * depth against stuck entries even after LRU bound, and protection
+ * against stale Clerk→Mongo mappings if the underlying User._id ever
+ * changes (account merge, soft-delete + recreate).
  */
 
-/** @type {Map<string, string>} */
-const _socketUserIdCache = new Map();
+const MAX_ENTRIES = 10_000;
+const TTL_MS = 24 * 60 * 60 * 1000;
+
+const _socketUserIdCache = new LRUCache({ max: MAX_ENTRIES, ttl: TTL_MS });
 
 /**
  * Resolve `socket.data.user.id` (Clerk session ID) → Mongo `User._id`
- * (stringified ObjectId). Cached per-process for the lifetime of the
- * socket connection.
+ * (stringified ObjectId). Cached per-process with LRU bound + 24h TTL.
  *
  * @param {import('socket.io').Socket} socket
  * @returns {Promise<string>} stringified Mongo ObjectId
@@ -48,7 +52,8 @@ async function resolveMongoUserIdForSocket(socket) {
 
 /**
  * Drop the cached Clerk → Mongo mapping for a socket. Call from the
- * `disconnect` handler so stale entries don't accumulate.
+ * `disconnect` handler so stale entries don't accumulate. Idempotent
+ * on unknown keys.
  *
  * @param {string} clerkId
  */
