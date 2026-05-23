@@ -39,7 +39,9 @@ var ICON_MAP = {
  */
 var LABEL_MAP = {
   [PATIENT_ROUTES.HOME]: 'Home',
-  [PATIENT_ROUTES.BOOK_APPOINTMENT]: 'Book',
+  // P4.3 rename: 'Book' → 'Appointments'. The tab now hosts the new
+  // AppointmentsRootScreen at its root, with BookTherapist pushed from it.
+  [PATIENT_ROUTES.BOOK_APPOINTMENT]: 'Appointments',
   [PATIENT_ROUTES.MESSAGES]: 'Chat',
   [PATIENT_ROUTES.PROGRESS]: 'Progress',
   [PATIENT_ROUTES.PROFILE]: 'Profile',
