@@ -17,4 +17,15 @@ const createProposal = asyncHandler(async (req, res) => {
   return apiResponse.success(res, result, 201);
 });
 
-module.exports = { createProposal };
+/**
+ * POST /api/v1/bookings/proposals/:id/accept
+ * Patient accepts a pending proposal. Service-layer atomic claim handles
+ * the race; controller is a thin pass-through.
+ */
+const acceptProposal = asyncHandler(async (req, res) => {
+  const actor = await resolveActor(req);
+  const result = await proposalService.acceptProposal(actor, req.params.id);
+  return apiResponse.success(res, result, 201);
+});
+
+module.exports = { createProposal, acceptProposal };
