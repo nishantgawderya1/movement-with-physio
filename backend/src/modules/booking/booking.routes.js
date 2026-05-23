@@ -14,8 +14,12 @@ const {
   listSlotsSchema,
   requestInstantBookingSchema,
 } = require('./booking.validation');
+const proposalRoutes = require('./proposal.routes');
 
 const router = Router();
+
+// Session-proposal sub-router. Routes land under /api/v1/bookings/proposals.
+router.use('/', proposalRoutes);
 
 /**
  * @openapi
