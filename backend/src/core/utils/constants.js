@@ -20,6 +20,18 @@ const BOOKING_STATUS = Object.freeze({
   INSTANT_DECLINED: 'instant_declined',
 });
 
+// Session-proposal lifecycle. Separate from BOOKING_STATUS because a
+// proposal is a therapist-initiated invitation, not a booking — distinct
+// state machine. On accept, a Booking is created and BookingProposal.bookingId
+// stores the FK back to it.
+const PROPOSAL_STATUS = Object.freeze({
+  PENDING: 'pending',
+  ACCEPTED: 'accepted',
+  DECLINED: 'declined',
+  EXPIRED: 'expired',
+  CANCELLED_BY_THERAPIST: 'cancelled_by_therapist',
+});
+
 const NOTIFICATION_TYPES = Object.freeze({
   BOOKING_CONFIRMED: 'booking_confirmed',
   BOOKING_CANCELLED: 'booking_cancelled',
@@ -35,6 +47,11 @@ const NOTIFICATION_TYPES = Object.freeze({
   VIDEO_CALL_REMINDER: 'video_call_reminder',
   VIDEO_CALL_DECLINED: 'video_call_declined',
   ASSESSMENT_COMPLETED: 'assessment_completed',
+  // Session proposals (therapist-initiated booking invitation flow)
+  PROPOSAL_RECEIVED: 'proposal_received',
+  PROPOSAL_ACCEPTED: 'proposal_accepted',
+  PROPOSAL_DECLINED: 'proposal_declined',
+  PROPOSAL_EXPIRED: 'proposal_expired',
 });
 
 // iOS UNNotificationCategory identifiers. These strings MUST match exactly
@@ -52,6 +69,10 @@ const CRITICAL_NOTIFICATION_TYPES = [
   NOTIFICATION_TYPES.SESSION_REMINDER,
   NOTIFICATION_TYPES.THERAPIST_VERIFIED,
   NOTIFICATION_TYPES.ACCOUNT_DELETED,
+  // High-value, time-bounded — patient must see it before the 24h expiry.
+  // Email fallback when fcmToken is missing. Accept/Decline (in-app only)
+  // and Expired (post-hoc) stay push-only — email would be noise.
+  NOTIFICATION_TYPES.PROPOSAL_RECEIVED,
 ];
 
 const EXERCISE_DIFFICULTY = Object.freeze({
@@ -126,6 +147,7 @@ const JOB_NAMES = Object.freeze({
 module.exports = {
   ROLES,
   BOOKING_STATUS,
+  PROPOSAL_STATUS,
   NOTIFICATION_TYPES,
   NOTIFICATION_CATEGORIES,
   CRITICAL_NOTIFICATION_TYPES,
