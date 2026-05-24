@@ -52,7 +52,9 @@ async function connect() {
       auth: { token },
     });
 
-    _socket.io.on('reconnect_attempt', async () => {
+    _socket.io.on('reconnect_attempt', async (attempt) => {
+      // eslint-disable-next-line no-console
+      console.log('[videoSocket] reconnect_attempt', { attempt });
       const fresh = await tokenProvider.getToken();
       if (fresh) _socket.auth = { token: fresh };
     });
@@ -102,7 +104,13 @@ async function connect() {
       done = true;
       cleanup();
       _connecting = false;
-      console.warn('[videoSocket] connect_error', err && err.message);
+      // eslint-disable-next-line no-console
+      console.warn('[videoSocket] connect_error', {
+        message: err && err.message,
+        description: err && err.description,
+        context: err && err.context,
+        type: err && err.type,
+      });
       reject(err || new Error('connect_error'));
     };
 
@@ -115,6 +123,8 @@ async function connect() {
       done = true;
       cleanup();
       _connecting = false;
+      // eslint-disable-next-line no-console
+      console.warn('[videoSocket] connect timeout fired');
       reject(new Error('connect timeout'));
     }, 10000);
 

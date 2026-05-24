@@ -71,7 +71,9 @@ async function connect() {
     // Always refresh the token before every reconnect attempt — without
     // this, an expired Clerk JWT will 401 silently and the call will
     // appear "stuck connecting".
-    _socket.io.on('reconnect_attempt', async function () {
+    _socket.io.on('reconnect_attempt', async function (attempt) {
+      // eslint-disable-next-line no-console
+      console.log('[videoSocket] reconnect_attempt', { attempt: attempt });
       var fresh = await tokenProvider.getToken();
       if (fresh) _socket.auth = { token: fresh };
     });
@@ -124,7 +126,13 @@ async function connect() {
       done = true;
       cleanup();
       _connecting = false;
-      console.warn('[videoSocket] connect_error', err && err.message);
+      // eslint-disable-next-line no-console
+      console.warn('[videoSocket] connect_error', {
+        message: err && err.message,
+        description: err && err.description,
+        context: err && err.context,
+        type: err && err.type,
+      });
       reject(err || new Error('connect_error'));
     };
 
@@ -137,6 +145,8 @@ async function connect() {
       done = true;
       cleanup();
       _connecting = false;
+      // eslint-disable-next-line no-console
+      console.warn('[videoSocket] connect timeout fired');
       reject(new Error('connect timeout'));
     }, 10000);
 
