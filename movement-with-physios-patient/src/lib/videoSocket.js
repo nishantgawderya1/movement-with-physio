@@ -79,9 +79,34 @@ async function connect() {
     _socket.auth = { token: token };
   }
 
-  _socket.connect();
-  _connecting = false;
-  return _socket;
+  // Wait for the actual WS handshake before resolving. Without this,
+  // callers do `await connect()` then immediately `emit('join_call', ...)`,
+  // and the emit silently no-ops because `_socket.connected` is still
+  // false (see emit() guard below). socket.io-client's internal sendBuffer
+  // would queue it normally, but this wrapper's connectivity check
+  // bypasses that buffering. Resolves null on connect_error / timeout so
+  // callers can detect failure (current callers just ignore the value,
+  // which is fine — the subsequent emit will still no-op).
+  return new Promise(function (resolve) {
+    var done = false;
+    var finish = function (success) {
+      if (done) return;
+      done = true;
+      _connecting = false;
+      resolve(success ? _socket : null);
+    };
+
+    _socket.once('connect', function () { finish(true); });
+    _socket.once('connect_error', function (err) {
+      console.warn('[videoSocket] connect_error', err && err.message);
+      finish(false);
+    });
+
+    // Safety timeout — fail fast if backend unreachable.
+    setTimeout(function () { finish(false); }, 10000);
+
+    _socket.connect();
+  });
 }
 
 /**
