@@ -37,7 +37,10 @@ async function request(method, path, opts) {
   const options = opts || {};
   const url = withQuery(buildUrl(path), options.query);
 
-  const headers = { Accept: 'application/json', 'ngrok-skip-browser-warning': 'true' };
+  const headers = {};
+  if (options.headers) Object.assign(headers, options.headers);
+  headers.Accept = 'application/json';
+  headers['ngrok-skip-browser-warning'] = 'true';
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
 
   const token = await tokenProvider.getToken();
@@ -71,7 +74,7 @@ async function request(method, path, opts) {
 export const apiClient = {
   baseUrl: () => BASE_URL,
   get: (path, query, signal) => request('GET', path, { query, signal }),
-  post: (path, body) => request('POST', path, { body }),
+  post: (path, body, opts) => request('POST', path, { body, headers: opts && opts.headers }),
   patch: (path, body) => request('PATCH', path, { body }),
   del: (path) => request('DELETE', path),
 };

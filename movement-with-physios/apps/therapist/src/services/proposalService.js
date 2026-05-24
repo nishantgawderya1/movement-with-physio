@@ -12,6 +12,16 @@
 
 import { apiClient } from '../lib/apiClient';
 
+// Module-private — mirrors patient app's generateIdempotencyKey helper.
+// crypto.randomUUID is available on RN 0.81+ via the JSI bridge; fallback
+// is sufficient as a client-side dedup token (not security-sensitive).
+function generateIdempotencyKey() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+}
+
 /**
  * POST /api/v1/bookings/proposals — create a pending session proposal
  * to a patient (therapist-only). Backend gates on existing therapist↔
@@ -20,19 +30,22 @@ import { apiClient } from '../lib/apiClient';
  * slot-conflict-therapist, duplicate-pending, slot-conflict-patient,
  * E11000-rollback).
  *
- * NOTE on idempotency: Idempotency-Key header is NOT sent here.
- * Therapist apiClient lacks the { idempotencyKey } option signature that
- * patient apiClient supports (see commit message). Race protection comes
- * from the DB-level partial unique index on { therapistId, slotStart,
- * status: 'pending' } from P1.3 — rapid double-tap returns the typed
- * PROPOSAL_DUPLICATE_PENDING error (409). P3.4's UI will additionally
- * debounce / disable-on-submit at the button layer.
+ * Idempotency-Key header is generated per call. Backend idempotency
+ * middleware replays the same response for retries with the same key
+ * (true idempotency semantics). UI-layer debounce in P3.4 remains the
+ * first line against rapid double-tap; DB partial unique index on
+ * { therapistId, slotStart, status: 'pending' } from P1.3 is the
+ * backstop for collisions across separate keys.
  *
  * @param {{ patientId: string, slotStart: string, durationMinutes: 30|60, timezone: string, meetingType: 'video'|'in_person', notes?: string }} body
  * @returns {Promise<{ success: boolean, data?: { proposal: object }, error?: string }>}
  */
 export async function createProposal(body) {
-  var response = await apiClient.post('/bookings/proposals', body);
+  var response = await apiClient.post(
+    '/bookings/proposals',
+    body,
+    { headers: { 'Idempotency-Key': generateIdempotencyKey() } }
+  );
   if (!response.success) {
     return { success: false, error: response.error || 'Failed to create proposal' };
   }
