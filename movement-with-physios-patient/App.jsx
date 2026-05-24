@@ -24,6 +24,11 @@ import { navigationRef } from './src/lib/navigationRef';
 import { registerProposalCategory } from './src/services/notificationService';
 import { PATIENT_ROUTES } from './src/constants/routes';
 
+// Boot-time marker — confirms which bundle the dev-client is actually
+// running. Set EXPO_PUBLIC_COMMIT_SHA at build time to capture the sha.
+// eslint-disable-next-line no-console
+console.log('[BOOT] bundle commit=' + (process.env.EXPO_PUBLIC_COMMIT_SHA || 'dev'));
+
 SplashScreen.preventAutoHideAsync();
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
