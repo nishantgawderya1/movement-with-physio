@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -64,6 +64,22 @@ function formatBookingTime(iso) {
   var ampm = h >= 12 ? 'PM' : 'AM';
   h = h % 12; if (h === 0) h = 12;
   return h + ':' + (m < 10 ? '0' + m : m) + ' ' + ampm;
+}
+
+// Smart-join window: confirmed video booking with a videoCallId stamped on
+// it, slotStart within ±30 minutes of now. Mirrors the backend canJoin
+// reasoning so the patient can self-serve the lobby instead of waiting for
+// the chat-based smart-join probe that was removed in P4.1.
+function isInSmartJoinWindow(booking) {
+  if (!booking) return false;
+  if (booking.meetingType !== 'video') return false;
+  if (booking.status !== 'confirmed') return false;
+  if (!booking.videoCallId) return false;
+  if (!booking.slotStart) return false;
+  var slotMs = new Date(booking.slotStart).getTime();
+  var nowMs = Date.now();
+  var diff = Math.abs(slotMs - nowMs);
+  return diff <= 30 * 60 * 1000;
 }
 
 /**
@@ -250,6 +266,20 @@ export default function AppointmentsRootScreen() {
     navigation.navigate(PATIENT_ROUTES.BOOK_THERAPIST);
   }
 
+  // Cross-stack navigation: AppointmentsRootScreen lives in BookStack;
+  // PRE_CALL_LOBBY lives in MessagesStack. v7 requires nested
+  // { screen, params } form to push into a sibling tab's stack.
+  function handleJoinCall(booking) {
+    if (!booking || !booking.videoCallId) return;
+    navigation.navigate(PATIENT_ROUTES.MESSAGES, {
+      screen: PATIENT_ROUTES.PRE_CALL_LOBBY,
+      params: {
+        callId: String(booking.videoCallId),
+        bookingId: String(booking._id),
+      },
+    });
+  }
+
   // ── Derived slices for the booking sections ─────────────────────────
   var now = Date.now();
   var upcoming = bookings
@@ -333,7 +363,14 @@ export default function AppointmentsRootScreen() {
               <Text style={styles.empty}>No upcoming sessions yet</Text>
             ) : (
               upcoming.map(function (b) {
-                return <BookingCard key={String(b._id)} booking={b} />;
+                var canJoin = isInSmartJoinWindow(b);
+                return (
+                  <BookingCard
+                    key={String(b._id)}
+                    booking={b}
+                    onJoinPress={canJoin ? function () { handleJoinCall(b); } : null}
+                  />
+                );
               })
             )}
           </View>
@@ -375,6 +412,7 @@ function BookingCard(props) {
   if (b.therapistId && typeof b.therapistId === 'object' && b.therapistId.name) {
     therapistName = b.therapistId.name;
   }
+  var onJoinPress = props.onJoinPress;
   return (
     <View style={[bookingStyles.card, muted && bookingStyles.cardMuted]}>
       <View style={bookingStyles.row}>
@@ -390,6 +428,12 @@ function BookingCard(props) {
       <Text style={[bookingStyles.slot, muted && bookingStyles.muted]}>
         {formatBookingDate(b.slotStart)} · {formatBookingTime(b.slotStart)}
       </Text>
+      {onJoinPress ? (
+        <Pressable style={bookingStyles.joinBtn} onPress={onJoinPress}>
+          <Ionicons name="videocam" size={16} color="#FFFFFF" />
+          <Text style={bookingStyles.joinBtnText}>Join now</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -416,6 +460,22 @@ var bookingStyles = StyleSheet.create({
     color: colors.textMedium,
   },
   muted: { color: colors.textLight },
+  joinBtn: {
+    marginTop: 12,
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  joinBtnText: {
+    color: '#FFFFFF',
+    fontFamily: fonts.body.semibold,
+    fontSize: 14,
+  },
 });
 
 var styles = StyleSheet.create({
