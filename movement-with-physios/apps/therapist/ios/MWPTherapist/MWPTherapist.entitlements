@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  TEMPORARY: aps-environment entitlement removed because Apple free
+  Personal Team does not support the Push Notifications capability.
+  Restore the aps-environment key when paid Apple Developer Program
+  account ($99/year) is enrolled. See commit message for restoration plan.
+-->
 <plist version="1.0">
-  <dict>
-    <key>aps-environment</key>
-    <string>development</string>
-  </dict>
+<dict>
+</dict>
 </plist>
