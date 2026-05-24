@@ -53,7 +53,12 @@ async function connect() {
 
   if (!_socket) {
     _socket = io(BASE_URL + NAMESPACE, {
-      transports: ['websocket'],
+      // No `transports` override — socket.io-client defaults to
+      // ['polling', 'websocket']: handshake via long-polling first, then
+      // upgrade to WebSocket if available. The previous explicit
+      // ['websocket'] caused the initial connection to fail outright when
+      // the WS upgrade was blocked anywhere in the path (e.g. ngrok free
+      // tier, certain corporate proxies), since there was no fallback.
       autoConnect: false,
       reconnection: true,
       reconnectionAttempts: Infinity,
