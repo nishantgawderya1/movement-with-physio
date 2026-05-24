@@ -37,6 +37,8 @@ var _listeners = new Map(); // event -> Set<callback>
  * @returns {Promise<object|null>} socket instance, or null on misconfig
  */
 async function connect() {
+  // eslint-disable-next-line no-console
+  console.log('[videoSocket] connect() called', { hasSocket: !!_socket, connected: !!(_socket && _socket.connected), connecting: _connecting });
   if (_socket && _socket.connected) return _socket;
   if (_connecting) return _socket;
   if (!BASE_URL) return null;
@@ -96,7 +98,11 @@ async function connect() {
       resolve(success ? _socket : null);
     };
 
-    _socket.once('connect', function () { finish(true); });
+    _socket.once('connect', function () {
+      // eslint-disable-next-line no-console
+      console.log('[videoSocket] connected', { socketId: _socket.id });
+      finish(true);
+    });
     _socket.once('connect_error', function (err) {
       console.warn('[videoSocket] connect_error', err && err.message);
       finish(false);
@@ -158,7 +164,10 @@ function off(event, cb) {
  * @param {*} payload
  */
 function emit(event, payload) {
-  if (_socket && _socket.connected) {
+  var canSend = !!(_socket && _socket.connected);
+  // eslint-disable-next-line no-console
+  console.log('[videoSocket] emit', { event: event, sent: canSend });
+  if (canSend) {
     _socket.emit(event, payload);
   }
 }

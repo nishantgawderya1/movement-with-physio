@@ -434,6 +434,16 @@ async function acceptProposal(actor, proposalId) {
       $set: { bookingId: booking._id },
     });
 
+    // Temporary diagnostic log — Phase 3 of session-proposals video debugging.
+    // Remove once end-to-end video flow is verified stable.
+    logger.info('[proposal:accept] OK', {
+      proposalId: claimed._id.toString(),
+      bookingId: booking._id.toString(),
+      videoCallId: booking.videoCallId ? booking.videoCallId.toString() : null,
+      idempotencyKey: booking.idempotencyKey,
+      participants: videoCall && videoCall.participants ? videoCall.participants.map(String) : null,
+    });
+
     logger.info({
       event: 'PROPOSAL_ACCEPTED',
       proposalId: claimed._id,

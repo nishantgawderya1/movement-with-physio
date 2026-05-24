@@ -21,6 +21,8 @@ let _connecting = false;
 const _listeners = new Map(); // event -> Set<callback>
 
 async function connect() {
+  // eslint-disable-next-line no-console
+  console.log('[videoSocket] connect() called', { hasSocket: !!_socket, connected: !!(_socket && _socket.connected), connecting: _connecting });
   if (_socket && _socket.connected) return _socket;
   if (_connecting) return _socket;
   if (!BASE_URL) return null;
@@ -74,7 +76,11 @@ async function connect() {
       resolve(success ? _socket : null);
     };
 
-    _socket.once('connect', () => finish(true));
+    _socket.once('connect', () => {
+      // eslint-disable-next-line no-console
+      console.log('[videoSocket] connected', { socketId: _socket.id });
+      finish(true);
+    });
     _socket.once('connect_error', (err) => {
       console.warn('[videoSocket] connect_error', err && err.message);
       finish(false);
@@ -109,7 +115,10 @@ function off(event, cb) {
 }
 
 function emit(event, payload) {
-  if (_socket && _socket.connected) _socket.emit(event, payload);
+  const canSend = !!(_socket && _socket.connected);
+  // eslint-disable-next-line no-console
+  console.log('[videoSocket] emit', { event, sent: canSend });
+  if (canSend) _socket.emit(event, payload);
 }
 
 function isConnected() {
