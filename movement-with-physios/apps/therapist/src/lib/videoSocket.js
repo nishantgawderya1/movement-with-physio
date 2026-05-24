@@ -64,30 +64,54 @@ async function connect() {
   // and the emit silently no-ops because `_socket.connected` is still
   // false (see emit() guard below). socket.io-client's internal sendBuffer
   // would queue it normally, but this wrapper's connectivity check
-  // bypasses that buffering. Resolves null on connect_error / timeout so
-  // callers can detect failure (current callers just ignore the value,
-  // which is fine — the subsequent emit will still no-op).
-  return new Promise((resolve) => {
+  // bypasses that buffering.
+  //
+  // REJECTS on connect_error / timeout so the caller's existing try/catch
+  // (useVideoCall.join) surfaces a failed-status error instead of silently
+  // proceeding to emit on a dead socket.
+  return new Promise((resolve, reject) => {
     let done = false;
-    const finish = (success) => {
-      if (done) return;
-      done = true;
-      _connecting = false;
-      resolve(success ? _socket : null);
+    let timer = null;
+    let onConnect = null;
+    let onError = null;
+
+    const cleanup = () => {
+      if (onConnect) _socket.off('connect', onConnect);
+      if (onError) _socket.off('connect_error', onError);
+      if (timer) clearTimeout(timer);
+      timer = null;
     };
 
-    _socket.once('connect', () => {
+    onConnect = () => {
+      if (done) return;
+      done = true;
+      cleanup();
+      _connecting = false;
       // eslint-disable-next-line no-console
       console.log('[videoSocket] connected', { socketId: _socket.id });
-      finish(true);
-    });
-    _socket.once('connect_error', (err) => {
+      resolve(_socket);
+    };
+
+    onError = (err) => {
+      if (done) return;
+      done = true;
+      cleanup();
+      _connecting = false;
       console.warn('[videoSocket] connect_error', err && err.message);
-      finish(false);
-    });
+      reject(err || new Error('connect_error'));
+    };
+
+    _socket.once('connect', onConnect);
+    _socket.once('connect_error', onError);
 
     // Safety timeout — fail fast if backend unreachable.
-    setTimeout(() => finish(false), 10000);
+    timer = setTimeout(() => {
+      if (done) return;
+      done = true;
+      cleanup();
+      _connecting = false;
+      reject(new Error('connect timeout'));
+    }, 10000);
 
     _socket.connect();
   });
