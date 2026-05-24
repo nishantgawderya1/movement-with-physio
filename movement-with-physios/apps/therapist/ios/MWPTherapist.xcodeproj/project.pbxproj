@@ -21,7 +21,7 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = MWPTherapist/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MWPTherapist/Info.plist; sourceTree = "<group>"; };
 		3BA90E06967C106B9210D227 /* Pods-MWPTherapist.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MWPTherapist.debug.xcconfig"; path = "Target Support Files/Pods-MWPTherapist/Pods-MWPTherapist.debug.xcconfig"; sourceTree = "<group>"; };
-		837697C13783804B9117D124 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = MWPTherapist/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		837697C13783804B9117D124 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = MWPTherapist/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		9F869403697A9C06D58CB13A /* Pods-MWPTherapist.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MWPTherapist.release.xcconfig"; path = "Target Support Files/Pods-MWPTherapist/Pods-MWPTherapist.release.xcconfig"; sourceTree = "<group>"; };
 		A1981D096029FB3BD96B6BDE /* libPods-MWPTherapist.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MWPTherapist.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = MWPTherapist/SplashScreen.storyboard; sourceTree = "<group>"; };
@@ -50,7 +50,6 @@
 				3BA90E06967C106B9210D227 /* Pods-MWPTherapist.debug.xcconfig */,
 				9F869403697A9C06D58CB13A /* Pods-MWPTherapist.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -349,6 +348,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MWPTherapist/MWPTherapist.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UACKJ675KL;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -385,6 +385,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MWPTherapist/MWPTherapist.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UACKJ675KL;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = MWPTherapist/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
