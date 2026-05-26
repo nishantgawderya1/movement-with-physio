@@ -5,6 +5,12 @@ import {
   InstrumentSerif_400Regular,
   InstrumentSerif_400Regular_Italic,
 } from '@expo-google-fonts/instrument-serif';
+import {
+  DMSans_400Regular,
+  DMSans_500Medium,
+  DMSans_600SemiBold,
+  DMSans_700Bold,
+} from '@expo-google-fonts/dm-sans';
 import * as SplashScreenExpo from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
 import { ClerkProvider } from '@clerk/clerk-expo';
@@ -49,6 +55,10 @@ export default function App() {
   const [fontsLoaded] = useFonts({
     InstrumentSerif_400Regular,
     InstrumentSerif_400Regular_Italic,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_600SemiBold,
+    DMSans_700Bold,
   });
 
   const onLayoutRootView = useCallback(async () => {
