@@ -138,6 +138,19 @@ Replace with real patient branding before any public/internal build.
 
 ---
 
+## Error display convention
+
+Errors → InlineBanner (screen-level errors only).
+Alert.alert is acceptable for:
+- Destructive confirms (logout, end session, cancel booking, etc.)
+- System-level errors that fire from outside a screen context
+  (ClerkTokenBridge, root-level handlers)
+- Modal/overlay-level errors where no screen has a banner host
+  (IncomingInstantCallModal)
+Otherwise: InlineBanner.
+
+---
+
 ## Constants Reference
 
 ### `src/constants/colors.js`
@@ -492,7 +505,7 @@ All wrapped in `OnboardingProvider` via `AuthNavigator`.
 #### `ProfileScreen.jsx`
 - Wrapped in `<TabScreenWrapper tabIndex={4}>` ← updated from 3 to 4 (Chat tab added at index 2)
 - Accepts `{ navigation }` prop
-- Menu rows have `onPress` handlers via `handleComingSoon()` → `Alert.alert('Coming soon', '', [{ text: 'OK' }])`
+- Two menu rows only: **Primary body part** (opens the body-part picker modal; persists via `updatePatientProfile`) and **Logout** (confirm `Alert` → Clerk `signOut`). The former "Coming soon" stub rows (Personal Information / Notifications / Settings / Help & Support) were removed.
 - ScrollView uses dynamic `paddingBottom: 60 + insets.bottom`
 
 #### `SessionScreen.jsx`
@@ -581,7 +594,7 @@ App renders `null` until fonts are loaded (or error). SplashScreen held via `exp
 | Item | Status |
 |---|---|
 | Notifications screen | No-op `onPress: () => {}` in HomeScreen bell icon |
-| Profile menu rows (Personal Info, Notifications, Settings, Help) | `Alert.alert('Coming soon')` |
+| Profile menu rows | ✅ Removed — the "Coming soon" stub rows were deleted; Profile now shows Primary body part + Logout only |
 | Clerk auth integration | Stub `ClerkAuthScreen` shows "Login coming soon" |
 | Session screen (exercise player) | ✅ Built — `SessionScreen.jsx`, 5 mock exercises, rep + duration modes |
 | Chat feature | ✅ Built — `MessagesScreen`, `ChatRoomScreen`, 6 chat components, `chatService` mock |

@@ -225,6 +225,17 @@ Dev credentials: phone `9876543210`, OTP `123456`, email `test@mwp.com`, passwor
 - **Styles:** `StyleSheet.create()` at the bottom of each file
 - Token storage is in-memory only (`src/services/auth/tokenStorage.js`) — needs `expo-secure-store` when going to production
 
+## Error display convention
+
+Errors → InlineBanner (screen-level errors only).
+Alert.alert is acceptable for:
+- Destructive confirms (logout, end session, cancel booking, etc.)
+- System-level errors that fire from outside a screen context
+  (ClerkTokenBridge, root-level handlers)
+- Modal/overlay-level errors where no screen has a banner host
+  (IncomingInstantCallModal)
+Otherwise: InlineBanner.
+
 ## Current Status
 
 **Done:** All 13 auth/onboarding screens, navigation structure, mock services, constants/theme.

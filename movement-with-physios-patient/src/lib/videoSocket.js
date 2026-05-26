@@ -61,9 +61,9 @@ async function connect() {
       // tier, certain corporate proxies), since there was no fallback.
       autoConnect: false,
       reconnection: true,
-      reconnectionAttempts: Infinity,
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
+      reconnectionDelayMax: 30000,
       timeout: 10000,
       auth: { token: token },
     });

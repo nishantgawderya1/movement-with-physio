@@ -134,10 +134,6 @@ export default function ProfileScreen({ navigation }) {
     ]);
   }
 
-  function handleComingSoon() {
-    Alert.alert('Coming soon', '', [{ text: 'OK' }]);
-  }
-
   return (
     <TabScreenWrapper tabIndex={4}>
       <SafeAreaView style={styles.safe}>
@@ -166,26 +162,6 @@ export default function ProfileScreen({ navigation }) {
             label="Primary body part"
             value={formatPainLocation(patient.painLocation)}
             onPress={function () { setIsBodyPartModalOpen(true); }}
-          />
-          <MenuRow
-            icon="person-outline"
-            label="Personal Information"
-            onPress={handleComingSoon}
-          />
-          <MenuRow
-            icon="notifications-outline"
-            label="Notifications"
-            onPress={handleComingSoon}
-          />
-          <MenuRow
-            icon="settings-outline"
-            label="Settings"
-            onPress={handleComingSoon}
-          />
-          <MenuRow
-            icon="help-circle-outline"
-            label="Help & Support"
-            onPress={handleComingSoon}
           />
         </View>
 
