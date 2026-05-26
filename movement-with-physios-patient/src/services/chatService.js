@@ -33,10 +33,6 @@ import { tokenProvider } from '../lib/tokenProvider';
  *   - POST /chat/rooms (new)   → raw ObjectId strings (NOT populated)
  * Both forms are handled — `idOf` normalizes the comparison.
  *
- * TODO(backend): make POST /chat/rooms `.populate('participants')` to match
- * the GET shape. Once that lands, this dual-shape handling + the matching
- * defensive branch in `normalizeRoom` below can be removed.
- *
  * @param {Array} participants - populated User docs OR raw ObjectId strings
  * @param {string|null} myId
  * @returns {object|string|null}
