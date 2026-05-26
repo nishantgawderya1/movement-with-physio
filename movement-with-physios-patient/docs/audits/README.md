@@ -15,6 +15,7 @@ cleanup commits on `feat/session-proposals`.
 | DESIGN_TOKENS.md | Pre-Phase 2 | Color/font/radius/spacing extraction, both apps |
 | GHOST_UI.md | Pre-Phase 2 | Ghost-UI sweep — buttons with no onPress, mock flows, etc. |
 | TIER3_INVESTIGATION.md | Pre-Tier 3 | Per-commit reconnaissance for Tier 3 cleanup |
+| INTEGRITY_CHECK.md | Post-Tier 3.5 | Static integrity audit of all Phase 2 + Tier 3 + Tier 3.5 commits (zero HIGH / zero MED / 3 LOW findings) — branch declared safe for device-test |
 
 ## What's NOT here
 
@@ -29,3 +30,4 @@ cleanup commits on `feat/session-proposals`.
 3. UI_AUDIT_PATIENT.md / UI_AUDIT_THERAPIST.md (the bulk)
 4. SERVICE_AUDIT.md (where frontend meets backend)
 5. GHOST_UI.md (what's broken/mock and why)
+6. INTEGRITY_CHECK.md (if you want to see how the cleanup was verified)
