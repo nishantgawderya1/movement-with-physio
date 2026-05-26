@@ -39,6 +39,7 @@ import {
 } from '../../services/bookingService';
 import { getCall } from '../../services/videoCallService';
 import { getPdf } from '../../services/assessmentService';
+import InlineBanner from '../../components/InlineBanner';
 
 function formatSlot(iso) {
   if (!iso) return '';
@@ -62,6 +63,7 @@ export default function BookingDetailScreen({ navigation, route }) {
   var [loading, setLoading] = useState(true);
   var [error, setError] = useState(null);
   var [acting, setActing] = useState(false);
+  var [banner, setBanner] = useState({ visible: false, message: '', variant: 'error' });
 
   var load = useCallback(async function () {
     setError(null);
@@ -104,10 +106,10 @@ export default function BookingDetailScreen({ navigation, route }) {
     var r = await acceptInstant(bookingId);
     setActing(false);
     if (r.success) {
-      Alert.alert('Accepted', 'You accepted the instant call request.');
+      setBanner({ visible: true, message: 'You accepted the instant call request.', variant: 'success' });
       load();
     } else {
-      Alert.alert('Error', r.error || 'Failed to accept');
+      setBanner({ visible: true, message: r.error || 'Failed to accept', variant: 'error' });
     }
   }
 
@@ -119,7 +121,7 @@ export default function BookingDetailScreen({ navigation, route }) {
     if (r.success) {
       navigation.goBack();
     } else {
-      Alert.alert('Error', r.error || 'Failed to decline');
+      setBanner({ visible: true, message: r.error || 'Failed to decline', variant: 'error' });
     }
   }
 
@@ -132,7 +134,7 @@ export default function BookingDetailScreen({ navigation, route }) {
           if (r.success) {
             navigation.goBack();
           } else {
-            Alert.alert('Error', r.error || 'Failed to cancel');
+            setBanner({ visible: true, message: r.error || 'Failed to cancel', variant: 'error' });
           }
         }
       }
@@ -182,6 +184,12 @@ export default function BookingDetailScreen({ navigation, route }) {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <InlineBanner
+        visible={banner.visible}
+        message={banner.message}
+        variant={banner.variant}
+        onDismiss={() => setBanner((b) => ({ ...b, visible: false }))}
+      />
       <View style={styles.header}>
         <TouchableOpacity onPress={function () { navigation.goBack(); }} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={22} color={colors.textDark} />
