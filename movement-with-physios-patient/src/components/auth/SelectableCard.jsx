@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     marginBottom: COLUMN_GAP,
   },
   cardDefault: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
     borderColor: colors.cardBorder,
   },
   cardSelected: {

@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pillDefault: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
     borderColor: colors.cardBorder,
   },
   pillSelected: {

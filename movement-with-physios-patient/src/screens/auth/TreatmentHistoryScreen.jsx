@@ -70,7 +70,7 @@ export default function TreatmentHistoryScreen({ navigation }) {
                   borderRadius: 18,
                   borderWidth: isSelected ? 2 : 1,
                   borderColor: isSelected ? colors.primary : colors.cardBorder,
-                  backgroundColor: isSelected ? '#E0F7F2' : colors.white,
+                  backgroundColor: isSelected ? '#E0F7F2' : colors.background,
                 }}
               >
                 <View style={{
@@ -84,7 +84,7 @@ export default function TreatmentHistoryScreen({ navigation }) {
                   <Ionicons
                     name={option.icon}
                     size={26}
-                    color={isSelected ? colors.white : colors.textLight}
+                    color={isSelected ? colors.textOnPrimary : colors.textLight}
                   />
                 </View>
                 <View style={{ flex: 1 }}>
