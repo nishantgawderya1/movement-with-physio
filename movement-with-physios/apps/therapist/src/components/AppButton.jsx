@@ -8,12 +8,13 @@ import { fonts, fontFamilies } from '../constants/fonts';
 /**
  * AppButton — reusable CTA button
  * Props:
- *   title, onPress, loading (bool), variant ('primary' | 'outline' | 'pill')
+ *   title, onPress, loading (bool), disabled (bool), variant ('primary' | 'outline' | 'pill')
  */
 const AppButton = ({
   title,
   onPress,
   loading = false,
+  disabled = false,
   variant = 'primary',
 }) => {
   const variantStyle =
@@ -23,11 +24,13 @@ const AppButton = ({
       ? styles.pill
       : styles.primary;
 
+  const isInactive = loading || disabled;
+
   return (
     <TouchableOpacity
-      style={[styles.base, variantStyle, loading && styles.disabled]}
+      style={[styles.base, variantStyle, isInactive && styles.disabled]}
       onPress={onPress}
-      disabled={loading}
+      disabled={isInactive}
       activeOpacity={0.8}
     >
       {loading ? (

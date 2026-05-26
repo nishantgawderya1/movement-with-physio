@@ -27,6 +27,7 @@ const InputField = ({
   maxLength,
   autoFocus,
   autoCapitalize,
+  autoComplete,
   inputStyle,
 }) => {
   return (
@@ -43,6 +44,7 @@ const InputField = ({
           secureTextEntry={secureTextEntry}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
+          autoComplete={autoComplete}
           autoCorrect={false}
           maxLength={maxLength}
           autoFocus={autoFocus}

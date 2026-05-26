@@ -221,6 +221,7 @@ export default function ClerkAuthScreen() {
                 placeholder="you@clinic.com"
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoComplete="email"
                 autoFocus
               />
               <AppButton
@@ -228,6 +229,7 @@ export default function ClerkAuthScreen() {
                 title="Continue"
                 onPress={handleSendOTP}
                 loading={loading}
+                disabled={!email.trim() || loading}
               />
             </>
           ) : (
@@ -247,6 +249,7 @@ export default function ClerkAuthScreen() {
                 title="Continue"
                 onPress={handleVerifyOTP}
                 loading={loading}
+                disabled={!otp.trim() || loading}
               />
               <Pressable
                 style={styles.changeEmail}
