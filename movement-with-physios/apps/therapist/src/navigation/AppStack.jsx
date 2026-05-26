@@ -2,7 +2,6 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import BootstrapScreen from '../screens/BootstrapScreen';
 import PersonalInfoScreen from '../screens/auth/PersonalInfoScreen';
-import OnboardingNext from '../screens/auth/OnboardingNext';
 import ProfessionalCredentialsScreen from '../screens/auth/ProfessionalCredentialsScreen';
 import GovernmentIDVerificationScreen from '../screens/auth/GovernmentIDVerificationScreen';
 import ProfilePhotoScreen from '../screens/auth/ProfilePhotoScreen';
@@ -68,7 +67,6 @@ const AppStack = () => (
 
     {/* Onboarding (reachable post-signup if needed) */}
     <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
-    <Stack.Screen name="OnboardingNext" component={OnboardingNext} />
     <Stack.Screen name="ProfessionalCredentials" component={ProfessionalCredentialsScreen} />
     <Stack.Screen name="GovernmentIDVerification" component={GovernmentIDVerificationScreen} />
     <Stack.Screen name="ProfilePhoto" component={ProfilePhotoScreen} />
