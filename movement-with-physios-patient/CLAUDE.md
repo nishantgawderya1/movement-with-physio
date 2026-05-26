@@ -51,6 +51,15 @@ to keep the graph current.
 
 ---
 
+## Design system
+
+- Pill buttons: borderRadius 99 (full pill).
+- Buttons / inputs: borderRadius 12.
+- Cards: borderRadius 16.
+- Fonts: Lora (headings) + Nunito (body) — both fully loaded via `@expo-google-fonts/lora` and `@expo-google-fonts/nunito` in `App.jsx`.
+
+---
+
 ## Dev Client + WebRTC plumbing (Phase 1, no UI yet)
 
 Expo Go cannot be used — the app links `react-native-webrtc` natively, so
@@ -380,12 +389,12 @@ All wrapped in `OnboardingProvider` via `AuthNavigator`.
 - Empty state with centered text + emoji
 
 #### `ChatRoomScreen.jsx`
-- Custom header (no `headerShown`): back arrow + avatar + name (Lora) + online status + video call placeholder
+- Custom header (no `headerShown`): back arrow + avatar + name (Lora) + online status
 - Inverted FlatList for message history (bottom-up rendering)
 - `chatService.getMessages(roomId)` on mount + `chatService.markAsRead(roomId, null)` to clear badge
 - Optimistic send: appends message to state immediately, calls `chatService.sendMessage`
 - Long-press on any bubble → sets `replyTo` state → shows `ReplyPreview` in composer
-- Typing indicator poll: `setInterval → chatService.getTypingStatus(roomId)` every 3s
+- Typing indicator: live via /chat socket (`onTyping` listener + `setTyping` emit)
 - **Keyboard handling**: Manual `Keyboard.addListener` — no `KeyboardAvoidingView` anywhere
   - `keyboardWillShow` → `setKeyboardHeight(e.endCoordinates.height)` (fires early on iOS, no visible jump)
   - `keyboardWillHide` → `setKeyboardHeight(0)`
@@ -585,7 +594,6 @@ App renders `null` until fonts are loaded (or error). SplashScreen held via `exp
 | Real therapy session data | All data is mock from `PatientContext` / hardcoded in SessionScreen |
 | Real therapist data | Mock list in `BookTherapistScreen` |
 | Real chat API | `chatService.js` mock-first — swap implementations when backend is ready |
-| Video call from chat header | Placeholder `onPress: () => {}` in ChatRoomScreen |
 | Video consultation UI | Not built — WebRTC native modules linked (Phase 1 plumbing only). Verified on iOS via temporary smoke screen (now removed). Bare `mediaDevices.getUserMedia` + `RTCView` confirmed working. |
 | Patient brand assets | `assets/*.png` are placeholders copied from therapist — replace with real branding before any external build. |
 

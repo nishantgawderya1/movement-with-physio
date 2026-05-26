@@ -83,7 +83,7 @@ movement-with-physios/
 │   │   │   ├── auth/RegisterScreen.jsx        (stub)
 │   │   │   ├── auth/RegistrationNextStep.jsx  (post-OTP confirmation)
 │   │   │   ├── auth/OnboardingNext.jsx        (coming soon placeholder)
-│   │   │   ├── dashboard/DashboardScreen.jsx  (EMPTY FILE)
+│   │   │   ├── dashboard/DashboardScreen.jsx  (backend-wired home — ~560 lines)
 │   │   │   ├── dashboard/BookingConfirmed.jsx (booking success → PendingVerificationDashboard)
 │   │   │   ├── dashboard/ProfessionalCredentials.jsx (degree/license/specialization/years)
 │   │   │   ├── dashboard/GovernmentIDVerification.jsx (ID type/number, front/back photo)
@@ -137,7 +137,6 @@ Splash (2.8s) → Login → ClerkAuth (OTP) → PersonalInfo
                            → ProfilePhoto → ScheduleVerificationCall
                            → BookingConfirmed / RegistrationNextStep
                            → PendingVerificationDashboard
-Dashboard (empty)
 ForgotPassword / Register (stubs)
 ```
 
@@ -211,8 +210,13 @@ Dev credentials: phone `9876543210`, OTP `123456`, email `test@mwp.com`, passwor
 | File | Purpose |
 |------|---------|
 | `src/constants/colors.js` | Brand palette — primary `#1A5C4A` (teal). Import `colors` (lowercase). |
-| `src/constants/fonts.js` | Font scale (`xs`→`xxxl`) and Instrument Serif families. Import `fonts` and `fontFamilies`. |
+| `src/constants/fonts.js` | Font scale (`xs`→`xxxl`) and Instrument Serif families. Import `fonts` and `fontFamilies`. **Instrument Serif is loaded (headings only, ~25 usages). DM Sans is NOT loaded — body text falls back to the OS system font. Loading DM Sans is a planned Phase 2 task.** |
 | `src/constants/routes.js` | `ROUTES` enum — always use this instead of string literals. |
+
+**Border radius conventions:**
+- Auth-screen CTA pill: `borderRadius 30` (convention across 9 auth screens).
+- `AppButton` component: `borderRadius 14`.
+- Full pills: `borderRadius 999`.
 
 ### Code Conventions
 
@@ -225,4 +229,17 @@ Dev credentials: phone `9876543210`, OTP `123456`, email `test@mwp.com`, passwor
 
 **Done:** All 13 auth/onboarding screens, navigation structure, mock services, constants/theme.
 
-**Not yet implemented:** Real backend (all `backend/` controllers are empty stubs), Dashboard screen, global auth state, secure token storage, Clerk integration, and any testing.
+**Not yet implemented:** Real backend (all `backend/` controllers are empty stubs), global auth state, secure token storage, Clerk integration, and any testing.
+
+## Known mock flows (Tier 4 — decisions pending)
+
+The 5-screen verification onboarding (ProfessionalCredentials,
+GovernmentIDVerification, ProfilePhoto, ScheduleVerificationCall,
+BookingConfirmed) collects input and image uploads but persists NOTHING —
+every Continue handler is `console.log('[MOCK]', payload); navigate(...)`.
+Government ID photos captured via `expo-image-picker` are never uploaded.
+Status: known, decision pending.
+
+AssignFlow (SelectClient → SetSchedule → ReviewAssignment) is similarly
+mock — the backend exercise plugin was deleted, and "Assign Exercises"
+shows a fake success modal that persists nothing.
