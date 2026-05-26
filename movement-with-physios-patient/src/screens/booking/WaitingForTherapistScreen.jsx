@@ -25,7 +25,6 @@ import {
   SafeAreaView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -33,6 +32,7 @@ import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { PATIENT_ROUTES } from '../../constants/routes';
 import { getBooking, cancelBooking } from '../../services/bookingService';
+import InlineBanner from '../../components/common/InlineBanner';
 
 var POLL_INTERVAL_MS = 3000;
 var COUNTDOWN_TICK_MS = 5000;
@@ -73,6 +73,7 @@ export default function WaitingForTherapistScreen({ navigation, route }) {
   var [loadError, setLoadError] = useState(null);
   var [cancelling, setCancelling] = useState(false);
   var [nowMs, setNowMs] = useState(Date.now());
+  var [banner, setBanner] = useState({ visible: false, message: '', variant: 'error' });
 
   var pollHandleRef = useRef(null);
   var countdownHandleRef = useRef(null);
@@ -152,7 +153,7 @@ export default function WaitingForTherapistScreen({ navigation, route }) {
       navigation.popToTop();
     } else {
       setCancelling(false);
-      Alert.alert('Could not cancel', resp.error || 'Try again');
+      setBanner({ visible: true, message: resp.error || 'Could not cancel. Try again.', variant: 'error' });
     }
   }
 
@@ -262,6 +263,12 @@ export default function WaitingForTherapistScreen({ navigation, route }) {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <InlineBanner
+        visible={banner.visible}
+        message={banner.message}
+        variant={banner.variant}
+        onDismiss={() => setBanner((b) => ({ ...b, visible: false }))}
+      />
       {renderHeader('Waiting', handleCancel)}
       <View style={styles.body}>
         <View style={styles.iconCircle}>
