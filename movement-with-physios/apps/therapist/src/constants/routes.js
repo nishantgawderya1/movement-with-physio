@@ -3,8 +3,6 @@ export const ROUTES = {
   // Future therapist screens:
   LOGIN: "Login",
   DASHBOARD: "Dashboard",
-  SCHEDULE: "Schedule",
-  PATIENT_LIST: "PatientList",
   CLIENTS: "AllClients",
   EXERCISES: "ExerciseLibrary",
   MESSAGES: "Messages",

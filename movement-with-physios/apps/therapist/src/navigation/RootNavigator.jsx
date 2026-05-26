@@ -6,17 +6,13 @@ import AppNavigator from './AppNavigator';
 /**
  * RootNavigator
  *
- * CURRENT STATE: Always renders AuthNavigator (no session check yet).
+ * NOTE: This component is NOT the active navigator. The app renders
+ * `AppNavigator` (see App.jsx), which already drives session-based routing
+ * via Clerk's `useAuth()` — switching between AuthNavigator (signed-out) and
+ * AppStack (signed-in). The old AuthService abstraction has been removed.
  *
- * BACKEND ENGINEER — To enable session-based routing:
- *   1. Import AuthService from '../services/AuthService'
- *   2. Replace: const isAuthenticated = false
- *      With:    const isAuthenticated = AuthService.isAuthenticated()
- *   3. Wrap with Clerk's useAuth() hook or a session context
- *
- * Stack structure:
- *   AuthNavigator → SplashScreen, WelcomeScreen, ClerkAuthScreen
- *   AppNavigator  → PersonalInfoScreen, TherapistPortalScreen, DashboardScreen
+ * This file is retained only as a legacy entry point and is a candidate for
+ * a future cleanup pass.
  */
 export default function RootNavigator() {
   // TODO (Backend Engineer): Replace false with AuthService.isAuthenticated()
