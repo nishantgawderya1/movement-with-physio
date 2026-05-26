@@ -4,7 +4,7 @@
 // (default 3000); error variant requires manual dismiss. Tap to dismiss
 // either variant.
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
@@ -20,11 +20,16 @@ export default function InlineBanner(props) {
   var autoHideMs = props.autoHideMs != null ? props.autoHideMs : 3000;
   var onDismiss = props.onDismiss || function () {};
 
+  // Keeps the component mounted through its fade-out so the exit animation
+  // is visible; flipped false only when the hide animation actually finishes.
+  var [shouldRender, setShouldRender] = useState(visible);
+
   var translateY = useRef(new Animated.Value(-80)).current;
   var opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(function () {
     if (visible) {
+      setShouldRender(true);
       Animated.parallel([
         Animated.spring(translateY, {
           toValue: 0,
@@ -56,11 +61,13 @@ export default function InlineBanner(props) {
           duration: 180,
           useNativeDriver: true,
         }),
-      ]).start();
+      ]).start(function (result) {
+        if (result && result.finished) setShouldRender(false);
+      });
     }
   }, [visible, variant, autoHideMs]);
 
-  if (!visible && opacity._value === 0) return null;
+  if (!shouldRender) return null;
 
   var isError = variant === 'error';
   return (
