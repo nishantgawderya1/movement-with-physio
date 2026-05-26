@@ -94,7 +94,7 @@ export default function PainSeverityScreen({ navigation }) {
                   height: CIRCLE,
                   borderRadius: CIRCLE / 2,
                   borderWidth: isSelected ? 0 : 1.5,
-                  borderColor: colors.cardBorder,
+                  borderColor: colors.border,
                   backgroundColor: isSelected ? colors.primary : colors.background,
                   justifyContent: 'center',
                   alignItems: 'center',

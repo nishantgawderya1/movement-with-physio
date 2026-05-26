@@ -136,7 +136,7 @@ export default function AvailabilityScreen({ navigation }) {
                 padding: 18,
                 borderRadius: 16,
                 borderWidth: isSelected ? 2 : 1,
-                borderColor: isSelected ? colors.primary : colors.cardBorder,
+                borderColor: isSelected ? colors.primary : colors.border,
                 backgroundColor: isSelected ? '#E0F7F2' : colors.background,
                 alignItems: 'center',
                 gap: 10,
@@ -191,7 +191,7 @@ var styles = StyleSheet.create({
   },
   errorText: {
     fontSize: fonts.sm,
-    color: colors.error,
+    color: colors.danger,
     marginTop: 12,
     textAlign: 'center',
   },

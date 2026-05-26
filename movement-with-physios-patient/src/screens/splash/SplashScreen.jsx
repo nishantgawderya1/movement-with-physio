@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontSize: fonts.sm,
-    color: colors.placeholder,
+    color: colors.textLight,
     letterSpacing: 2,
     marginBottom: 6,
     textTransform: 'lowercase',

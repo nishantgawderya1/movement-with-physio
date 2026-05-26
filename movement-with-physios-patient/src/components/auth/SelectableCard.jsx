@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
   },
   cardDefault: {
     backgroundColor: colors.background,
-    borderColor: colors.cardBorder,
+    borderColor: colors.border,
   },
   cardSelected: {
     backgroundColor: colors.primaryLight,

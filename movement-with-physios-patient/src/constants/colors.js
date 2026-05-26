@@ -8,6 +8,7 @@ export const colors = {
   background: '#FFFFFF',
   surface: '#F4F6F9',
   surfaceElevated: '#FFFFFF',
+  inputBg: '#FFFFFF',
 
   primary: '#00B894',
   primaryLight: '#E0F7F2',

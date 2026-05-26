@@ -52,7 +52,7 @@ export default function PersonalInfoScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Full name"
-          placeholderTextColor={colors.placeholder}
+          placeholderTextColor={colors.textLight}
           value={name}
           onChangeText={setName}
           autoCapitalize="words"
@@ -62,7 +62,7 @@ export default function PersonalInfoScreen({ navigation }) {
         <TextInput
           style={[styles.input, styles.inputSpaced]}
           placeholder="Age"
-          placeholderTextColor={colors.placeholder}
+          placeholderTextColor={colors.textLight}
           value={age}
           onChangeText={setAge}
           keyboardType="numeric"
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   input: {
     height: 52,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 16,
     fontSize: fonts.md,

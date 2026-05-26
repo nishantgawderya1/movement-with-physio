@@ -63,7 +63,7 @@ export default function PainDurationScreen({ navigation }) {
                 padding: 20,
                 borderRadius: 16,
                 borderWidth: isSelected ? 2 : 1,
-                borderColor: isSelected ? colors.primary : colors.cardBorder,
+                borderColor: isSelected ? colors.primary : colors.border,
                 backgroundColor: isSelected ? '#E0F7F2' : colors.background,
               }}
             >

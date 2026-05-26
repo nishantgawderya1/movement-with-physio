@@ -69,7 +69,7 @@ export default function TreatmentHistoryScreen({ navigation }) {
                   padding: 22,
                   borderRadius: 18,
                   borderWidth: isSelected ? 2 : 1,
-                  borderColor: isSelected ? colors.primary : colors.cardBorder,
+                  borderColor: isSelected ? colors.primary : colors.border,
                   backgroundColor: isSelected ? '#E0F7F2' : colors.background,
                 }}
               >
@@ -119,7 +119,7 @@ export default function TreatmentHistoryScreen({ navigation }) {
             <TextInput
               style={styles.detailsInput}
               placeholder="e.g. 6 months of physiotherapy at a clinic"
-              placeholderTextColor={colors.placeholder}
+              placeholderTextColor={colors.textLight}
               value={details}
               onChangeText={setDetails}
               multiline
@@ -146,7 +146,7 @@ var styles = StyleSheet.create({
   },
   detailsInput: {
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
+    borderColor: colors.border,
     borderRadius: 10,
     padding: 14,
     fontSize: fonts.md,

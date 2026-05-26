@@ -360,7 +360,7 @@ var styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
   },
   modalOptionSelected: {

@@ -97,7 +97,7 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   ctaSection: {
     paddingHorizontal: 24,
     paddingBottom: 16,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
   },
   primaryBtn: {
     backgroundColor: colors.primary,

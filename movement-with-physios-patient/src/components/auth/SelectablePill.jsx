@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   },
   pillDefault: {
     backgroundColor: colors.background,
-    borderColor: colors.cardBorder,
+    borderColor: colors.border,
   },
   pillSelected: {
     backgroundColor: colors.primaryLight,

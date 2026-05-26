@@ -75,7 +75,7 @@ function AnimatedSheet(props) {
           value={reason}
           onChangeText={setReason}
           placeholder="I'm not available at this time..."
-          placeholderTextColor={colors.placeholder}
+          placeholderTextColor={colors.textLight}
           multiline
           maxLength={500}
           textAlignVertical="top"
@@ -180,7 +180,7 @@ var styles = StyleSheet.create({
     backgroundColor: colors.inputBg,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.inputBorder,
+    borderColor: colors.border,
     paddingHorizontal: 14,
     paddingTop: 12,
     paddingBottom: 12,
