@@ -3,38 +3,49 @@ import {
   TouchableOpacity, Text, ActivityIndicator, StyleSheet,
 } from 'react-native';
 import { colors } from '../constants/colors';
-import { fonts } from '../constants/fonts';
+import { fonts, fontFamilies } from '../constants/fonts';
 
 /**
  * AppButton — reusable CTA button
  * Props:
- *   title, onPress, loading (bool), variant ('primary' | 'outline')
+ *   title, onPress, loading (bool), variant ('primary' | 'outline' | 'pill')
  */
 const AppButton = ({
   title,
   onPress,
   loading = false,
   variant = 'primary',
-}) => (
-  <TouchableOpacity
-    style={[
-      styles.base,
-      variant === 'outline' ? styles.outline : styles.primary,
-      loading && styles.disabled,
-    ]}
-    onPress={onPress}
-    disabled={loading}
-    activeOpacity={0.8}
-  >
-    {loading ? (
-      <ActivityIndicator color={colors.white} size="small" />
-    ) : (
-      <Text style={[styles.label, variant === 'outline' && styles.outlineLabel]}>
-        {title}
-      </Text>
-    )}
-  </TouchableOpacity>
-);
+}) => {
+  const variantStyle =
+    variant === 'outline'
+      ? styles.outline
+      : variant === 'pill'
+      ? styles.pill
+      : styles.primary;
+
+  return (
+    <TouchableOpacity
+      style={[styles.base, variantStyle, loading && styles.disabled]}
+      onPress={onPress}
+      disabled={loading}
+      activeOpacity={0.8}
+    >
+      {loading ? (
+        <ActivityIndicator color={colors.white} size="small" />
+      ) : (
+        <Text
+          style={[
+            styles.label,
+            variant === 'outline' && styles.outlineLabel,
+            variant === 'pill' && styles.pillLabel,
+          ]}
+        >
+          {title}
+        </Text>
+      )}
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   base: {
@@ -58,6 +69,17 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   outlineLabel: { color: colors.primary },
+  pill: {
+    height: 54,
+    borderRadius: 30,
+    backgroundColor: colors.primary,
+  },
+  pillLabel: {
+    fontFamily: fontFamilies.dmSans.bold,
+    fontSize: 16,
+    letterSpacing: 0.3,
+    color: colors.white,
+  },
 });
 
 export default AppButton;
