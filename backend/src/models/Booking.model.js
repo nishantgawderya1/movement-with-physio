@@ -97,7 +97,7 @@ BookingSchema.plugin(softDeletePlugin);
 // Compound index: prevents duplicate slots for same therapist
 BookingSchema.index(
   { therapistId: 1, slotStart: 1, status: 1 },
-  { partialFilterExpression: { status: { $in: ['pending', 'confirmed'] }, isDeleted: false } }
+  { unique: true, partialFilterExpression: { status: { $in: ['pending', 'confirmed'] }, isDeleted: false } }
 );
 
 // Patient booking list
