@@ -1,19 +1,31 @@
 'use strict';
 
 const Joi = require('joi');
-const { MEETING_TYPE, INSTANT_DELAY_MINUTES } = require('../../core/utils/constants');
+const { toZonedTime, format } = require('date-fns-tz');
+const { MEETING_TYPE, INSTANT_DELAY_MINUTES, BOOKING_WINDOW_DAYS } = require('../../core/utils/constants');
 
 const IANA_TIMEZONE_PATTERN = /^[A-Za-z]+\/[A-Za-z_]+$/;
 
 const listSlotsSchema = Joi.object({
-  therapistId: Joi.string().required(),
+  therapistId: Joi.string().hex().length(24).required(),
   date: Joi.string()
     .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .required()
     .messages({ 'string.pattern.base': 'date must be YYYY-MM-DD' }),
   timezone: Joi.string().default('Asia/Kolkata'),
-  durationMinutes: Joi.number().valid(30, 60).default(60),
-});
+  durationMinutes: Joi.number().integer().optional(), // accepted, silently ignored (30-min fixed)
+}).custom((value, helpers) => {
+  // Reject dates beyond the forward booking window (BOOKING_WINDOW_DAYS from
+  // today inclusive), measured in IST (system default tz). Past dates pass —
+  // listSlots returns [] for them.
+  const tz = 'Asia/Kolkata';
+  const maxDate = new Date(Date.now() + (BOOKING_WINDOW_DAYS - 1) * 24 * 60 * 60 * 1000);
+  const maxStr = format(toZonedTime(maxDate, tz), 'yyyy-MM-dd', { timeZone: tz });
+  if (value.date && value.date > maxStr) {
+    return helpers.message(`date must be within ${BOOKING_WINDOW_DAYS} days from today`);
+  }
+  return value;
+}, 'booking window check');
 
 const createBookingSchema = Joi.object({
   therapistId: Joi.string().required(),

@@ -3,6 +3,7 @@
 const { fromZonedTime, toZonedTime, format } = require('date-fns-tz');
 const Booking = require('../../models/Booking.model');
 const User = require('../../models/User.model');
+const Availability = require('../../models/Availability.model');
 const Assessment = require('../../models/Assessment.model');
 const AssessmentQuestionTemplate = require('../../models/AssessmentQuestionTemplate.model');
 const VideoCall = require('../../models/VideoCall.model');
@@ -14,7 +15,7 @@ const {
   BOOKING_STATUS, NOTIFICATION_TYPES, REDIS_TTL,
   MEETING_TYPE, SCHEDULED_MODE, VIDEO_CALL_STATUS,
   ASSESSMENT_MODE, INSTANT_DELAY_MINUTES, INSTANT_REQUEST_TIMEOUT_MS,
-  JOB_NAMES, ROLES, BOOKING_WINDOW_DAYS,
+  JOB_NAMES, ROLES, BOOKING_WINDOW_DAYS, SLOT_DURATION_MINUTES, MIN_LEAD_TIME_MINUTES,
 } = require('../../core/utils/constants');
 const logger = require('../../core/utils/logger');
 
@@ -134,49 +135,104 @@ function toUTC(dateTimeStr, timezone) {
 }
 
 /**
- * List all available slots for a therapist on a given date.
- * Loads existing bookings for that date and subtracts them.
+ * Generate 30-min slot starts for a date against recurring weekly windows.
+ * Pure — no DB/IO. Slot starts returned in UTC, ascending.
+ *  - Past dates (relative to `now` in `timezone`) → [].
+ *  - Only windows whose dayOfWeek matches the date contribute.
+ *  - Starts run startMinute → endMinute - SLOT_DURATION_MINUTES (slots fit fully).
+ *  - For "today" in `timezone`, starts before now + MIN_LEAD_TIME_MINUTES are dropped.
  *
- * @param {string} therapistId
- * @param {string} date - "YYYY-MM-DD" in therapist's timezone
- * @param {string} timezone - IANA timezone
- * @param {number} [durationMinutes=60]
+ * @param {{ windows: Array<{dayOfWeek:number, startMinute:number, endMinute:number}>,
+ *           timezone: string, dateStr: string, now: Date }} params
+ * @returns {Date[]} slot starts in UTC
  */
-async function listSlots(therapistId, date, timezone = 'Asia/Kolkata', durationMinutes = 60) {
-  const cacheKey = `slots:${therapistId}:${date}`;
-  const cached = await cacheManager.get(cacheKey);
-  if (cached) return cached;
+function generateSlotsForDate({ windows, timezone, dateStr, now }) {
+  const todayStr = format(toZonedTime(now, timezone), 'yyyy-MM-dd', { timeZone: timezone });
+  if (dateStr < todayStr) return [];
 
-  // Define working hours: 9:00 - 18:00 in therapist's timezone
+  // Calendar weekday (0=Sun, matches JS getDay). Noon-UTC avoids tz date-shift.
+  const dayOfWeek = new Date(`${dateStr}T12:00:00.000Z`).getUTCDay();
+
   const slots = [];
-  for (let hour = 9; hour < 18; hour++) {
-    const zonedSlotStr = `${date}T${String(hour).padStart(2, '0')}:00:00`;
-    const utcSlot = toUTC(zonedSlotStr, timezone);
-    slots.push(utcSlot);
+  for (const w of windows) {
+    if (w.dayOfWeek !== dayOfWeek) continue;
+    for (let m = w.startMinute; m <= w.endMinute - SLOT_DURATION_MINUTES; m += SLOT_DURATION_MINUTES) {
+      const hh = String(Math.floor(m / 60)).padStart(2, '0');
+      const mm = String(m % 60).padStart(2, '0');
+      slots.push(fromZonedTime(`${dateStr}T${hh}:${mm}:00`, timezone));
+    }
+  }
+  slots.sort((a, b) => a.getTime() - b.getTime());
+
+  if (dateStr === todayStr) {
+    const cutoff = now.getTime() + MIN_LEAD_TIME_MINUTES * 60 * 1000;
+    return slots.filter((s) => s.getTime() >= cutoff);
+  }
+  return slots;
+}
+
+/**
+ * List bookable 30-min slots for a therapist on a given date. Public.
+ * Returns [] for every empty case (therapist missing / not a therapist /
+ * no Availability doc / no windows / no free slots / past date). The route
+ * validator guarantees a 24-hex therapistId + in-window YYYY-MM-DD date.
+ *
+ * Duration is fixed (SLOT_DURATION_MINUTES) and timezone is read from the
+ * Availability doc; the controller's legacy positional timezone/durationMinutes
+ * args are ignored. Cache key is unchanged (`slots:<therapistId>:<date>`) so
+ * step 2's invalidateSlotsCache keeps working. A final UTC-instant lead-time
+ * filter keeps cached entries correct as "now" advances within the TTL.
+ *
+ * @param {string} therapistId - Mongo User._id
+ * @param {string} date - "YYYY-MM-DD" in the therapist's timezone
+ * @returns {Promise<Array<{utc:string, local:string, available:boolean}>>}
+ */
+async function listSlots(therapistId, date) {
+  const cacheKey = `slots:${therapistId}:${date}`;
+  let available = await cacheManager.get(cacheKey);
+
+  if (!available) {
+    const therapist = await User.findOne({ _id: therapistId, role: 'therapist' }).select('_id').lean();
+    if (!therapist) return []; // don't cache — keep TTL pressure off bad input
+
+    const avail = await Availability.findOne({ therapistId }).lean();
+    if (!avail || !avail.windows || avail.windows.length === 0) {
+      await cacheManager.set(cacheKey, [], REDIS_TTL.SLOTS);
+      return [];
+    }
+
+    const tz = avail.timezone || 'Asia/Kolkata';
+    const rawSlots = generateSlotsForDate({ windows: avail.windows, timezone: tz, dateStr: date, now: new Date() });
+    if (rawSlots.length === 0) {
+      await cacheManager.set(cacheKey, [], REDIS_TTL.SLOTS);
+      return [];
+    }
+
+    // Subtract active bookings landing on any generated start.
+    const booked = await Booking.find({
+      therapistId,
+      slotStart: { $in: rawSlots },
+      status: { $in: [BOOKING_STATUS.PENDING, BOOKING_STATUS.CONFIRMED] },
+    })
+      .select('slotStart')
+      .lean();
+    const bookedTimes = new Set(booked.map((b) => new Date(b.slotStart).getTime()));
+
+    available = rawSlots
+      .filter((s) => !bookedTimes.has(s.getTime()))
+      .map((s) => ({
+        utc: s.toISOString(),
+        local: format(toZonedTime(s, tz), 'yyyy-MM-dd HH:mm', { timeZone: tz }),
+        available: true,
+      }));
+
+    await cacheManager.set(cacheKey, available, REDIS_TTL.SLOTS);
   }
 
-  // Find booked slots for that day
-  const dayStart = toUTC(`${date}T00:00:00`, timezone);
-  const dayEnd = toUTC(`${date}T23:59:59`, timezone);
-
-  const bookedSlots = await Booking.find({
-    therapistId,
-    slotStart: { $gte: dayStart, $lte: dayEnd },
-    status: { $in: [BOOKING_STATUS.PENDING, BOOKING_STATUS.CONFIRMED] },
-  })
-    .select('slotStart')
-    .lean();
-
-  const bookedTimes = new Set(bookedSlots.map((b) => new Date(b.slotStart).getTime()));
-
-  const available = slots.map((utcSlot) => ({
-    utc: utcSlot.toISOString(),
-    local: format(toZonedTime(utcSlot, timezone), 'yyyy-MM-dd HH:mm', { timeZone: timezone }),
-    available: !bookedTimes.has(utcSlot.getTime()),
-  }));
-
-  await cacheManager.set(cacheKey, available, REDIS_TTL.SLOTS);
-  return available;
+  // Lead-time guard on the final list — UTC-instant, tz-agnostic. Future dates
+  // are unaffected (far from now); empty/past lists are no-ops.
+  const cutoff = Date.now() + MIN_LEAD_TIME_MINUTES * 60 * 1000;
+  return available.filter((s) => new Date(s.utc).getTime() >= cutoff);
 }
 
 /**
@@ -739,6 +795,7 @@ async function declineInstantBooking({ bookingId, therapistId }) {
 
 module.exports = {
   listSlots,
+  generateSlotsForDate,
   invalidateSlotsCache,
   createBooking,
   getBooking,

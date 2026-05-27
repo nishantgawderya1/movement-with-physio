@@ -140,6 +140,7 @@ const INSTANT_REQUEST_TIMEOUT_MS = 5 * 60 * 1000;
 // ── Tier 4 — scheduled slot booking against published availability ──
 const SLOT_DURATION_MINUTES = 30;
 const BOOKING_WINDOW_DAYS = 7;
+const MIN_LEAD_TIME_MINUTES = 30;
 
 const JOB_NAMES = Object.freeze({
   SEND_NOTIFICATION: 'send_notification',
@@ -170,5 +171,6 @@ module.exports = {
   // Tier 4
   SLOT_DURATION_MINUTES,
   BOOKING_WINDOW_DAYS,
+  MIN_LEAD_TIME_MINUTES,
   JOB_NAMES,
 };
