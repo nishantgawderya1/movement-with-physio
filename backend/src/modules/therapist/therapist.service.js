@@ -156,9 +156,9 @@ async function getDashboard(clerkId) {
     Booking.find({
       therapistId: therapist._id,
       status: { $in: ['pending', 'confirmed'] },
-      'slot.start': { $gte: new Date() },
+      slotStart: { $gte: new Date() },
     })
-      .sort({ 'slot.start': 1 })
+      .sort({ slotStart: 1 })
       .limit(10)
       .populate('patientId', 'name')
       .lean(),
