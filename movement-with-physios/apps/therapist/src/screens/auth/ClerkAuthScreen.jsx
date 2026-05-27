@@ -38,7 +38,12 @@ export default function ClerkAuthScreen() {
 
   // Step-change transition: fade + small rise (~200ms).
   const stepAnim = useRef(new Animated.Value(1)).current;
+  const hasMountedRef = useRef(false);
   useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return; // skip animation on first mount; content renders at opacity 1
+    }
     stepAnim.setValue(0);
     Animated.timing(stepAnim, {
       toValue: 1,
