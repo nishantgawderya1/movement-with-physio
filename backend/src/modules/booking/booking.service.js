@@ -14,7 +14,7 @@ const {
   BOOKING_STATUS, NOTIFICATION_TYPES, REDIS_TTL,
   MEETING_TYPE, SCHEDULED_MODE, VIDEO_CALL_STATUS,
   ASSESSMENT_MODE, INSTANT_DELAY_MINUTES, INSTANT_REQUEST_TIMEOUT_MS,
-  JOB_NAMES, ROLES,
+  JOB_NAMES, ROLES, BOOKING_WINDOW_DAYS,
 } = require('../../core/utils/constants');
 const logger = require('../../core/utils/logger');
 
@@ -177,6 +177,24 @@ async function listSlots(therapistId, date, timezone = 'Asia/Kolkata', durationM
 
   await cacheManager.set(cacheKey, available, REDIS_TTL.SLOTS);
   return available;
+}
+
+/**
+ * Bust the per-day slots cache for a therapist across the booking window.
+ * Keyed by Mongo User._id to match the listSlots cache key. Best-effort:
+ * entries also self-expire via REDIS_TTL.SLOTS, and cacheManager.invalidate
+ * no-ops when Redis is unavailable.
+ *
+ * @param {string} therapistId - Mongo User._id (string)
+ * @param {string} [timezone='Asia/Kolkata'] - IANA tz the date keys are formatted in
+ */
+async function invalidateSlotsCache(therapistId, timezone = 'Asia/Kolkata') {
+  const now = new Date();
+  for (let i = 0; i < BOOKING_WINDOW_DAYS; i++) {
+    const day = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
+    const dateStr = format(toZonedTime(day, timezone), 'yyyy-MM-dd', { timeZone: timezone });
+    await cacheManager.invalidate(`slots:${therapistId}:${dateStr}`);
+  }
 }
 
 /**
@@ -721,6 +739,7 @@ async function declineInstantBooking({ bookingId, therapistId }) {
 
 module.exports = {
   listSlots,
+  invalidateSlotsCache,
   createBooking,
   getBooking,
   listBookings,

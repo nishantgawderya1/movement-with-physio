@@ -7,7 +7,7 @@ const rbac = require('../../core/middleware/rbac');
 const { defaultLimiter } = require('../../core/middleware/rateLimiter');
 const auditLog = require('../../core/middleware/auditLog');
 const validate = require('../../core/middleware/validate');
-const { updateProfile, listTherapists } = require('./therapist.validation');
+const { updateProfile, listTherapists, updateAvailability } = require('./therapist.validation');
 
 const router = Router();
 
@@ -77,6 +77,7 @@ router.put(
   '/me/availability',
   authMiddleware,
   rbac('therapist'),
+  validate(updateAvailability),
   auditLog('UPDATE_AVAILABILITY', 'therapist'),
   controller.updateAvailability
 );

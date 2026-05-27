@@ -2,8 +2,10 @@
 
 const User = require('../../models/User.model');
 const Booking = require('../../models/Booking.model');
+const Availability = require('../../models/Availability.model');
 const cacheManager = require('../../core/cache/cacheManager');
 const paginate = require('../../core/utils/paginator');
+const ApiError = require('../../core/utils/ApiError');
 const { REDIS_TTL } = require('../../core/utils/constants');
 const logger = require('../../core/utils/logger');
 
@@ -103,29 +105,40 @@ async function getClients(clerkId, { cursor, limit, includeAll } = {}) {
 }
 
 /**
- * Get therapist availability (stored as embedded field or separate collection).
- * For now returns from user profile.
+ * Get a therapist's recurring weekly availability. Resolves the Clerk
+ * identity to the Mongo therapist, then reads the Availability doc.
+ * Returns an empty-windows default when none exists yet.
  */
 async function getAvailability(clerkId) {
-  const therapist = await User.findOne({ clerkId, role: 'therapist' })
-    .select('availability')
-    .lean();
-  return therapist?.availability || { slots: [], timezone: 'Asia/Kolkata' };
+  const therapist = await User.findOne({ clerkId, role: 'therapist' }).select('_id').lean();
+  if (!therapist) return { windows: [], timezone: 'Asia/Kolkata' };
+
+  const doc = await Availability.findOne({ therapistId: therapist._id }).lean();
+  if (!doc) return { windows: [], timezone: 'Asia/Kolkata' };
+  return { windows: doc.windows, timezone: doc.timezone };
 }
 
 /**
- * Update therapist availability.
+ * Replace a therapist's recurring weekly availability (upsert, one doc per
+ * therapist). Busts the per-day slots cache across the booking window so the
+ * patient slot grid (step 3) reflects the change. Window shape + cross-window
+ * overlap are validated at the route boundary (see therapist.validation.js).
  */
-async function updateAvailability(clerkId, availabilityData) {
-  const user = await User.findOneAndUpdate(
-    { clerkId, role: 'therapist' },
-    { availability: availabilityData },
-    { new: true, runValidators: true }
+async function updateAvailability(clerkId, payload) {
+  const therapist = await User.findOne({ clerkId, role: 'therapist' }).select('_id').lean();
+  if (!therapist) throw new ApiError(404, 'Therapist not found');
+
+  const timezone = payload.timezone || 'Asia/Kolkata';
+  const doc = await Availability.findOneAndUpdate(
+    { therapistId: therapist._id },
+    { $set: { windows: payload.windows, timezone } },
+    { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
   ).lean();
-  if (user) {
-    await cacheManager.invalidate(`therapist:profile:${clerkId}`);
-  }
-  return user?.availability || availabilityData;
+
+  const { invalidateSlotsCache } = require('../booking/booking.service');
+  await invalidateSlotsCache(String(therapist._id), timezone);
+
+  return { windows: doc.windows, timezone: doc.timezone };
 }
 
 /**
