@@ -752,6 +752,10 @@ async function acceptInstantBooking({ bookingId, therapistId }) {
     },
   });
 
+  // Bust the slot cache so the freshly-confirmed slot disappears from the
+  // patient picker before the 5-min TTL expires.
+  await invalidateSlotsCache(String(booking.therapistId), booking.timezone || 'Asia/Kolkata');
+
   return { booking, videoCall, assessment };
 }
 
