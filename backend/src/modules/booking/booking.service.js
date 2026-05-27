@@ -520,6 +520,7 @@ async function cancelBooking(bookingId, actor, reason) {
   }
   // admin: bypass — can cancel any booking
 
+  const priorStatus = booking.status; // capture before the in-place mutation
   booking.status = BOOKING_STATUS.CANCELLED;
   booking.cancellationReason = reason || null;
   booking.cancelledAt = new Date();
@@ -548,6 +549,35 @@ async function cancelBooking(bookingId, actor, reason) {
   });
 
   logger.info({ event: 'BOOKING_CANCELLED', bookingId, cancelledBy: actor.role });
+
+  // Cancel→chat hook: only patient-cancels of confirmed bookings. Therapist
+  // already knows about their own cancels; non-confirmed cancels (instant_pending
+  // expiry, etc.) don't represent a lost confirmed session. Best-effort —
+  // the cancel is already saved and the patient push already queued, so a
+  // chat-emit failure must NOT roll back the cancellation.
+  if (actor.role === ROLES.PATIENT && priorStatus === BOOKING_STATUS.CONFIRMED) {
+    try {
+      const chat = require('../../container').container.chat;
+      const localTime = format(
+        toZonedTime(booking.slotStart, timezone),
+        'EEE, MMM d, h:mm a',
+        { timeZone: timezone }
+      );
+      const room = await chat.createRoom([booking.patientId, booking.therapistId]);
+      await chat.sendMessage(
+        room._id,
+        booking.patientId,
+        `Patient cancelled the appointment scheduled for ${localTime}.`,
+        { isSystemMessage: true, skipPush: true }
+      );
+    } catch (err) {
+      logger.warn('[cancelBooking] system message failed', {
+        bookingId: booking._id?.toString(),
+        err: err.message,
+      });
+    }
+  }
+
   return booking;
 }
 

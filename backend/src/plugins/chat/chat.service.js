@@ -106,7 +106,8 @@ class ChatService {
    * @param {string} text
    * @returns {Promise<Message>}
    */
-  async sendMessage(roomId, senderId, text) {
+  async sendMessage(roomId, senderId, text, options = {}) {
+    const { isSystemMessage = false, skipPush = false } = options;
     const room = await ChatRoom.findById(roomId);
     if (!room) {
       throw Object.assign(new Error('Chat room not found'), {
@@ -134,6 +135,7 @@ class ChatService {
       sender: senderId,
       text,
       sequenceNumber,
+      isSystemMessage,
     });
 
     // Update room last message info
@@ -163,19 +165,24 @@ class ChatService {
     // attached to a malicious-URL preview yields disproportionate phishing
     // success. See S-followup-11 (mirrors S-followup-6's booking cancellation
     // fix, commit a2c29b2).
-    const sender = await User.findById(senderId).select('name').lean();
-    const senderName = sanitizeDisplayName(sender?.name, { maxLength: 50 });
-    const pushBody = senderName ? `New message from ${senderName}` : 'New message';
+    //
+    // skipPush lets a programmatic caller (e.g. the cancel→chat system message)
+    // suppress this when a richer, purpose-built push has already been sent.
+    if (!skipPush) {
+      const sender = await User.findById(senderId).select('name').lean();
+      const senderName = sanitizeDisplayName(sender?.name, { maxLength: 50 });
+      const pushBody = senderName ? `New message from ${senderName}` : 'New message';
 
-    const otherParticipants = room.participants.filter(p => p.toString() !== senderId.toString());
-    for (const participantId of otherParticipants) {
-      await addJob('send_notification', {
-        userId: participantId,
-        title: 'New Message',
-        body: pushBody,
-        type: NOTIFICATION_TYPES.NEW_MESSAGE,
-        data: { roomId: roomId.toString() },
-      });
+      const otherParticipants = room.participants.filter(p => p.toString() !== senderId.toString());
+      for (const participantId of otherParticipants) {
+        await addJob('send_notification', {
+          userId: participantId,
+          title: 'New Message',
+          body: pushBody,
+          type: NOTIFICATION_TYPES.NEW_MESSAGE,
+          data: { roomId: roomId.toString() },
+        });
+      }
     }
 
     return message;
