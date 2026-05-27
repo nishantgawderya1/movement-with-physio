@@ -4,6 +4,7 @@ import { useAuth, useClerk } from '@clerk/clerk-expo';
 import { tokenProvider } from './tokenProvider';
 import { apiClient } from './apiClient';
 import { chatSocket } from './chatSocket';
+import { registerPushToken } from '../services/notificationService';
 
 /**
  * Wait until tokenProvider.getToken() resolves to a non-null value, or
@@ -102,6 +103,24 @@ export default function ClerkTokenBridge() {
         }
         // Open chat socket once we know who we are.
         chatSocket.connect();
+
+        // Register the device's Expo push token with the backend
+        // (PATCH /users/me/fcm-token, endpoint from P1.1 c8898e7). For
+        // new users this fires immediately after onboarding completes
+        // because OnboardingCompleteScreen activates the Clerk session
+        // via setActive(), which flips isSignedIn=true and runs this
+        // very effect — satisfying the locked decision "request
+        // permission only after onboarding completes" without a
+        // separate hook. Fire-and-forget — a failure here (no
+        // permission, simulator, no APNs entitlement until prebuild
+        // lands) must NOT block sign-in. Backend diff-writes on
+        // no-change so cold-start re-registration is cheap.
+        registerPushToken().then(function (r) {
+          if (!r.success) {
+            // eslint-disable-next-line no-console
+            console.warn('[ClerkTokenBridge] registerPushToken failed:', r.error);
+          }
+        });
       })();
     } else {
       tokenProvider.setSignedIn(false);

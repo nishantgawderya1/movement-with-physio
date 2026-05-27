@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   Modal,
   Pressable,
-  Alert,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +17,7 @@ import { PATIENT_ROUTES } from '../../constants/routes';
 import { chatService } from '../../services/chatService';
 import TabScreenWrapper from '../../components/navigation/TabScreenWrapper';
 import ConversationRow from '../../components/chat/ConversationRow';
+import InlineBanner from '../../components/common/InlineBanner';
 
 /**
  * Messages screen — WhatsApp-style conversation list.
@@ -32,6 +32,7 @@ export default function MessagesScreen({ navigation }) {
   var [pickerOpen, setPickerOpen] = useState(false);
   var [therapists, setTherapists] = useState([]);
   var [therapistsLoading, setTherapistsLoading] = useState(false);
+  var [banner, setBanner] = useState({ visible: false, message: '', variant: 'error' });
 
   var loadConversations = useCallback(function () {
     chatService.getConversations().then(function (result) {
@@ -55,7 +56,7 @@ export default function MessagesScreen({ navigation }) {
       if (result.success) {
         setTherapists(result.data);
       } else {
-        Alert.alert('Could not load therapists', result.error || 'Try again');
+        setBanner({ visible: true, message: result.error || 'Could not load therapists. Try again.', variant: 'error' });
       }
       setTherapistsLoading(false);
     });
@@ -69,7 +70,7 @@ export default function MessagesScreen({ navigation }) {
     setPickerOpen(false);
     var res = await chatService.createRoom(therapist.id);
     if (!res.success) {
-      Alert.alert('Could not start chat', res.error || 'Try again');
+      setBanner({ visible: true, message: res.error || 'Could not start chat. Try again.', variant: 'error' });
       return;
     }
     navigation.navigate(PATIENT_ROUTES.CHAT_ROOM, {
@@ -156,6 +157,12 @@ export default function MessagesScreen({ navigation }) {
   return (
     <TabScreenWrapper tabIndex={2}>
       <SafeAreaView style={styles.safe}>
+        <InlineBanner
+          visible={banner.visible}
+          message={banner.message}
+          variant={banner.variant}
+          onDismiss={() => setBanner((b) => ({ ...b, visible: false }))}
+        />
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Messages</Text>

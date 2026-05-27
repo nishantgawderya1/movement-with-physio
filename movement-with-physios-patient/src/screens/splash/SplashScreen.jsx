@@ -36,13 +36,13 @@ export default function SplashScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
   tagline: {
     fontSize: fonts.sm,
-    color: colors.placeholder,
+    color: colors.textLight,
     letterSpacing: 2,
     marginBottom: 6,
     textTransform: 'lowercase',

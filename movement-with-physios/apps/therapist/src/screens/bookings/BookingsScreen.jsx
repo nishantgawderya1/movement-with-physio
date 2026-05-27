@@ -23,13 +23,17 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { ROUTES } from '../../constants/routes';
 import BottomTabBar from '../../components/BottomTabBar';
 import BodyPartBadge from '../../components/video/BodyPartBadge';
+import ProposalRow from '../../components/proposals/ProposalRow';
+import ProposalDetailSheet from '../../components/proposals/ProposalDetailSheet';
 import { listBookings } from '../../services/bookingService';
+import { listProposals } from '../../services/proposalService';
 
 var UPCOMING_STATUSES = ['confirmed', 'instant_pending', 'pending'];
 var PAST_STATUSES = ['completed', 'cancelled', 'instant_declined'];
@@ -130,6 +134,12 @@ export default function BookingsScreen({ navigation }) {
   var [refreshing, setRefreshing] = useState(false);
   var [error, setError] = useState(null);
 
+  // P3.5 — outgoing proposals (pending + declined-within-24h, surfaced
+  // above the bookings list on the Upcoming tab only).
+  var [proposals, setProposals] = useState([]);
+  var [proposalsError, setProposalsError] = useState(null);
+  var [detailSheet, setDetailSheet] = useState({ open: false, proposal: null });
+
   var load = useCallback(async function () {
     setError(null);
     var statuses = tab === 'upcoming' ? UPCOMING_STATUSES : PAST_STATUSES;
@@ -160,6 +170,38 @@ export default function BookingsScreen({ navigation }) {
     return unsub;
   }, [load, navigation]);
 
+  // P3.5 — load outgoing proposals. Backend returns the role-aware union
+  // (own pending + own declined-within-24h) without a status filter.
+  // Sort: pending first by slotStart asc (soonest upcoming first), then
+  // declined by respondedAt desc (freshest decline first).
+  var loadProposals = useCallback(function () {
+    setProposalsError(null);
+    listProposals().then(function (resp) {
+      if (resp.success) {
+        var list = (resp.data || []).slice().sort(function (a, b) {
+          var ap = a.status === 'pending' ? 0 : 1;
+          var bp = b.status === 'pending' ? 0 : 1;
+          if (ap !== bp) return ap - bp;
+          if (ap === 0) {
+            return new Date(a.slotStart || 0).getTime() - new Date(b.slotStart || 0).getTime();
+          }
+          return new Date(b.respondedAt || 0).getTime() - new Date(a.respondedAt || 0).getTime();
+        });
+        setProposals(list);
+      } else {
+        setProposalsError(resp.error || 'Failed to load proposals');
+      }
+    });
+  }, []);
+
+  // Refresh on every screen focus — so a just-sent proposal from
+  // ProposeSessionScreen (P3.4) appears immediately on return, and a
+  // patient response that landed via push while we were elsewhere is
+  // reflected here too.
+  useFocusEffect(useCallback(function () {
+    loadProposals();
+  }, [loadProposals]));
+
   function onTabPress(tabId) {
     if (tabId === 'home') navigation.navigate(ROUTES.DASHBOARD);
     else if (tabId === 'clients') navigation.navigate(ROUTES.CLIENTS);
@@ -184,6 +226,17 @@ export default function BookingsScreen({ navigation }) {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Bookings</Text>
+        <View style={{ flex: 1 }} />
+        {/* P3.4 — propose-session entry point. Mirrors the new-chat
+            button pattern from MessagesScreen.jsx:122-124. */}
+        <TouchableOpacity
+          style={styles.proposeBtn}
+          onPress={function () { navigation.navigate(ROUTES.PROPOSE_SESSION); }}
+          activeOpacity={0.7}
+          accessibilityLabel="Propose a session"
+        >
+          <Ionicons name="add" size={22} color={colors.primary} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.tabsRow}>
@@ -202,6 +255,41 @@ export default function BookingsScreen({ navigation }) {
           );
         })}
       </View>
+
+      {/* P3.5 — Pending + declined proposals section. Renders only on the
+          Upcoming tab AND only when there's at least one proposal to show
+          (hidden entirely otherwise — keeps the bookings list visually
+          unburdened when there's nothing to act on). */}
+      {tab === 'upcoming' && proposals.length > 0 ? (
+        <View style={styles.proposalsSection}>
+          <View style={styles.proposalsHeaderRow}>
+            <Text style={styles.proposalsHeader}>Proposals</Text>
+            <View style={styles.countPill}>
+              <Text style={styles.countPillText}>{proposals.length}</Text>
+            </View>
+          </View>
+          <View style={{ gap: 10 }}>
+            {proposals.map(function (p) {
+              return (
+                <ProposalRow
+                  key={String(p._id)}
+                  proposal={p}
+                  onPress={function (proposal) {
+                    setDetailSheet({ open: true, proposal: proposal });
+                  }}
+                />
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
+
+      {tab === 'upcoming' && proposalsError ? (
+        <View style={styles.errorBanner}>
+          <Ionicons name="alert-circle-outline" size={15} color="#C53030" />
+          <Text style={styles.errorBannerText}>{proposalsError}</Text>
+        </View>
+      ) : null}
 
       {loading ? (
         <View style={styles.centered}>
@@ -242,6 +330,22 @@ export default function BookingsScreen({ navigation }) {
       )}
 
       <BottomTabBar activeTab="calendar" onTabPress={onTabPress} />
+
+      <ProposalDetailSheet
+        isOpen={detailSheet.open}
+        proposal={detailSheet.proposal}
+        onClose={function () { setDetailSheet({ open: false, proposal: null }); }}
+        onCancelled={function () {
+          // Optimistic local removal — avoid a refetch round-trip. The
+          // next focus event (e.g. tab switch) will reconcile via
+          // loadProposals().
+          var cancelledId = detailSheet.proposal && String(detailSheet.proposal._id);
+          setProposals(function (curr) {
+            return curr.filter(function (p) { return String(p._id) !== cancelledId; });
+          });
+          setDetailSheet({ open: false, proposal: null });
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -249,9 +353,18 @@ export default function BookingsScreen({ navigation }) {
 var styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 18, paddingTop: 18, paddingBottom: 8,
   },
   headerTitle: { fontSize: fonts.xxl, color: colors.textDark, fontWeight: fonts.bold },
+  // P3.4 — header right "+" button (propose session)
+  proposeBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.background,
+    borderWidth: 1, borderColor: colors.cardBorder,
+  },
 
   tabsRow: {
     flexDirection: 'row',
@@ -302,4 +415,48 @@ var styles = StyleSheet.create({
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   emptyText: { fontSize: fonts.sm, color: colors.textMedium },
   errorText: { fontSize: fonts.sm, color: colors.error },
+
+  // P3.5 — proposals section above the bookings list (Upcoming tab only)
+  proposalsSection: {
+    paddingHorizontal: 18,
+    paddingBottom: 14,
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.cardBorder,
+  },
+  proposalsHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4, marginBottom: 10,
+  },
+  proposalsHeader: {
+    fontSize: fonts.md,
+    fontWeight: fonts.semibold,
+    color: colors.textDark,
+  },
+  countPill: {
+    minWidth: 22, height: 22, borderRadius: 11,
+    paddingHorizontal: 6,
+    backgroundColor: colors.primary,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  countPillText: {
+    fontSize: fonts.xs,
+    fontWeight: fonts.bold,
+    color: colors.white,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: '#FEE2E2',
+    borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 10,
+    marginHorizontal: 18,
+    marginBottom: 10,
+  },
+  errorBannerText: {
+    flex: 1, fontSize: fonts.sm, color: '#C53030', lineHeight: 18,
+  },
 });

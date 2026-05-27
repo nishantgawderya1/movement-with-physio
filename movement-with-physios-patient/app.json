@@ -16,7 +16,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.mwp.patient",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": ["audio", "remote-notification"]
       }
     },
     "android": {
@@ -40,6 +40,7 @@
     "sdkVersion": "54.0.0",
     "plugins": [
       "expo-font",
+      "expo-notifications",
       "expo-dev-client",
       [
         "@config-plugins/react-native-webrtc",

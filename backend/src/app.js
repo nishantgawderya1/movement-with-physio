@@ -24,6 +24,7 @@ const therapistRoutes = require('./modules/therapist/therapist.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
 const bookingRoutes = require('./modules/booking/booking.routes');
 const assessmentRoutes = require('./modules/assessment/assessment.routes');
+const usersRoutes = require('./modules/users/users.routes');
 
 const PluginManager = require('./core/plugins/PluginManager');
 
@@ -182,6 +183,7 @@ function createApp(container) {
   app.use('/api/v1/admin', adminRoutes);
   app.use('/api/v1/bookings', bookingRoutes);
   app.use('/api/v1/assessments', assessmentRoutes);
+  app.use('/api/v1/users', usersRoutes);
 
   // ── Plugin auto-discovery ────────────────────────────────────
   // Routes are registered later via pluginManager.registerAll() in server.js

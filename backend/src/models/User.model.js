@@ -23,6 +23,11 @@ const UserSchema = new mongoose.Schema(
       default: ROLES.PATIENT,
       index: true,
     },
+    // Single-token storage. Multi-device push (fcmTokens array) is tracked
+    // as a separate followup — would touch notificationWorker, dataPrivacyService,
+    // and every push path. Out of scope for proposals MVP.
+    // Plaintext (consistent with clerkId severity class). See Phase 3A
+    // encryption policy: only `phone` is encrypted via fieldCryptoPlugin below.
     fcmToken: { type: String, default: null },
 
     // Therapist-specific fields (null for patients/admins)

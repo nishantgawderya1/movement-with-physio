@@ -15,13 +15,11 @@ import {
   Keyboard,
   Platform,
   Animated,
-  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { fonts, fontFamilies } from '../../constants/fonts';
-import { ROUTES } from '../../constants/routes';
 
 import MessageBubble from '../../components/chat/MessageBubble';
 import ComposerBar from '../../components/chat/ComposerBar';
@@ -31,7 +29,6 @@ import ReactionPicker from '../../components/chat/ReactionPicker';
 import QuickRepliesSheet from '../../components/chat/QuickRepliesSheet';
 import ExerciseSelectModal from '../../components/chat/ExerciseSelectModal';
 import { chatService } from '../../services/chatService';
-import { listBookings } from '../../services/bookingService';
 
 // ── Unique ID helper (for local-only message types) ─────────────────────────
 let _id = 100;
@@ -145,10 +142,6 @@ const ChatScreen = ({ navigation, route }) => {
   const [reactionTarget, setReactionTarget] = useState(null); // message id
   const [quickRepliesOpen, setQuickRepliesOpen] = useState(false);
   const [exerciseModalOpen, setExerciseModalOpen] = useState(false);
-  // Smart video button: probe for a confirmed video booking with this patient
-  // within ±30 min of now. Drives both the icon style and the tap behavior.
-  const [upcomingVideoBooking, setUpcomingVideoBooking] = useState(null);
-  const [bookingsChecked, setBookingsChecked] = useState(false);
 
   const flatListRef = useRef(null);
   const typingTimerRef = useRef(null);
@@ -213,38 +206,6 @@ const ChatScreen = ({ navigation, route }) => {
 
     return () => { show.remove(); hide.remove(); };
   }, []);
-
-  // ── Smart video button: probe for an eligible confirmed video booking ────
-  //    with this patient (±30 min window). Mirrors the patient app's
-  //    ChatRoom smart-button pattern. No-ops on the legacy-mock conv
-  //    (no clientId) so it sits dim instead of hammering the API.
-  useEffect(() => {
-    const clientId = conv && conv.clientId;
-    if (!clientId) { setBookingsChecked(true); return; }
-    let cancelled = false;
-    listBookings({ status: 'confirmed', meetingType: 'video', limit: 20 }).then((res) => {
-      if (cancelled) return;
-      if (!res.success || !Array.isArray(res.data)) {
-        setBookingsChecked(true);
-        return;
-      }
-      const nowMs = Date.now();
-      const windowMs = 30 * 60 * 1000;
-      const match = res.data.find((b) => {
-        if (!b || b.meetingType !== 'video') return false;
-        // patientId arrives as a populated user doc OR a raw ObjectId string
-        // depending on backend response shape — handle both.
-        const pid = (b.patientId && b.patientId._id) ? b.patientId._id : b.patientId;
-        if (String(pid) !== String(clientId)) return false;
-        if (!b.slotStart || !b.videoCallId) return false;
-        const diff = new Date(b.slotStart).getTime() - nowMs;
-        return diff > -windowMs && diff < windowMs;
-      });
-      setUpcomingVideoBooking(match || null);
-      setBookingsChecked(true);
-    });
-    return () => { cancelled = true; };
-  }, [conv && conv.clientId]);
 
   // ── Send a text/image message ──────────────────────────────────────────────
   const handleSend = useCallback(() => {
@@ -397,21 +358,6 @@ const ChatScreen = ({ navigation, route }) => {
     }, 100);
   }, []);
 
-  // ── Video button tap handler ──────────────────────────────────────────────
-  const handleVideoPress = useCallback(() => {
-    if (upcomingVideoBooking) {
-      navigation.navigate(ROUTES.PRE_CALL_LOBBY, {
-        callId: String(upcomingVideoBooking.videoCallId),
-        bookingId: String(upcomingVideoBooking._id),
-      });
-      return;
-    }
-    Alert.alert(
-      'No upcoming video session',
-      'No active video session with this patient. Schedule one via the Bookings tab.',
-    );
-  }, [upcomingVideoBooking, navigation]);
-
   // ── React to a message ────────────────────────────────────────────────────
   const handleReact = useCallback((messageId, emoji) => {
     setMessages((prev) =>
@@ -499,22 +445,6 @@ const ChatScreen = ({ navigation, route }) => {
           </Text>
         </View>
 
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={[
-              styles.headerActionBtn,
-              bookingsChecked && !upcomingVideoBooking && styles.headerActionBtnDim,
-            ]}
-            activeOpacity={0.7}
-            onPress={handleVideoPress}
-          >
-            <Ionicons
-              name={upcomingVideoBooking ? 'videocam' : 'videocam-outline'}
-              size={20}
-              color={upcomingVideoBooking ? colors.primary : colors.textDark}
-            />
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* ── Chat Body ────────────────────────────────────────────── */}
@@ -672,22 +602,6 @@ const styles = StyleSheet.create({
     fontSize: fonts.xs,
     color: colors.textLight,
   },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  headerActionBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-  },
-  headerActionBtnDim: { opacity: 0.6 },
-
   messageList: {
     paddingHorizontal: 0,
     paddingVertical: 12,

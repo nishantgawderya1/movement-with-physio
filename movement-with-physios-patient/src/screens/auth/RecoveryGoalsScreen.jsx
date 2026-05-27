@@ -82,8 +82,8 @@ export default function RecoveryGoalsScreen({ navigation }) {
                 padding: 18,
                 borderRadius: 16,
                 borderWidth: isSelected ? 2 : 1,
-                borderColor: isSelected ? colors.primary : colors.cardBorder,
-                backgroundColor: isSelected ? '#E0F7F2' : colors.white,
+                borderColor: isSelected ? colors.primary : colors.border,
+                backgroundColor: isSelected ? '#E0F7F2' : colors.background,
                 alignItems: 'center',
                 gap: 10,
               }}
@@ -99,7 +99,7 @@ export default function RecoveryGoalsScreen({ navigation }) {
                 <Ionicons
                   name={GOAL_ICONS[index]}
                   size={24}
-                  color={isSelected ? colors.white : colors.textLight}
+                  color={isSelected ? colors.textOnPrimary : colors.textLight}
                 />
               </View>
               <Text style={{

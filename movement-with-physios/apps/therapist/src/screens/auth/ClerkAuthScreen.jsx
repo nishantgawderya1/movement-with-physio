@@ -1,19 +1,14 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, Pressable, Animated, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { apiClient } from '../../lib/apiClient';
+import { colors } from '../../constants/colors';
+import { fonts, fontFamilies } from '../../constants/fonts';
+import ScreenContainer from '../../components/ScreenContainer';
+import InputField from '../../components/InputField';
+import AppButton from '../../components/AppButton';
+import InlineBanner from '../../components/InlineBanner';
 
 /**
  * ClerkAuthScreen — Email OTP for therapist app.
@@ -34,11 +29,32 @@ export default function ClerkAuthScreen() {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [flow, setFlow] = useState(null);       // 'signIn' | 'signUp'
+  const [banner, setBanner] = useState({ visible: false, message: '', variant: 'error' });
 
   const isReady = signInLoaded && signUpLoaded;
 
   /* Routing on auth state is handled by AppNavigator (it swaps to AppStack
      whenever isSignedIn becomes true). No imperative redirect needed here. */
+
+  // Step-change transition: fade + small rise (~200ms).
+  const stepAnim = useRef(new Animated.Value(1)).current;
+  const hasMountedRef = useRef(false);
+  useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return; // skip animation on first mount; content renders at opacity 1
+    }
+    stepAnim.setValue(0);
+    Animated.timing(stepAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [step]);
+
+  function dismissBanner() {
+    setBanner((b) => ({ ...b, visible: false }));
+  }
 
   /* ── Step 1: Send email OTP ──────────────────────────────── */
   async function handleSendOTP() {
@@ -54,11 +70,13 @@ export default function ClerkAuthScreen() {
         expectedRole: 'therapist',
       });
       if (status.success && status.data && status.data.ok === false) {
-        Alert.alert(
-          'Wrong app for this email',
-          `This email is registered as a ${status.data.conflictRole}. ` +
-            'Use the patient app to sign in, or use a different email here.'
-        );
+        setBanner({
+          visible: true,
+          variant: 'error',
+          message:
+            `This email is registered as a ${status.data.conflictRole}. ` +
+            'Use the patient app to sign in, or use a different email here.',
+        });
         setLoading(false);
         return;
       }
@@ -97,10 +115,18 @@ export default function ClerkAuthScreen() {
           setFlow('signUp');
           setStep('otp');
         } catch (signUpErr) {
-          Alert.alert('Error', signUpErr?.errors?.[0]?.longMessage || signUpErr.message);
+          setBanner({
+            visible: true,
+            variant: 'error',
+            message: signUpErr?.errors?.[0]?.longMessage || signUpErr.message,
+          });
         }
       } else {
-        Alert.alert('Error', err?.errors?.[0]?.longMessage || err.message);
+        setBanner({
+          visible: true,
+          variant: 'error',
+          message: err?.errors?.[0]?.longMessage || err.message,
+        });
       }
     } finally {
       setLoading(false);
@@ -122,7 +148,11 @@ export default function ClerkAuthScreen() {
           // swaps to AppStack automatically. No imperative navigation.
           await setSignInActive({ session: result.createdSessionId });
         } else {
-          Alert.alert('Incomplete', `Status: ${result.status}. Please try again.`);
+          setBanner({
+            visible: true,
+            variant: 'error',
+            message: `Status: ${result.status}. Please try again.`,
+          });
         }
       } else {
         const result = await signUp.attemptEmailAddressVerification({ code: otp });
@@ -131,197 +161,152 @@ export default function ClerkAuthScreen() {
           // AppStack lands new users on Dashboard. They can complete
           // PersonalInfo from there until we add an onboarding gate.
         } else {
-          Alert.alert('Incomplete', `Status: ${result.status}. Please try again.`);
+          setBanner({
+            visible: true,
+            variant: 'error',
+            message: `Status: ${result.status}. Please try again.`,
+          });
         }
       }
     } catch (err) {
-      Alert.alert('Invalid Code', err?.errors?.[0]?.longMessage || err.message);
+      setBanner({
+        visible: true,
+        variant: 'error',
+        message: err?.errors?.[0]?.longMessage || err.message,
+      });
     } finally {
       setLoading(false);
     }
   }
 
   /* ── UI ──────────────────────────────────────────────────── */
+  const heroTitle = step === 'email' ? 'Welcome to MWP' : 'Verify your email';
+  const heroSubtitle =
+    step === 'email'
+      ? "Enter your work email and we'll send a 6-digit code to sign you in."
+      : `We sent a 6-digit code to ${email}. Enter it below to continue.`;
+
+  const stepContentStyle = {
+    opacity: stepAnim,
+    transform: [
+      { translateY: stepAnim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) },
+    ],
+  };
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.flex}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.badge}>THERAPIST PORTAL</Text>
-            <Text style={styles.title}>
-              {step === 'email' ? 'Sign in to your account' : 'Enter verification code'}
-            </Text>
-            <Text style={styles.subtitle}>
-              {step === 'email'
-                ? 'Enter your email to receive a one-time code'
-                : `We sent a 6-digit code to\n${email}`}
-            </Text>
-          </View>
+    <View style={styles.root}>
+      <InlineBanner
+        visible={banner.visible}
+        message={banner.message}
+        variant={banner.variant}
+        onDismiss={dismissBanner}
+      />
 
-          {/* Card */}
-          <View style={styles.card}>
-            {step === 'email' ? (
-              <>
-                <Text style={styles.label}>Email address</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="you@clinic.com"
-                  placeholderTextColor="#94A3B8"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  value={email}
-                  onChangeText={setEmail}
-                  autoFocus
-                />
-                <Pressable
-                  style={[styles.btn, (!email.trim() || loading) && styles.btnDisabled]}
-                  onPress={handleSendOTP}
-                  disabled={!email.trim() || loading}
-                >
-                  {loading
-                    ? <ActivityIndicator color="#fff" />
-                    : <Text style={styles.btnText}>Send Code →</Text>}
-                </Pressable>
-              </>
-            ) : (
-              <>
-                <Text style={styles.label}>6-digit code</Text>
-                <TextInput
-                  style={[styles.input, styles.otpInput]}
-                  placeholder="••••••"
-                  placeholderTextColor="#94A3B8"
-                  keyboardType="number-pad"
-                  value={otp}
-                  onChangeText={setOtp}
-                  maxLength={6}
-                  autoFocus
-                />
-                <Pressable
-                  style={[styles.btn, (!otp.trim() || loading) && styles.btnDisabled]}
-                  onPress={handleVerifyOTP}
-                  disabled={!otp.trim() || loading}
-                >
-                  {loading
-                    ? <ActivityIndicator color="#fff" />
-                    : <Text style={styles.btnText}>Verify & Continue</Text>}
-                </Pressable>
+      <ScreenContainer style={styles.scrollContent}>
+        <Text style={styles.stepIndicator}>
+          {step === 'email' ? 'Step 1 of 2' : 'Step 2 of 2'}
+        </Text>
 
-                <Pressable
-                  style={styles.backBtn}
-                  onPress={() => { setStep('email'); setOtp(''); }}
-                >
-                  <Text style={styles.backText}>← Change email</Text>
-                </Pressable>
-              </>
-            )}
-          </View>
+        <Animated.View style={stepContentStyle}>
+          <Ionicons
+            name="medkit-outline"
+            size={32}
+            color="rgba(26, 92, 74, 0.4)"
+            style={styles.heroIcon}
+          />
+          <Text style={styles.hero}>{heroTitle}</Text>
+          <Text style={styles.subtitle}>{heroSubtitle}</Text>
 
-          {__DEV__ && (
-            <Text style={styles.devNote}>
-              ℹ️  Dev: Use your real email. Code arrives in ~5 seconds.
-            </Text>
+          {step === 'email' ? (
+            <>
+              <InputField
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="you@clinic.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoFocus
+              />
+              <AppButton
+                variant="pill"
+                title="Continue"
+                onPress={handleSendOTP}
+                loading={loading}
+                disabled={!email.trim() || loading}
+              />
+            </>
+          ) : (
+            <>
+              <InputField
+                label="Verification code"
+                value={otp}
+                onChangeText={setOtp}
+                placeholder="••••••"
+                keyboardType="number-pad"
+                maxLength={6}
+                autoFocus
+                inputStyle={styles.otpInput}
+              />
+              <AppButton
+                variant="pill"
+                title="Continue"
+                onPress={handleVerifyOTP}
+                loading={loading}
+                disabled={!otp.trim() || loading}
+              />
+              <Pressable
+                style={styles.changeEmail}
+                onPress={() => {
+                  setStep('email');
+                  setOtp('');
+                }}
+              >
+                <Text style={styles.changeEmailText}>← Change email</Text>
+              </Pressable>
+            </>
           )}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </Animated.View>
+      </ScreenContainer>
+    </View>
   );
 }
 
-const PRIMARY = '#1E3A5F';
-const ACCENT = '#2563EB';
-
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F8FAFC' },
-  flex: { flex: 1 },
-  scroll: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 40,
+  root: { flex: 1, backgroundColor: colors.background },
+  scrollContent: { justifyContent: 'center', paddingVertical: 40 },
+  stepIndicator: {
+    fontFamily: fontFamilies.dmSans.medium,
+    fontSize: 12,
+    color: colors.textLight,
+    letterSpacing: 0.5,
+    marginBottom: 20,
   },
-  header: { alignItems: 'center', marginBottom: 32 },
-  badge: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.6,
-    color: ACCENT,
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginBottom: 16,
-    overflow: 'hidden',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: PRIMARY,
-    textAlign: 'center',
-    marginBottom: 8,
+  heroIcon: { marginBottom: 16 },
+  hero: {
+    fontFamily: fontFamilies.instrumentSerif,
+    fontSize: fonts.xxxl,
+    lineHeight: fonts.xxxl * 1.2,
+    color: colors.textDark,
+    marginBottom: 10,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1.5,
-    borderColor: '#CBD5E1',
-    borderRadius: 10,
-    height: 52,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#0F172A',
-    marginBottom: 16,
-    backgroundColor: '#F8FAFC',
+    fontFamily: fontFamilies.dmSans.regular,
+    fontSize: fonts.md,
+    lineHeight: fonts.md * 1.5,
+    color: colors.textMedium,
+    marginBottom: 28,
   },
   otpInput: {
     letterSpacing: 8,
     textAlign: 'center',
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: fonts.xl,
   },
-  btn: {
-    backgroundColor: ACCENT,
-    borderRadius: 10,
-    height: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  btnDisabled: { opacity: 0.45 },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  backBtn: { alignItems: 'center', marginTop: 16 },
-  backText: { color: ACCENT, fontSize: 14, fontWeight: '500' },
-  devNote: {
-    textAlign: 'center',
-    marginTop: 24,
-    fontSize: 12,
-    color: '#94A3B8',
+  changeEmail: { alignItems: 'center', marginTop: 18 },
+  changeEmailText: {
+    fontFamily: fontFamilies.dmSans.semibold,
+    fontSize: 14,
+    color: colors.primary,
   },
 });

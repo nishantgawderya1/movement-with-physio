@@ -8,7 +8,11 @@ import { fonts } from '../constants/fonts';
  * Props:
  *   label, value, onChangeText, placeholder,
  *   secureTextEntry, rightIcon, onRightIconPress,
- *   errorMessage, keyboardType
+ *   errorMessage, keyboardType,
+ *   maxLength, autoFocus, autoCapitalize, inputStyle
+ *
+ * The last four are pass-through with NO defaults — when omitted, the
+ * underlying TextInput keeps its native default behavior.
  */
 const InputField = ({
   label,
@@ -20,6 +24,11 @@ const InputField = ({
   onRightIconPress,
   errorMessage,
   keyboardType = 'default',
+  maxLength,
+  autoFocus,
+  autoCapitalize,
+  autoComplete,
+  inputStyle,
 }) => {
   return (
     <View style={styles.container}>
@@ -27,15 +36,18 @@ const InputField = ({
 
       <View style={[styles.inputRow, errorMessage ? styles.inputError : styles.inputNormal]}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, inputStyle]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
           placeholderTextColor={colors.placeholder}
           secureTextEntry={secureTextEntry}
           keyboardType={keyboardType}
-          autoCapitalize="none"
+          autoCapitalize={autoCapitalize}
+          autoComplete={autoComplete}
           autoCorrect={false}
+          maxLength={maxLength}
+          autoFocus={autoFocus}
         />
         {rightIcon && (
           <TouchableOpacity onPress={onRightIconPress} style={styles.icon}>

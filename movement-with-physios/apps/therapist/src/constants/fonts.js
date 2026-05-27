@@ -20,4 +20,10 @@ export const fonts = {
 export const fontFamilies = {
   instrumentSerif: 'InstrumentSerif_400Regular',
   instrumentSerifItalic: 'InstrumentSerif_400Regular_Italic',
+  dmSans: {
+    regular: 'DMSans_400Regular',
+    medium: 'DMSans_500Medium',
+    semibold: 'DMSans_600SemiBold',
+    bold: 'DMSans_700Bold',
+  },
 };

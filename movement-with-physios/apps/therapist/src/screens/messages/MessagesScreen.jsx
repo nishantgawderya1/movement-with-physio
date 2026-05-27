@@ -17,7 +17,6 @@ import {
   Modal,
   Pressable,
   FlatList,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
@@ -25,6 +24,7 @@ import { fonts, fontFamilies } from '../../constants/fonts';
 import BottomTabBar from '../../components/BottomTabBar';
 import { ROUTES } from '../../constants/routes';
 import { chatService } from '../../services/chatService';
+import InlineBanner from '../../components/InlineBanner';
 
 // ── Component ─────────────────────────────────────────────────────────────────
 const MessagesScreen = ({ navigation }) => {
@@ -34,6 +34,7 @@ const MessagesScreen = ({ navigation }) => {
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [clients, setClients] = useState([]);
   const [clientsLoading, setClientsLoading] = useState(false);
+  const [banner, setBanner] = useState({ visible: false, message: '', variant: 'error' });
 
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(12)).current;
@@ -82,7 +83,7 @@ const MessagesScreen = ({ navigation }) => {
     setClientsLoading(true);
     chatService.listMyClients().then((res) => {
       if (res.success) setClients(res.data);
-      else Alert.alert('Could not load clients', res.error || 'Try again');
+      else setBanner({ visible: true, message: res.error || 'Could not load clients. Try again.', variant: 'error' });
       setClientsLoading(false);
     });
   };
@@ -91,7 +92,7 @@ const MessagesScreen = ({ navigation }) => {
     setNewChatOpen(false);
     const res = await chatService.createRoomWithPatient(client.id);
     if (!res.success) {
-      Alert.alert('Could not start chat', res.error || 'Try again');
+      setBanner({ visible: true, message: res.error || 'Could not start chat. Try again.', variant: 'error' });
       return;
     }
     navigation.navigate(ROUTES.CHAT, { conv: res.data });
@@ -111,6 +112,12 @@ const MessagesScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <InlineBanner
+        visible={banner.visible}
+        message={banner.message}
+        variant={banner.variant}
+        onDismiss={() => setBanner((b) => ({ ...b, visible: false }))}
+      />
 
       {/* ── Header ──────────────────────────────────────────────────── */}
       <View style={styles.header}>

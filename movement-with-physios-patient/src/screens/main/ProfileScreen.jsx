@@ -17,6 +17,7 @@ import { fonts } from '../../constants/fonts';
 import { useClerk } from '@clerk/clerk-expo';
 import { usePatient } from '../../context/PatientContext';
 import { updatePatientProfile, BACKEND_BODY_PARTS } from '../../services/auth/patientService';
+import { clearPushToken } from '../../services/notificationService';
 import TabScreenWrapper from '../../components/navigation/TabScreenWrapper';
 
 
@@ -119,6 +120,11 @@ export default function ProfileScreen({ navigation }) {
         style: 'destructive',
         onPress: async () => {
           try {
+            // Clear the registered push token server-side BEFORE Clerk
+            // signs out — once signed out, tokenProvider.getToken()
+            // returns null and the PATCH would 401. Fire-and-forget:
+            // a transient backend failure must not block sign-out.
+            clearPushToken().catch(function () {});
             await signOut();
           } catch (e) {
             Alert.alert('Error', 'Could not sign out. Please try again.');
@@ -126,10 +132,6 @@ export default function ProfileScreen({ navigation }) {
         },
       },
     ]);
-  }
-
-  function handleComingSoon() {
-    Alert.alert('Coming soon', '', [{ text: 'OK' }]);
   }
 
   return (
@@ -160,26 +162,6 @@ export default function ProfileScreen({ navigation }) {
             label="Primary body part"
             value={formatPainLocation(patient.painLocation)}
             onPress={function () { setIsBodyPartModalOpen(true); }}
-          />
-          <MenuRow
-            icon="person-outline"
-            label="Personal Information"
-            onPress={handleComingSoon}
-          />
-          <MenuRow
-            icon="notifications-outline"
-            label="Notifications"
-            onPress={handleComingSoon}
-          />
-          <MenuRow
-            icon="settings-outline"
-            label="Settings"
-            onPress={handleComingSoon}
-          />
-          <MenuRow
-            icon="help-circle-outline"
-            label="Help & Support"
-            onPress={handleComingSoon}
           />
         </View>
 
@@ -378,7 +360,7 @@ var styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
   },
   modalOptionSelected: {

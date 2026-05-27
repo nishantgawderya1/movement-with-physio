@@ -48,8 +48,8 @@ const styles = StyleSheet.create({
     marginBottom: COLUMN_GAP,
   },
   cardDefault: {
-    backgroundColor: colors.white,
-    borderColor: colors.cardBorder,
+    backgroundColor: colors.background,
+    borderColor: colors.border,
   },
   cardSelected: {
     backgroundColor: colors.primaryLight,

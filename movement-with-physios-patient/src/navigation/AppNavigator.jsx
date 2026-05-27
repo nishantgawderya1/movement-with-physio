@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { BackHandler } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { PatientProvider } from '../context/PatientContext';
 import RootNavigator from './RootNavigator';
+import { navigationRef } from '../lib/navigationRef';
 
 /**
  * Root navigation wrapper.
@@ -16,8 +17,6 @@ import RootNavigator from './RootNavigator';
  *       (Android default: minimise / exit).
  */
 export default function AppNavigator() {
-  var navigationRef = useRef(null);
-
   useEffect(function () {
     var sub = BackHandler.addEventListener('hardwareBackPress', function () {
       var nav = navigationRef.current;

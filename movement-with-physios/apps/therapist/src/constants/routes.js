@@ -3,8 +3,6 @@ export const ROUTES = {
   // Future therapist screens:
   LOGIN: "Login",
   DASHBOARD: "Dashboard",
-  SCHEDULE: "Schedule",
-  PATIENT_LIST: "PatientList",
   CLIENTS: "AllClients",
   EXERCISES: "ExerciseLibrary",
   MESSAGES: "Messages",
@@ -21,4 +19,6 @@ export const ROUTES = {
   PRE_CALL_LOBBY: "PreCallLobby",
   VIDEO_CALL: "VideoCall",
   SESSION_ENDED: "SessionEnded",
+  // Session proposals (P3.4)
+  PROPOSE_SESSION: "ProposeSession",
 };

@@ -94,8 +94,8 @@ export default function PainSeverityScreen({ navigation }) {
                   height: CIRCLE,
                   borderRadius: CIRCLE / 2,
                   borderWidth: isSelected ? 0 : 1.5,
-                  borderColor: colors.cardBorder,
-                  backgroundColor: isSelected ? colors.primary : colors.white,
+                  borderColor: colors.border,
+                  backgroundColor: isSelected ? colors.primary : colors.background,
                   justifyContent: 'center',
                   alignItems: 'center',
                   shadowColor: '#000',
@@ -111,7 +111,7 @@ export default function PainSeverityScreen({ navigation }) {
                 <Text style={{
                   fontSize: level === 10 ? fonts.sm : fonts.md,
                   fontFamily: fonts.heading.semibold,
-                  color: isSelected ? colors.white : colors.textDark,
+                  color: isSelected ? colors.textOnPrimary : colors.textDark,
                 }}>
                   {level}
                 </Text>

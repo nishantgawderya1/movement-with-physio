@@ -2,7 +2,6 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import BootstrapScreen from '../screens/BootstrapScreen';
 import PersonalInfoScreen from '../screens/auth/PersonalInfoScreen';
-import OnboardingNext from '../screens/auth/OnboardingNext';
 import ProfessionalCredentialsScreen from '../screens/auth/ProfessionalCredentialsScreen';
 import GovernmentIDVerificationScreen from '../screens/auth/GovernmentIDVerificationScreen';
 import ProfilePhotoScreen from '../screens/auth/ProfilePhotoScreen';
@@ -19,6 +18,7 @@ import AssignFlowNavigator from './AssignFlowNavigator';
 // Phase 3B — bookings + video calling
 import BookingsScreen from '../screens/bookings/BookingsScreen';
 import BookingDetailScreen from '../screens/bookings/BookingDetailScreen';
+import ProposeSessionScreen from '../screens/bookings/ProposeSessionScreen';
 import PreCallLobbyScreen from '../screens/video/PreCallLobbyScreen';
 import VideoCallScreen from '../screens/video/VideoCallScreen';
 import SessionEndedScreen from '../screens/video/SessionEndedScreen';
@@ -53,6 +53,8 @@ const AppStack = () => (
     {/* Phase 3B — Bookings tab + video calling flow */}
     <Stack.Screen name={ROUTES.BOOKINGS} component={BookingsScreen} />
     <Stack.Screen name={ROUTES.BOOKING_DETAIL} component={BookingDetailScreen} />
+    {/* P3.4 — therapist propose-session form, pushed from BookingsScreen header */}
+    <Stack.Screen name={ROUTES.PROPOSE_SESSION} component={ProposeSessionScreen} />
     <Stack.Screen name={ROUTES.PRE_CALL_LOBBY} component={PreCallLobbyScreen} />
     {/* Disable swipe-back gesture during an active video call so a stray
         edge swipe can't tear down the session mid-conversation. */}
@@ -65,7 +67,6 @@ const AppStack = () => (
 
     {/* Onboarding (reachable post-signup if needed) */}
     <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
-    <Stack.Screen name="OnboardingNext" component={OnboardingNext} />
     <Stack.Screen name="ProfessionalCredentials" component={ProfessionalCredentialsScreen} />
     <Stack.Screen name="GovernmentIDVerification" component={GovernmentIDVerificationScreen} />
     <Stack.Screen name="ProfilePhoto" component={ProfilePhotoScreen} />

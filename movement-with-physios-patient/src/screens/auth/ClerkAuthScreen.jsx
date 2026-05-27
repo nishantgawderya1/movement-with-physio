@@ -1,21 +1,15 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, Pressable, Animated, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSignIn, useSignUp } from '@clerk/clerk-expo';
 import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { PATIENT_ROUTES } from '../../constants/routes';
 import { apiClient } from '../../lib/apiClient';
+import ScreenContainer from '../../components/common/ScreenContainer';
+import TextField from '../../components/ui/TextField';
+import AuthPillButton from '../../components/auth/AuthPillButton';
+import InlineBanner from '../../components/common/InlineBanner';
 
 /**
  * Email OTP screen — handles two distinct modes:
@@ -41,10 +35,31 @@ export default function ClerkAuthScreen({ navigation, route }) {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [banner, setBanner] = useState({ visible: false, message: '', variant: 'error' });
 
   const isReady = signInLoaded && signUpLoaded;
 
   const isSignUp = mode === 'signup';
+
+  // Step-change transition: fade + small rise (~200ms).
+  const stepAnim = useRef(new Animated.Value(1)).current;
+  const hasMountedRef = useRef(false);
+  useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return; // skip animation on first mount; content renders at opacity 1
+    }
+    stepAnim.setValue(0);
+    Animated.timing(stepAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [step]);
+
+  function dismissBanner() {
+    setBanner((b) => ({ ...b, visible: false }));
+  }
 
   /* ── Step 1: Send email OTP ──────────────────────────── */
   async function handleSendOTP() {
@@ -60,11 +75,13 @@ export default function ClerkAuthScreen({ navigation, route }) {
         expectedRole: 'patient',
       });
       if (status.success && status.data && status.data.ok === false) {
-        Alert.alert(
-          'Wrong app for this email',
-          `This email is registered as a ${status.data.conflictRole}. ` +
-            'Use the therapist app to sign in, or use a different email here.'
-        );
+        setBanner({
+          visible: true,
+          variant: 'error',
+          message:
+            `This email is registered as a ${status.data.conflictRole}. ` +
+            'Use the therapist app to sign in, or use a different email here.',
+        });
         setLoading(false);
         return;
       }
@@ -89,19 +106,25 @@ export default function ClerkAuthScreen({ navigation, route }) {
     } catch (err) {
       const code = err?.errors?.[0]?.code;
       if (isSignUp && code === 'form_identifier_already_in_use') {
-        Alert.alert(
-          'Account already exists',
-          'An account with this email already exists.\nPlease use the "Login" button instead.',
-          [{ text: 'OK' }]
-        );
+        setBanner({
+          visible: true,
+          variant: 'error',
+          message:
+            'An account with this email already exists.\nPlease use the "Login" button instead.',
+        });
       } else if (!isSignUp && code === 'form_identifier_not_found') {
-        Alert.alert(
-          'No account found',
-          'No account found for this email.\nPlease tap "Start My Recovery" to create one.',
-          [{ text: 'OK' }]
-        );
+        setBanner({
+          visible: true,
+          variant: 'error',
+          message:
+            'No account found for this email.\nPlease tap "Start My Recovery" to create one.',
+        });
       } else {
-        Alert.alert('Error', err?.errors?.[0]?.longMessage || err.message);
+        setBanner({
+          visible: true,
+          variant: 'error',
+          message: err?.errors?.[0]?.longMessage || err.message,
+        });
       }
     } finally {
       setLoading(false);
@@ -131,10 +154,11 @@ export default function ClerkAuthScreen({ navigation, route }) {
           };
           navigation.navigate(PATIENT_ROUTES.PERSONAL_INFO);
         } else {
-          Alert.alert(
-            'Could not complete sign-up',
-            `Status: ${result.status}. Missing: ${result.missingFields?.join(', ') ?? 'none'}`
-          );
+          setBanner({
+            visible: true,
+            variant: 'error',
+            message: `Could not complete sign-up. Status: ${result.status}. Missing: ${result.missingFields?.join(', ') ?? 'none'}`,
+          });
         }
       } else {
         // ── Sign-in: verify → RootNavigator auto-switches ─────
@@ -149,167 +173,159 @@ export default function ClerkAuthScreen({ navigation, route }) {
           // Do NOT call navigation.navigate() — it conflicts with the re-render.
           setSignInActive({ session: result.createdSessionId }).catch(() => {});
         } else {
-          Alert.alert('Incomplete', `Unexpected status: ${result.status}`);
+          setBanner({
+            visible: true,
+            variant: 'error',
+            message: `Unexpected status: ${result.status}`,
+          });
         }
       }
     } catch (err) {
-      Alert.alert('Invalid Code', err?.errors?.[0]?.longMessage || err.message);
+      setBanner({
+        visible: true,
+        variant: 'error',
+        message: err?.errors?.[0]?.longMessage || err.message,
+      });
     } finally {
       setLoading(false);
     }
   }
 
   /* ── UI ──────────────────────────────────────────────── */
-  const headerTitle   = step === 'email'
-    ? (isSignUp ? 'Create your account' : 'Welcome back')
-    : 'Check your inbox';
-  const headerSubtitle = step === 'email'
-    ? (isSignUp
-        ? 'Enter your email to get started'
-        : 'Enter your email to sign in')
-    : `A 6-digit code was sent to\n${email}`;
+  const heroTitle =
+    step === 'email'
+      ? (isSignUp ? "Let's get started" : 'Welcome back')
+      : 'Check your email';
+
+  const heroSubtitle =
+    step === 'email'
+      ? (isSignUp
+          ? "Enter your email and we'll send a 6-digit code to confirm it's you. No password needed."
+          : "Enter your email and we'll send a 6-digit code to sign you in. No password needed.")
+      : `We sent a 6-digit code to ${email}. Enter it below to continue.`;
+
+  const stepContentStyle = {
+    opacity: stepAnim,
+    transform: [
+      { translateY: stepAnim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) },
+    ],
+  };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.inner}
-      >
-        <View style={styles.card}>
-          <Text style={styles.title}>{headerTitle}</Text>
-          <Text style={styles.subtitle}>{headerSubtitle}</Text>
+    <View style={styles.root}>
+      <InlineBanner
+        visible={banner.visible}
+        message={banner.message}
+        variant={banner.variant}
+        onDismiss={dismissBanner}
+      />
+
+      <ScreenContainer style={styles.scrollContent}>
+        <Text style={styles.stepIndicator}>
+          {step === 'email' ? 'Step 1 of 2' : 'Step 2 of 2'}
+        </Text>
+
+        <Animated.View style={stepContentStyle}>
+          <Ionicons
+            name="leaf-outline"
+            size={32}
+            color="rgba(0, 184, 148, 0.4)"
+            style={styles.heroIcon}
+          />
+          <Text style={styles.hero}>{heroTitle}</Text>
+          <Text style={styles.subtitle}>{heroSubtitle}</Text>
 
           {step === 'email' ? (
             <>
-              <TextInput
-                style={styles.input}
-                placeholder="you@example.com"
-                placeholderTextColor={colors.textLight}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
+              <TextField
+                label="Email"
                 value={email}
                 onChangeText={setEmail}
+                placeholder="you@example.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
                 autoFocus
               />
-              <Pressable
-                style={[styles.btn, (!email.trim() || loading) && styles.btnDisabled]}
+              <AuthPillButton
+                label="Continue"
                 onPress={handleSendOTP}
-                disabled={!email.trim() || loading}
-              >
-                {loading
-                  ? <ActivityIndicator color="#fff" />
-                  : <Text style={styles.btnText}>Send Code</Text>}
-              </Pressable>
+                loading={loading}
+                disabled={!email.trim()}
+                style={styles.cta}
+              />
             </>
           ) : (
             <>
-              <TextInput
-                style={[styles.input, styles.otpInput]}
-                placeholder="6-digit code"
-                placeholderTextColor={colors.textLight}
-                keyboardType="number-pad"
+              <TextField
+                label="6-digit code"
                 value={otp}
                 onChangeText={setOtp}
+                placeholder="••••••"
+                keyboardType="number-pad"
                 maxLength={6}
                 autoFocus
+                inputStyle={styles.otpInput}
+              />
+              <AuthPillButton
+                label="Continue"
+                onPress={handleVerifyOTP}
+                loading={loading}
+                disabled={!otp.trim()}
+                style={styles.cta}
               />
               <Pressable
-                style={[styles.btn, (!otp.trim() || loading) && styles.btnDisabled]}
-                onPress={handleVerifyOTP}
-                disabled={!otp.trim() || loading}
+                style={styles.changeEmail}
+                onPress={() => {
+                  setStep('email');
+                  setOtp('');
+                }}
               >
-                {loading
-                  ? <ActivityIndicator color="#fff" />
-                  : <Text style={styles.btnText}>Verify & Continue</Text>}
-              </Pressable>
-
-              <Pressable
-                style={styles.secondaryBtn}
-                onPress={() => { setStep('email'); setOtp(''); }}
-              >
-                <Text style={styles.secondaryText}>← Change email</Text>
+                <Text style={styles.changeEmailText}>← Change email</Text>
               </Pressable>
             </>
           )}
-        </View>
-
-        {__DEV__ && (
-          <Text style={styles.devNote}>
-            {isSignUp
-              ? 'ℹ️  New account will be created. Check inbox for OTP.'
-              : 'ℹ️  Sign in only. Account must already exist.'}
-          </Text>
-        )}
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </Animated.View>
+      </ScreenContainer>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.white || '#fff' },
-  inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 24 },
-  card: {
-    backgroundColor: colors.white || '#fff',
-    borderRadius: 20,
-    padding: 28,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 6,
+  root: { flex: 1, backgroundColor: colors.background },
+  scrollContent: { justifyContent: 'center', paddingVertical: 40 },
+  stepIndicator: {
+    fontFamily: fonts.body.medium,
+    fontSize: fonts.xs,
+    color: colors.textLight,
+    letterSpacing: 0.5,
+    marginBottom: 20,
   },
-  title: {
-    fontSize: fonts.xl || 22,
+  heroIcon: { marginBottom: 16 },
+  hero: {
+    fontFamily: fonts.heading.regular,
+    fontSize: fonts.xxxl,
+    lineHeight: fonts.xxxl * 1.35,
     color: colors.textDark,
-    marginBottom: 8,
-    fontWeight: '600',
+    marginBottom: 10,
   },
   subtitle: {
-    fontSize: fonts.sm || 14,
-    color: colors.textLight,
+    fontFamily: fonts.body.regular,
+    fontSize: fonts.md,
+    lineHeight: fonts.md * 1.5,
+    color: colors.textMedium,
     marginBottom: 28,
-    lineHeight: 22,
   },
-  input: {
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    borderRadius: 12,
-    height: 52,
-    paddingHorizontal: 16,
-    fontSize: fonts.md || 16,
-    color: colors.textDark,
-    marginBottom: 16,
-    backgroundColor: '#fafafa',
-  },
+  cta: { marginTop: 8 },
   otpInput: {
-    letterSpacing: 6,
+    letterSpacing: 8,
     textAlign: 'center',
-    fontSize: fonts.xl || 22,
+    fontSize: fonts.xl,
   },
-  btn: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    height: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  btnDisabled: { opacity: 0.45 },
-  btnText: {
-    color: '#fff',
-    fontSize: fonts.md || 16,
-    fontWeight: '600',
-  },
-  secondaryBtn: { alignItems: 'center', marginTop: 18 },
-  secondaryText: {
+  changeEmail: { alignItems: 'center', marginTop: 18 },
+  changeEmailText: {
+    fontFamily: fonts.body.semibold,
+    fontSize: fonts.sm,
     color: colors.primary,
-    fontSize: fonts.sm || 14,
-    fontWeight: '500',
-  },
-  devNote: {
-    textAlign: 'center',
-    marginTop: 24,
-    fontSize: 12,
-    color: colors.textLight || '#999',
   },
 });

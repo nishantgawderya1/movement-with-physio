@@ -17,7 +17,10 @@ const logger = require('../../utils/logger');
  * the shared queue and silently lost jobs to early-return).
  */
 async function notificationHandler(job) {
-  const { userId, title, body, type, data } = job.data;
+  // `category` (optional) is service-supplied (not type-derived) and threads
+  // through to FCMAdapter as apns.payload.aps.category for iOS action buttons.
+  // Existing callers that omit it pass `undefined`, which FCMAdapter skips.
+  const { userId, title, body, type, data, category } = job.data;
 
   const user = await User.findById(userId).select('fcmToken email').lean();
   if (!user) {
@@ -29,7 +32,7 @@ async function notificationHandler(job) {
   let pushSuccess = false;
   if (user.fcmToken) {
     try {
-      await container.notification.sendPush(user.fcmToken, { title, body, data });
+      await container.notification.sendPush(user.fcmToken, { title, body, data, category });
       pushSuccess = true;
       logger.info({ event: 'NOTIF_PUSH_SENT', userId, type });
     } catch (err) {

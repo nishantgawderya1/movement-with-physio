@@ -83,6 +83,15 @@ class VideoPlugin extends PluginBase {
       logger.info({ event: 'VIDEO_SOCKET_CONNECTED', userId: mongoId, socketId: socket.id });
 
       socket.on('join_call', async ({ callId }) => {
+        // Temporary diagnostic log — Phase 3 of session-proposals video debugging.
+        // Captures entry to join_call BEFORE gate so we can see attempts that
+        // fail the gate (silent in the existing VIDEO_JOIN_REJECTED warn).
+        logger.info('[video:join_call]', {
+          userId: mongoId,
+          callId: callId,
+          socketId: socket.id,
+          rooms: Array.from(socket.rooms),
+        });
         try {
           await gateJoinCall(callId, mongoId);
           socket.join(`call:${callId}`);
