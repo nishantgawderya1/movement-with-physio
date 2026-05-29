@@ -78,6 +78,34 @@ export async function getBooking(bookingId) {
 }
 
 /**
+ * GET /api/v1/bookings/slots — list bookable 30-min slots for a therapist
+ * on a given date. Public endpoint (no auth required server-side, but the
+ * patient flow only calls this post-login). Backend returns
+ *   { success: true, data: [{ utc, local, available }] }
+ * where utc is an ISO 8601 instant and local is "YYYY-MM-DD HH:mm" in the
+ * therapist's timezone. Empty array means no slots (past date, no
+ * availability doc, no windows, or all slots booked / past lead time).
+ *
+ * @param {{ therapistId: string, date: string, timezone?: string }} args
+ *   date: 'YYYY-MM-DD' interpreted in the therapist's tz (defaults to
+ *   Asia/Kolkata server-side if `timezone` omitted)
+ * @returns {Promise<{ success: boolean, data?: Array<{utc:string, local:string, available:boolean}>, error?: string }>}
+ */
+export async function getSlots(args) {
+  var params = args || {};
+  var query = { therapistId: params.therapistId, date: params.date };
+  if (params.timezone) query.timezone = params.timezone;
+  var response = await apiClient.get('/bookings/slots', query);
+  if (!response.success) {
+    return { success: false, error: response.error || 'Failed to load slots' };
+  }
+  // Coerce defensively: backend should always send an array, but unwrap-as-empty
+  // protects callers from a transport-layer shape surprise.
+  var data = Array.isArray(response.data) ? response.data : [];
+  return { success: true, data: data };
+}
+
+/**
  * POST /api/v1/bookings/instant — patient requests an instant video call.
  *
  * Server-side guards (booking.routes.js): authMiddleware + rbac('patient') +

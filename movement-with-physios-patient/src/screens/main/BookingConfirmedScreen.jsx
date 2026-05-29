@@ -19,6 +19,22 @@ import { PATIENT_ROUTES } from '../../constants/routes';
 
 var MEETING_LINK = 'https://meet.mwp.care/room/pat-ab12cd34';
 
+// Backend returns local as "YYYY-MM-DD HH:mm" (24-hour). Convert HH:mm only
+// to a 12-hour AM/PM label. Duplicated in SlotSelectionScreen per the
+// no-utils-directory decision (CLAUDE.md rule 9).
+function formatLocalTime(localStr) {
+  if (!localStr) return '';
+  var parts = localStr.split(' ');
+  var time = parts[1] || '';
+  var hm = time.split(':');
+  var h = parseInt(hm[0], 10);
+  var m = parseInt(hm[1], 10);
+  if (isNaN(h) || isNaN(m)) return localStr;
+  var ampm = h >= 12 ? 'PM' : 'AM';
+  var hh = h % 12; if (hh === 0) hh = 12;
+  return hh + ':' + (m < 10 ? '0' + m : m) + ' ' + ampm;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Detail row sub-component
 // ─────────────────────────────────────────────────────────────
@@ -67,13 +83,18 @@ var rowStyles = StyleSheet.create({
  * therapist detail card, meeting link with copy/open, calendar & share
  * actions, and footer navigation.
  *
- * Receives route.params: { therapist, slot, selectedSlot }
+ * Receives route.params: { therapist, selectedSlot, dateLabel }
+ *   - selectedSlot: { utc, local, available } — the slot object SlotSelection picked
+ *   - dateLabel: human display string, e.g. "Today, Jun 4, 2026"
  * @param {{ navigation: object, route: object }} props
  */
 export default function BookingConfirmedScreen({ navigation, route }) {
   var insets = useSafeAreaInsets();
   var therapist = route.params?.therapist ?? { name: 'Dr. Sarah James', specialization: 'Physiotherapist' };
-  var selectedSlot = route.params?.selectedSlot ?? route.params?.slot ?? '11:00 AM';
+  // No legacy param fallback; SlotSelection sends the canonical shape.
+  // No hardcoded default time — a missing slot should surface, not be masked.
+  var selectedSlot = route.params?.selectedSlot ?? null;
+  var dateLabel = route.params?.dateLabel ?? 'Date unavailable';
 
   var [linkCopied, setLinkCopied] = useState(false);
 
@@ -122,12 +143,13 @@ export default function BookingConfirmedScreen({ navigation, route }) {
   }
 
   function handleShare() {
+    var when = selectedSlot ? formatLocalTime(selectedSlot.local) : 'your booking time';
     Share.share({
       message:
         'MWP Session booked with ' +
         therapist.name +
         ' at ' +
-        selectedSlot +
+        when +
         '.\nJoin: ' +
         MEETING_LINK,
     });
@@ -187,12 +209,12 @@ export default function BookingConfirmedScreen({ navigation, route }) {
         <DetailRow
           icon="calendar-outline"
           label="Date"
-          value="Today, Feb 15 2026"
+          value={dateLabel}
         />
         <DetailRow
           icon="time-outline"
           label="Time"
-          value={selectedSlot}
+          value={selectedSlot ? formatLocalTime(selectedSlot.local) : '—'}
         />
         <DetailRow
           icon="timer-outline"
