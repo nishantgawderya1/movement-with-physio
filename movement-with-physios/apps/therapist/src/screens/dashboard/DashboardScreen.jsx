@@ -214,6 +214,19 @@ const DashboardScreen = ({ navigation }) => {
           />
         </View>
 
+        {/* ── Tier 4 Flow 1 (step 5): Scheduled availability entry ── */}
+        <TouchableOpacity
+          style={styles.availCard}
+          activeOpacity={0.75}
+          onPress={() => navigation.navigate(ROUTES.AVAILABILITY_EDITOR)}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.availTitle}>Scheduled availability</Text>
+            <Text style={styles.availSubtitle}>Set the hours you're bookable each week</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+        </TouchableOpacity>
+
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
 
           {/* ── Stats Grid ─────────────────────────────────────────

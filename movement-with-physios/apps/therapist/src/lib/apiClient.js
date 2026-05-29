@@ -76,5 +76,6 @@ export const apiClient = {
   get: (path, query, signal) => request('GET', path, { query, signal }),
   post: (path, body, opts) => request('POST', path, { body, headers: opts && opts.headers }),
   patch: (path, body) => request('PATCH', path, { body }),
+  put: (path, body) => request('PUT', path, { body }),
   del: (path) => request('DELETE', path),
 };
