@@ -43,10 +43,7 @@ export default function BookTherapistScreen({ navigation }) {
 
   var loadTherapists = useCallback(function () {
     setLoading(true);
-    // includeUnverified=true so therapists who haven't been admin-verified
-    // yet still appear during dev — the gate stays in place for production
-    // by passing nothing here later.
-    apiClient.get('/therapists', { limit: 50, includeUnverified: true }).then(function (res) {
+    apiClient.get('/therapists', { limit: 50 }).then(function (res) {
       if (res.success) {
         var raw = Array.isArray(res.data) ? res.data : [];
         setTherapists(raw.map(normalizeTherapist));

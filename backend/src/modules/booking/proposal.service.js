@@ -7,7 +7,7 @@ const User = require('../../models/User.model');
 const { addJob } = require('../../core/jobs/jobQueue');
 const { getClient } = require('../../config/redis');
 const sanitizeDisplayName = require('../../core/utils/sanitizeDisplayName');
-const { attachVideoCallAndAssessment } = require('./booking.service');
+const { attachVideoCallAndAssessment, invalidateSlotsCache } = require('./booking.service');
 const paginate = require('../../core/utils/paginator');
 const {
   BOOKING_STATUS,
@@ -470,6 +470,10 @@ async function acceptProposal(actor, proposalId) {
         slotStart: booking.slotStart.toISOString(),
       },
     });
+
+    // Bust the slot cache so the freshly-booked slot disappears from the
+    // patient picker before the 5-min TTL expires.
+    await invalidateSlotsCache(String(booking.therapistId), booking.timezone || 'Asia/Kolkata');
 
     return {
       proposal: { ...claimed.toObject(), bookingId: booking._id },

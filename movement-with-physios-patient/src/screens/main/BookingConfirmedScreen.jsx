@@ -1,23 +1,33 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   Pressable,
   StyleSheet,
-  Alert,
-  Share,
-  Linking,
   Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import * as Clipboard from 'expo-clipboard';
 import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { PATIENT_ROUTES } from '../../constants/routes';
 
-var MEETING_LINK = 'https://meet.mwp.care/room/pat-ab12cd34';
+// Backend returns local as "YYYY-MM-DD HH:mm" (24-hour). Convert HH:mm only
+// to a 12-hour AM/PM label. Duplicated in SlotSelectionScreen per the
+// no-utils-directory decision (CLAUDE.md rule 9).
+function formatLocalTime(localStr) {
+  if (!localStr) return '';
+  var parts = localStr.split(' ');
+  var time = parts[1] || '';
+  var hm = time.split(':');
+  var h = parseInt(hm[0], 10);
+  var m = parseInt(hm[1], 10);
+  if (isNaN(h) || isNaN(m)) return localStr;
+  var ampm = h >= 12 ? 'PM' : 'AM';
+  var hh = h % 12; if (hh === 0) hh = 12;
+  return hh + ':' + (m < 10 ? '0' + m : m) + ' ' + ampm;
+}
 
 // ─────────────────────────────────────────────────────────────
 // Detail row sub-component
@@ -63,19 +73,22 @@ var rowStyles = StyleSheet.create({
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Booking confirmed success screen — redesigned with animated entry,
- * therapist detail card, meeting link with copy/open, calendar & share
- * actions, and footer navigation.
+ * Booking confirmed success screen — animated entry, a therapist + booking
+ * detail card, an inline "open the app at session time to join" note, and
+ * footer navigation back home / to book another.
  *
- * Receives route.params: { therapist, slot, selectedSlot }
+ * Receives route.params: { therapist, selectedSlot, dateLabel }
+ *   - selectedSlot: { utc, local, available } — the slot object SlotSelection picked
+ *   - dateLabel: human display string, e.g. "Today, Jun 4, 2026"
  * @param {{ navigation: object, route: object }} props
  */
 export default function BookingConfirmedScreen({ navigation, route }) {
   var insets = useSafeAreaInsets();
   var therapist = route.params?.therapist ?? { name: 'Dr. Sarah James', specialization: 'Physiotherapist' };
-  var selectedSlot = route.params?.selectedSlot ?? route.params?.slot ?? '11:00 AM';
-
-  var [linkCopied, setLinkCopied] = useState(false);
+  // No legacy param fallback; SlotSelection sends the canonical shape.
+  // No hardcoded default time — a missing slot should surface, not be masked.
+  var selectedSlot = route.params?.selectedSlot ?? null;
+  var dateLabel = route.params?.dateLabel ?? 'Date unavailable';
 
   // ── Animations ────────────────────────────────────────────
   var checkScale = useRef(new Animated.Value(0)).current;
@@ -104,34 +117,6 @@ export default function BookingConfirmedScreen({ navigation, route }) {
       }),
     ]).start();
   }, []);
-
-  // ── Handlers ─────────────────────────────────────────────
-  function handleCopyLink() {
-    Clipboard.setStringAsync(MEETING_LINK).then(function () {
-      setLinkCopied(true);
-      setTimeout(function () { setLinkCopied(false); }, 2000);
-    });
-  }
-
-  function handleOpenLink() {
-    Linking.openURL(MEETING_LINK);
-  }
-
-  function handleAddToCalendar() {
-    Alert.alert('Opening Calendar', 'This will add your session to your calendar.');
-  }
-
-  function handleShare() {
-    Share.share({
-      message:
-        'MWP Session booked with ' +
-        therapist.name +
-        ' at ' +
-        selectedSlot +
-        '.\nJoin: ' +
-        MEETING_LINK,
-    });
-  }
 
   // Therapist initials
   var initials = therapist.name
@@ -187,12 +172,12 @@ export default function BookingConfirmedScreen({ navigation, route }) {
         <DetailRow
           icon="calendar-outline"
           label="Date"
-          value="Today, Feb 15 2026"
+          value={dateLabel}
         />
         <DetailRow
           icon="time-outline"
           label="Time"
-          value={selectedSlot}
+          value={selectedSlot ? formatLocalTime(selectedSlot.local) : '—'}
         />
         <DetailRow
           icon="timer-outline"
@@ -211,43 +196,12 @@ export default function BookingConfirmedScreen({ navigation, route }) {
         />
       </Animated.View>
 
-      {/* ── MEETING LINK CARD ── */}
-      <Animated.View style={[styles.linkCard, contentAnimStyle]}>
-        <View style={styles.linkCardInner}>
-          {/* Left: label + URL */}
-          <View style={styles.linkLeft}>
-            <Text style={styles.linkLabel}>MEETING LINK</Text>
-            <Text style={styles.linkUrl} numberOfLines={1} ellipsizeMode="tail">
-              {MEETING_LINK}
-            </Text>
-          </View>
-
-          {/* Right: copy + open */}
-          <View style={styles.linkActions}>
-            <Pressable style={styles.linkIconBtn} onPress={handleCopyLink}>
-              <Ionicons
-                name={linkCopied ? 'checkmark-done' : 'copy-outline'}
-                size={20}
-                color={linkCopied ? colors.primary : colors.primary}
-              />
-            </Pressable>
-            <Pressable style={styles.linkIconBtn} onPress={handleOpenLink}>
-              <Ionicons name="open-outline" size={20} color={colors.primary} />
-            </Pressable>
-          </View>
-        </View>
-      </Animated.View>
-
-      {/* ── CALENDAR ROW ── */}
-      <Animated.View style={[styles.calendarRow, contentAnimStyle]}>
-        <Pressable style={styles.calendarBtn} onPress={handleAddToCalendar}>
-          <Ionicons name="calendar-outline" size={18} color={colors.primary} />
-          <Text style={styles.calendarBtnText}>Add to Calendar</Text>
-        </Pressable>
-        <Pressable style={styles.calendarBtn} onPress={handleShare}>
-          <Ionicons name="share-outline" size={18} color={colors.primary} />
-          <Text style={styles.calendarBtnText}>Share</Text>
-        </Pressable>
+      {/* ── JOIN NOTE ── */}
+      <Animated.View style={[styles.joinNote, contentAnimStyle]}>
+        <Ionicons name="videocam-outline" size={18} color={colors.primary} />
+        <Text style={styles.joinNoteText}>
+          Open the app at session time to join your video call.
+        </Text>
       </Animated.View>
 
       {/* ── FOOTER ── */}
@@ -367,74 +321,25 @@ var styles = StyleSheet.create({
     marginBottom: 4,
   },
 
-  // ── Meeting link card ──
-  linkCard: {
+  // ── Join note ──
+  joinNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     marginHorizontal: 16,
     marginTop: 16,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
-    padding: 16,
-  },
-  linkCardInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  linkLeft: {
-    flex: 1,
-  },
-  linkLabel: {
-    fontFamily: fonts.body.semibold,
-    fontSize: 11,
-    color: colors.primaryDark,
-    letterSpacing: 1.2,
-  },
-  linkUrl: {
-    fontFamily: fonts.body.medium,
-    fontSize: 13,
-    color: colors.primary,
-    marginTop: 4,
-  },
-  linkActions: {
-    flexDirection: 'row',
-    gap: 8,
-    flexShrink: 0,
-  },
-  linkIconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  // ── Calendar row ──
-  calendarRow: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 12,
-    gap: 10,
-  },
-  calendarBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    height: 48,
-    backgroundColor: colors.surface,
+    padding: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
   },
-  calendarBtnText: {
+  joinNoteText: {
+    flex: 1,
     fontFamily: fonts.body.medium,
     fontSize: 13,
-    color: colors.textDark,
+    color: colors.primaryDark,
+    lineHeight: 18,
   },
 
   // ── Footer ──

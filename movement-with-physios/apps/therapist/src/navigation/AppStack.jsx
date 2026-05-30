@@ -22,6 +22,8 @@ import ProposeSessionScreen from '../screens/bookings/ProposeSessionScreen';
 import PreCallLobbyScreen from '../screens/video/PreCallLobbyScreen';
 import VideoCallScreen from '../screens/video/VideoCallScreen';
 import SessionEndedScreen from '../screens/video/SessionEndedScreen';
+// Tier 4 Flow 1 (step 5) — recurring weekly availability editor
+import AvailabilityEditorScreen from '../screens/schedule/AvailabilityEditorScreen';
 import { ROUTES } from '../constants/routes';
 
 const SCREEN_OPTIONS = {
@@ -64,6 +66,9 @@ const AppStack = () => (
       options={{ gestureEnabled: false }}
     />
     <Stack.Screen name={ROUTES.SESSION_ENDED} component={SessionEndedScreen} />
+
+    {/* Tier 4 Flow 1 (step 5) — recurring weekly availability editor */}
+    <Stack.Screen name={ROUTES.AVAILABILITY_EDITOR} component={AvailabilityEditorScreen} />
 
     {/* Onboarding (reachable post-signup if needed) */}
     <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />

@@ -29,7 +29,7 @@ import { toggleAvailability } from '../../services/availabilityService';
 import { clearPushToken } from '../../services/notificationService';
 
 /**
- * Format a slot.start ISO timestamp into "10:00 AM" style.
+ * Format a slotStart ISO timestamp into "10:00 AM" style.
  * @param {string|Date} iso
  * @returns {string}
  */
@@ -53,8 +53,8 @@ function normalizeBooking(b) {
   return {
     id: String(b._id),
     name: (b.patientId && b.patientId.name) || 'Patient',
-    type: b.type || 'Session',
-    time: formatSlotTime(b.slot && b.slot.start),
+    type: b.meetingType || 'Session',
+    time: formatSlotTime(b.slotStart),
     status: b.status === 'confirmed' ? 'Upcoming' : (b.status || 'Pending'),
   };
 }
@@ -213,6 +213,19 @@ const DashboardScreen = ({ navigation }) => {
             ios_backgroundColor={colors.cardBorder}
           />
         </View>
+
+        {/* ── Tier 4 Flow 1 (step 5): Scheduled availability entry ── */}
+        <TouchableOpacity
+          style={styles.availCard}
+          activeOpacity={0.75}
+          onPress={() => navigation.navigate(ROUTES.AVAILABILITY_EDITOR)}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.availTitle}>Scheduled availability</Text>
+            <Text style={styles.availSubtitle}>Set the hours you're bookable each week</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+        </TouchableOpacity>
 
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
 

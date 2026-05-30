@@ -21,4 +21,6 @@ export const ROUTES = {
   SESSION_ENDED: "SessionEnded",
   // Session proposals (P3.4)
   PROPOSE_SESSION: "ProposeSession",
+  // Tier 4 Flow 1 (step 5) — recurring weekly availability editor
+  AVAILABILITY_EDITOR: "AvailabilityEditor",
 };

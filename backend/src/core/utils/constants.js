@@ -137,6 +137,11 @@ const SCHEDULED_MODE = Object.freeze({
 const INSTANT_DELAY_MINUTES = Object.freeze([15, 30]);
 const INSTANT_REQUEST_TIMEOUT_MS = 5 * 60 * 1000;
 
+// ── Tier 4 — scheduled slot booking against published availability ──
+const SLOT_DURATION_MINUTES = 30;
+const BOOKING_WINDOW_DAYS = 7;
+const MIN_LEAD_TIME_MINUTES = 30;
+
 const JOB_NAMES = Object.freeze({
   SEND_NOTIFICATION: 'send_notification',
   GENERATE_ASSESSMENT_PDF: 'generate_assessment_pdf',
@@ -163,5 +168,9 @@ module.exports = {
   SCHEDULED_MODE,
   INSTANT_DELAY_MINUTES,
   INSTANT_REQUEST_TIMEOUT_MS,
+  // Tier 4
+  SLOT_DURATION_MINUTES,
+  BOOKING_WINDOW_DAYS,
+  MIN_LEAD_TIME_MINUTES,
   JOB_NAMES,
 };

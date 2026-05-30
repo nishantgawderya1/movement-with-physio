@@ -21,6 +21,12 @@ class ChatPlugin extends PluginBase {
   async register(app, container) {
     const controller = createController(container);
     const chatService = require('./chat.service')(container);
+    // Expose the namespace-injected singleton so other modules (e.g. the
+    // cancel→chat hook in booking.service.cancelBooking) reach THIS instance
+    // via container.chat. A fresh ChatService built elsewhere would have a
+    // null namespace and emit on the default ns, breaking live /chat delivery.
+    // setNamespace (below, in setupSocketHandlers) mutates this same instance.
+    container.chat = chatService;
     const router = Router();
 
     // REST Routes
