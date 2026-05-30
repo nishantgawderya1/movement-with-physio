@@ -19,17 +19,23 @@ function errorHandler(err, req, res, next) {
     ? 'Internal server error'
     : err.message || 'Something went wrong';
 
-  // Mongo duplicate-key (E11000). Reachable as a backstop when the
-  // booking.service Redis lock + DB findOne layers both race past
-  // (extreme: lock TTL'd between findOne and create, or Redis unavailable).
-  // Map to a clean 409 so the client sees the same shape as the explicit
-  // BOOKING_SLOT_TAKEN guard. For non-booking unique indexes (e.g. the
-  // sparse idempotencyKey index on Booking), use a generic DUPLICATE_KEY.
+  // Mongo duplicate-key (E11000) backstop. Reachable when an explicit guard
+  // upstream (Redis lock, findOne pre-check, etc.) races past or is absent.
+  // Map to a clean 409 with an actionable code per known unique index so the
+  // client sees a sensible shape instead of the raw Mongo error string.
   if (statusCode === 500 && err.code === 11000) {
-    const isSlotIndex = err.keyPattern && err.keyPattern.slotStart;
+    const kp = err.keyPattern || {};
     statusCode = 409;
-    code = isSlotIndex ? 'BOOKING_SLOT_TAKEN' : 'DUPLICATE_KEY';
-    message = isSlotIndex ? 'This slot is already booked.' : 'Duplicate value';
+    if (kp.slotStart) {
+      code = 'BOOKING_SLOT_TAKEN';
+      message = 'This slot is already booked.';
+    } else if (kp.email) {
+      code = 'USER_EMAIL_TAKEN';
+      message = 'This email is already registered.';
+    } else {
+      code = 'DUPLICATE_KEY';
+      message = 'Duplicate value';
+    }
   }
 
   logger.error({

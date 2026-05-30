@@ -36,6 +36,10 @@ const PatientContext = createContext(null);
 export function PatientProvider({ children }) {
   var [patient, setPatient] = useState(EMPTY_PATIENT);
   var [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
+  // False until the first /patient/profile response lands (success OR
+  // explicit failure). RootNavigator uses this to avoid flickering existing
+  // users through the onboarding gate during the post-signin fetch window.
+  var [isProfileLoaded, setIsProfileLoaded] = useState(false);
 
   var refresh = useCallback(function () {
     // Fire only when signed in — otherwise we'd 401 every time.
@@ -54,6 +58,11 @@ export function PatientProvider({ children }) {
           setIsOnboardingComplete(res.data.onboardingCompleted);
         }
       }
+      // Mark loaded regardless of success — the gate must not stall forever
+      // on a transient /patient/profile failure. A failed fetch leaves
+      // isOnboardingComplete at its default false, so RootNavigator routes
+      // to onboarding rather than a half-rendered MainNavigator.
+      setIsProfileLoaded(true);
     });
   }, []);
 
@@ -63,10 +72,15 @@ export function PatientProvider({ children }) {
     refresh();
     var unsub = tokenProvider.onAuthChange(function (signedIn) {
       if (signedIn) {
+        // Reset loaded so the gate waits for the FRESH user's profile, not
+        // the previous user's cached one (relevant when one device hosts
+        // sign-out → sign-in as a different account).
+        setIsProfileLoaded(false);
         refresh();
       } else {
         setPatient(EMPTY_PATIENT);
         setIsOnboardingComplete(false);
+        setIsProfileLoaded(false);
       }
     });
     return unsub;
@@ -84,6 +98,7 @@ export function PatientProvider({ children }) {
     <PatientContext.Provider
       value={Object.assign({}, patient, {
         isOnboardingComplete: isOnboardingComplete,
+        isProfileLoaded: isProfileLoaded,
         completeOnboarding: completeOnboarding,
         resetOnboarding: resetOnboarding,
         refresh: refresh,
@@ -100,7 +115,8 @@ export function PatientProvider({ children }) {
  * @returns {{ name: string, streak: number, adherence: number,
  *   todayPlan: { title: string, minutes: number, exercises: number },
  *   painTrend: number[], weekProgress: { rangeOfMotion: number, painReduction: number },
- *   isOnboardingComplete: boolean, completeOnboarding: Function, refresh: Function }}
+ *   isOnboardingComplete: boolean, isProfileLoaded: boolean,
+ *   completeOnboarding: Function, refresh: Function }}
  */
 export function usePatient() {
   var context = useContext(PatientContext);

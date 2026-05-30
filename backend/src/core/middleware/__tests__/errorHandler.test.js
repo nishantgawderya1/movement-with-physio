@@ -94,6 +94,76 @@ describe('errorHandler — typed .code forwarding', () => {
   });
 });
 
+describe('errorHandler — E11000 mapping (Mongo duplicate-key backstop)', () => {
+  let prevEnv;
+  beforeAll(() => { prevEnv = process.env.NODE_ENV; process.env.NODE_ENV = 'test'; });
+  afterAll(() => { process.env.NODE_ENV = prevEnv; });
+
+  test('maps slot-index E11000 → 409 BOOKING_SLOT_TAKEN with a clean message', () => {
+    const err = Object.assign(new Error('E11000 duplicate key error: index slotStart_1'), {
+      code: 11000,
+      keyPattern: { therapistId: 1, slotStart: 1, status: 1 },
+    });
+    const req = makeReq();
+    const res = makeRes();
+    errorHandler(err, req, res);
+    expect(res.statusCode).toBe(409);
+    expect(res.body).toMatchObject({
+      success: false,
+      error: 'This slot is already booked.',
+      code: 'BOOKING_SLOT_TAKEN',
+    });
+  });
+
+  test('maps email-index E11000 → 409 USER_EMAIL_TAKEN with a clean message', () => {
+    const err = Object.assign(new Error('E11000 duplicate key error: index email_1'), {
+      code: 11000,
+      keyPattern: { email: 1 },
+    });
+    const req = makeReq();
+    const res = makeRes();
+    errorHandler(err, req, res);
+    expect(res.statusCode).toBe(409);
+    expect(res.body).toMatchObject({
+      success: false,
+      error: 'This email is already registered.',
+      code: 'USER_EMAIL_TAKEN',
+    });
+  });
+
+  test('falls back to DUPLICATE_KEY for other unique-index E11000s', () => {
+    const err = Object.assign(new Error('E11000 duplicate key error: index identifier_1'), {
+      code: 11000,
+      keyPattern: { identifier: 1 },
+    });
+    const req = makeReq();
+    const res = makeRes();
+    errorHandler(err, req, res);
+    expect(res.statusCode).toBe(409);
+    expect(res.body).toMatchObject({
+      success: false,
+      error: 'Duplicate value',
+      code: 'DUPLICATE_KEY',
+    });
+  });
+
+  test('does NOT remap E11000 when caller already attached a non-500 statusCode', () => {
+    // Defense: if someone explicitly sets statusCode (e.g. a service throws
+    // a 409 with code 11000 as a misc detail), the mapping should leave the
+    // intended status alone. Only "implicit 500 fall-through" gets remapped.
+    const err = Object.assign(new Error('handled higher up'), {
+      statusCode: 422,
+      code: 11000,
+      keyPattern: { email: 1 },
+    });
+    const req = makeReq();
+    const res = makeRes();
+    errorHandler(err, req, res);
+    expect(res.statusCode).toBe(422);
+    expect(res.body.code).toBe(11000);
+  });
+});
+
 describe('ApiError — code option', () => {
   test('constructor accepts and stores code', () => {
     const err = new ApiError(404, 'Not found', { code: 'RESOURCE_NOT_FOUND' });

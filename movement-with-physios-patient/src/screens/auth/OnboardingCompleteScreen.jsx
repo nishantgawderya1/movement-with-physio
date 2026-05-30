@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { usePatient } from '../../context/PatientContext';
+import { markPending as markPendingOnboarding } from '../../lib/pendingOnboarding';
 
 /**
  * Onboarding success screen — white bg, sequential mount animations,
@@ -68,6 +69,10 @@ export default function OnboardingCompleteScreen() {
         if (global.__pendingClerkSession) {
           const { setActive, sessionId } = global.__pendingClerkSession;
           global.__pendingClerkSession = null;
+          // Tell ClerkTokenBridge (mounted outside PatientProvider, so it
+          // can't read context) to include onboardingCompleted:true on the
+          // /auth/me/init it will fire as soon as isSignedIn flips.
+          markPendingOnboarding();
           await setActive({ session: sessionId });
         } else {
           // Fallback for existing users who went through onboarding again

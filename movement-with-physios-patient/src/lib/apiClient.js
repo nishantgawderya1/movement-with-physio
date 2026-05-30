@@ -5,8 +5,10 @@
  * the bundle for both Expo Go and native production builds). Every request
  * attaches the latest Clerk session token from tokenProvider.
  *
- * All methods return { success, data?, error?, status? } so callers can keep
- * the same envelope used by the existing chatService contract.
+ * All methods return { success, data?, error?, code?, status? } so callers can
+ * keep the same envelope used by the existing chatService contract. `code` is
+ * the backend's typed error code (e.g. USER_EMAIL_TAKEN, BOOKING_SLOT_TAKEN)
+ * surfaced from payload.code — present on failures, undefined on success.
  */
 
 import { tokenProvider } from './tokenProvider';
@@ -53,7 +55,7 @@ function withQuery(url, params) {
  * @param {string} method - GET | POST | DELETE | PATCH
  * @param {string} path
  * @param {{ body?: any, query?: Object, signal?: AbortSignal, idempotencyKey?: string }} [opts]
- * @returns {Promise<{ success: boolean, data?: any, error?: string, status?: number }>}
+ * @returns {Promise<{ success: boolean, data?: any, error?: string, code?: string, status?: number }>}
  */
 async function request(method, path, opts) {
   var options = opts || {};
@@ -82,13 +84,14 @@ async function request(method, path, opts) {
 
     if (!res.ok) {
       var msg = (json && json.error) || ('Request failed with status ' + status);
-      return { success: false, error: msg, status: status };
+      var errCode = json && json.code;
+      return { success: false, error: msg, code: errCode, status: status };
     }
 
     // Backend envelope: { success: true, data: ... }
     if (json && typeof json === 'object' && 'success' in json) {
       if (json.success) return { success: true, data: json.data, status: status };
-      return { success: false, error: json.error || 'Unknown error', status: status };
+      return { success: false, error: json.error || 'Unknown error', code: json.code, status: status };
     }
 
     return { success: true, data: json, status: status };

@@ -48,31 +48,32 @@ const verifyOTP = asyncHandler(async (req, res) => {
  * Provision (or fetch) the Mongo User doc for the signed-in Clerk identity.
  * Each app calls this once after Clerk sign-in, passing its role.
  * Idempotent.
+ *
+ * Errors thrown by initUser carry statusCode + code (set by the service),
+ * so we let asyncHandler forward them to the global error handler — which
+ * maps E11000 backstops to clean 409s. The previous local try/catch swallowed
+ * raw E11000s as 500s with the Mongo error message verbatim.
  */
 const initMe = asyncHandler(async (req, res) => {
   const { role, name, onboardingCompleted } = req.body;
-  try {
-    const { user, isNew } = await authService.initUser({
-      clerkId: req.user.id,
-      role,
-      name,
-      onboardingCompleted,
-      authProvider: container.auth,
-    });
-    return apiResponse.success(res, {
-      user: {
-        _id: user._id,
-        clerkId: user.clerkId,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        onboardingCompleted: user.onboardingCompleted,
-      },
-      isNew,
-    });
-  } catch (err) {
-    return apiResponse.error(res, err.message, err.statusCode || 500, req.correlationId);
-  }
+  const { user, isNew } = await authService.initUser({
+    clerkId: req.user.id,
+    role,
+    name,
+    onboardingCompleted,
+    authProvider: container.auth,
+  });
+  return apiResponse.success(res, {
+    user: {
+      _id: user._id,
+      clerkId: user.clerkId,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      onboardingCompleted: user.onboardingCompleted,
+    },
+    isNew,
+  });
 });
 
 /**

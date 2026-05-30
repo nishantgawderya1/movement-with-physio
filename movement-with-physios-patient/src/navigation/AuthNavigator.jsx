@@ -44,11 +44,17 @@ const SPRING_TRANSITION = {
  *
  * Flow: Splash → Login → PersonalInfo → PainLocation → PainSeverity →
  *        PainDuration → TreatmentHistory → RecoveryGoals → Availability → OnboardingComplete
+ *
+ * @param {{ initialRouteName?: string }} props - When omitted, defaults to
+ *   the first registered screen (Splash). RootNavigator passes
+ *   PATIENT_ROUTES.PERSONAL_INFO to drop a signed-in-but-not-onboarded user
+ *   into the form directly (Bug 1 onboarding gate).
  */
-export default function AuthNavigator() {
+export default function AuthNavigator({ initialRouteName }) {
   return (
     <OnboardingProvider>
       <Stack.Navigator
+        initialRouteName={initialRouteName}
         screenOptions={{
           headerShown: false,
           gestureEnabled: true,

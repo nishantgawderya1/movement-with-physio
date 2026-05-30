@@ -206,15 +206,49 @@ async function initUser({ clerkId, role, name, onboardingCompleted, authProvider
   const fallbackName = `${clerkUser?.firstName || ''} ${clerkUser?.lastName || ''}`.trim();
   const finalName = (name && name.trim()) || fallbackName || null;
 
-  const user = await User.create({
-    clerkId,
-    email: email.toLowerCase(),
-    name: finalName,
-    role,
-  });
+  try {
+    const user = await User.create({
+      clerkId,
+      email: email.toLowerCase(),
+      name: finalName,
+      role,
+      onboardingCompleted: onboardingCompleted === true,
+    });
 
-  logger.info({ event: 'AUTH_ME_INIT', clerkId, role, isNew: true });
-  return { user: user.toObject(), isNew: true };
+    logger.info({ event: 'AUTH_ME_INIT', clerkId, role, isNew: true });
+    return { user: user.toObject(), isNew: true };
+  } catch (err) {
+    if (err && err.code === 11000) {
+      // Race recovery: a concurrent writer (Clerk user.created webhook or
+      // another /me/init) inserted a User with the same clerkId between the
+      // findOne above and this create. Re-resolve and return that doc as
+      // isNew:false — the caller is the same Clerk identity, so handing
+      // back the raced doc is the correct semantic. If the racing doc is
+      // somehow soft-deleted (production never produces this; the webhook
+      // writes active), the soft-delete pre-hook excludes it, recovery
+      // misses, and we rethrow — the global error handler then maps to a
+      // clean 409 DUPLICATE_KEY rather than a raw 500.
+      if (err.keyPattern && err.keyPattern.clerkId) {
+        const raced = await User.findOne({ clerkId }).lean();
+        if (raced) {
+          logger.info({ event: 'AUTH_ME_INIT_RACE_RECOVERED', clerkId });
+          return { user: raced, isNew: false };
+        }
+      }
+      // Email is held by another User — possibly soft-deleted, since the
+      // unique email index is enforced at the Mongo layer and doesn't honor
+      // isDeleted. Surface a clean 409 with an actionable code so the
+      // client can show a sensible alert (instead of the raw E11000 500
+      // the controller used to leak before this fix).
+      if (err.keyPattern && err.keyPattern.email) {
+        const conflict = new Error('This email is already registered.');
+        conflict.statusCode = 409;
+        conflict.code = 'USER_EMAIL_TAKEN';
+        throw conflict;
+      }
+    }
+    throw err;
+  }
 }
 
 module.exports = { sendOTP, verifyOTP, getOrCreateUser, saveOnboardingDraft, initUser };
