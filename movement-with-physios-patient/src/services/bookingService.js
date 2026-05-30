@@ -106,6 +106,61 @@ export async function getSlots(args) {
 }
 
 /**
+ * POST /api/v1/bookings — create a scheduled video booking for the
+ * authenticated patient.
+ *
+ * Server-side guards (booking.routes.js): authMiddleware + rbac('patient') +
+ * Joi createBookingSchema + idempotency. Idempotency-Key is required by the
+ * server; we mint a fresh UUID per call so a transport-layer retry cannot
+ * double-book.
+ *
+ * Patient flow always books video — patient app does not expose in_person.
+ * Duration defaults to 30 minutes to match the slot grid.
+ *
+ * Backend returns either { booking, videoCall, assessment } for video
+ * bookings (booking.controller.js createBooking) — apiClient unwraps to
+ * response.data.
+ *
+ * Failure shape preserves response.status so the UI can distinguish 409
+ * (slot taken — refetch + reselect) from other errors (banner only).
+ *
+ * @param {{
+ *   therapistId: string,
+ *   slotStart: string,       // ISO 8601 instant (UTC), e.g. slot.utc from getSlots
+ *   timezone?: string,       // defaults to 'Asia/Kolkata'
+ *   durationMinutes?: number,// defaults to 30
+ *   meetingType?: string,    // defaults to 'video'
+ *   notes?: string,
+ *   idempotencyKey?: string,
+ * }} args
+ * @returns {Promise<{ success: boolean, data?: object, error?: string, status?: number }>}
+ */
+export async function createBooking(args) {
+  var params = args || {};
+  var body = {
+    therapistId: params.therapistId,
+    slotStart: params.slotStart,
+    timezone: params.timezone || 'Asia/Kolkata',
+    durationMinutes: params.durationMinutes || 30,
+    meetingType: params.meetingType || 'video',
+  };
+  if (params.notes) body.notes = params.notes;
+  var idempotencyKey = params.idempotencyKey || generateIdempotencyKey();
+
+  var response = await apiClient.post('/bookings', body, {
+    idempotencyKey: idempotencyKey,
+  });
+  if (!response.success) {
+    return {
+      success: false,
+      error: response.error || 'Failed to create booking',
+      status: response.status,
+    };
+  }
+  return { success: true, data: response.data };
+}
+
+/**
  * POST /api/v1/bookings/instant — patient requests an instant video call.
  *
  * Server-side guards (booking.routes.js): authMiddleware + rbac('patient') +

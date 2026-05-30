@@ -220,13 +220,13 @@ async function createRoom(therapistUserId) {
 
 /**
  * List therapists the patient can start a chat with. Falls back to the full
- * verified list while the booking-aware "my therapists" endpoint doesn't
- * exist yet — includeUnverified=true matches Book tab's behavior so the
- * picker is never empty in dev.
+ * verified-therapist list while the booking-aware "my therapists" endpoint
+ * doesn't exist yet — the server's verification gate is the authoritative
+ * filter, so unverified therapists never appear here.
  * @returns {Promise<{ success: boolean, data?: Array<{ id, name, email, specialty }>, error?: string }>}
  */
 async function listAvailableTherapists() {
-  var res = await apiClient.get('/therapists', { limit: 50, includeUnverified: true });
+  var res = await apiClient.get('/therapists', { limit: 50 });
   if (!res.success) return { success: false, error: res.error };
   var raw = res.data && Array.isArray(res.data.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
   return {

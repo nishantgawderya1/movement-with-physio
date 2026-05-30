@@ -6,7 +6,7 @@ import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { PATIENT_ROUTES } from '../../constants/routes';
 import InlineBanner from '../../components/common/InlineBanner';
-import { getSlots } from '../../services/bookingService';
+import { getSlots, createBooking } from '../../services/bookingService';
 
 // Backend booking window is BOOKING_WINDOW_DAYS=7 (today..today+6) in IST.
 // We render the same span as a horizontal 7-pill day strip.
@@ -94,9 +94,15 @@ export default function SlotSelectionScreen({ navigation, route }) {
   var [slots, setSlots] = useState([]);
   var [loading, setLoading] = useState(true);
   var [error, setError] = useState(null);
-  // selectedSlot is now the BACKEND OBJECT {utc, local, available}, not a
-  // display string. utc is what step 7 (POST /bookings) will need.
+  // selectedSlot is the BACKEND OBJECT {utc, local, available}, not a
+  // display string. utc is what POST /bookings needs as slotStart.
   var [selectedSlot, setSelectedSlot] = useState(null);
+  // saving guards the Confirm button against double-tap during POST /bookings.
+  var [saving, setSaving] = useState(false);
+  // Bumping refetchKey forces useEffect to re-run getSlots. Used on a 409
+  // (slot taken by another patient between fetch and POST) so the grid
+  // shows the now-current availability without leaving the user stranded.
+  var [refetchKey, setRefetchKey] = useState(0);
 
   useEffect(function () {
     var cancelled = false;
@@ -121,10 +127,38 @@ export default function SlotSelectionScreen({ navigation, route }) {
     });
 
     return function () { cancelled = true; };
-  }, [therapist.id, selectedDateOffset]);
+  }, [therapist.id, selectedDateOffset, refetchKey]);
 
-  function handleConfirm() {
-    if (!selectedSlot) return;
+  async function handleConfirm() {
+    if (!selectedSlot || saving) return;
+    setSaving(true);
+    setError(null);
+
+    var resp = await createBooking({
+      therapistId: therapist.id,
+      slotStart: selectedSlot.utc,
+      timezone: 'Asia/Kolkata',
+      durationMinutes: 30,
+      meetingType: 'video',
+    });
+
+    if (!resp.success) {
+      // 409 = slot taken (Redis lock, DB findOne, or E11000 backstop). The
+      // grid is now stale — clear selection FIRST so a fresh fetch can't
+      // re-select the just-dead slot, then bump refetchKey to force the
+      // grid to refresh, then surface the banner.
+      if (resp.status === 409) {
+        setSelectedSlot(null);
+        setRefetchKey(function (k) { return k + 1; });
+        setError('That slot was just taken. Please pick another.');
+      } else {
+        setError(resp.error || 'Could not create booking');
+      }
+      setSaving(false);
+      return;
+    }
+
+    setSaving(false);
     navigation.navigate(PATIENT_ROUTES.BOOKING_CONFIRMED, {
       therapist: therapist,
       selectedSlot: selectedSlot, // object {utc, local, available}
@@ -265,11 +299,13 @@ export default function SlotSelectionScreen({ navigation, route }) {
 
         {/* Confirm button */}
         <Pressable
-          style={[styles.confirmBtn, !selectedSlot && styles.confirmBtnDisabled]}
+          style={[styles.confirmBtn, (!selectedSlot || saving) && styles.confirmBtnDisabled]}
           onPress={handleConfirm}
-          disabled={!selectedSlot}
+          disabled={!selectedSlot || saving}
         >
-          <Text style={styles.confirmBtnText}>Confirm Booking</Text>
+          <Text style={styles.confirmBtnText}>
+            {saving ? 'Booking…' : 'Confirm Booking'}
+          </Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
