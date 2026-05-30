@@ -5,6 +5,7 @@ import { tokenProvider } from './tokenProvider';
 import { apiClient } from './apiClient';
 import { chatSocket } from './chatSocket';
 import { registerPushToken } from '../services/notificationService';
+import { consumePending as consumePendingOnboarding } from './pendingOnboarding';
 
 /**
  * Wait until tokenProvider.getToken() resolves to a non-null value, or
@@ -73,18 +74,31 @@ export default function ClerkTokenBridge() {
           return;
         }
 
-        var init = await apiClient.post('/auth/me/init', { role: 'patient' });
+        // If onboarding just finished (OnboardingCompleteScreen called
+        // markPending before setActive), carry the flag so the backend
+        // creates / backfills the User as already-onboarded in a single
+        // round trip.
+        var initBody = { role: 'patient' };
+        if (consumePendingOnboarding()) {
+          initBody.onboardingCompleted = true;
+        }
+        var init = await apiClient.post('/auth/me/init', initBody);
         if (cancelled) return;
         if (!init.success) {
           // eslint-disable-next-line no-console
-          console.warn('[ClerkTokenBridge] /auth/me/init failed:', init.status, init.error);
-          // 409 = this email is already registered with a different role
-          // (likely as a therapist on the other app). One Clerk identity = one
-          // role by design — show a clear message and sign the user out.
+          console.warn('[ClerkTokenBridge] /auth/me/init failed:', init.status, init.error, init.code);
           if (init.status === 409) {
+            // Two distinct 409s:
+            //   USER_EMAIL_TAKEN — email belongs to a (possibly soft-deleted)
+            //     account at the Mongo unique-index layer
+            //   default          — this Clerk identity is already registered
+            //     with a different role (one Clerk identity = one role)
+            var isEmailTaken = init.code === 'USER_EMAIL_TAKEN';
             Alert.alert(
-              'Email already in use',
-              (init.error || 'This email is registered with a different role.') +
+              isEmailTaken ? 'Email already in use' : 'Account type mismatch',
+              (init.error || (isEmailTaken
+                ? 'This email is already registered.'
+                : 'This email is registered with a different role.')) +
                 '\n\nUse a different email to sign in to the patient app.',
               [{ text: 'OK', onPress: function () { clerk.signOut().catch(function () {}); } }]
             );
