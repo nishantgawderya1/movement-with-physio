@@ -31,6 +31,7 @@ export default function OnboardingShell({
   onContinue,
   isContinueDisabled,
   continueLabel = 'Continue',
+  onStartOver,
   children,
 }) {
   return (
@@ -82,6 +83,17 @@ export default function OnboardingShell({
           >
             <Text style={styles.continueBtnText}>{continueLabel}</Text>
           </Pressable>
+          {onStartOver ? (
+            <Pressable
+              onPress={onStartOver}
+              style={styles.startOverBtn}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Not you? Start over"
+            >
+              <Text style={styles.startOverText}>Not you? Start over</Text>
+            </Pressable>
+          ) : null}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -160,6 +172,17 @@ const styles = StyleSheet.create({
   continueBtnText: {
     color: colors.textOnPrimary,
     fontSize: fonts.md,
+    fontWeight: fonts.semibold,
+  },
+  startOverBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    paddingVertical: 8,
+  },
+  startOverText: {
+    fontSize: fonts.sm,
+    color: colors.textMedium,
     fontWeight: fonts.semibold,
   },
 });
