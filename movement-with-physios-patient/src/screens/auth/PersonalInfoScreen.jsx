@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet, Alert } from 'react-native';
+import { useClerk } from '@clerk/clerk-expo';
 import { useOnboarding } from '../../context/OnboardingContext';
 import OnboardingShell from '../../components/auth/OnboardingShell';
 import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { PATIENT_ROUTES } from '../../constants/routes';
 import { apiClient } from '../../lib/apiClient';
+import { hardSignOut } from '../../lib/sessionReset';
 
 /**
  * Step 1 — Collect patient name and age.
@@ -14,6 +16,7 @@ import { apiClient } from '../../lib/apiClient';
  */
 export default function PersonalInfoScreen({ navigation }) {
   const { name: contextName, age: contextAge, updateOnboardingData } = useOnboarding();
+  const { signOut } = useClerk();
 
   const [name, setName] = useState(contextName || '');
   const [age, setAge] = useState(contextAge ? String(contextAge) : '');
@@ -39,6 +42,37 @@ export default function PersonalInfoScreen({ navigation }) {
     navigation.goBack();
   }
 
+  // Escape hatch for the gate trap: a signed-in-but-not-onboarded identity is
+  // routed here as the lone stack screen (initialRouteName=PERSONAL_INFO), so
+  // the back button is dead ("GO_BACK was not handled"). Signing out flips
+  // isSignedIn=false; RootNavigator then swaps to the auth stack (Splash →
+  // Login) on its own — no manual navigation needed.
+  function handleStartOver() {
+    Alert.alert(
+      'Start over?',
+      'This signs you out and returns to the login screen.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await hardSignOut(signOut);
+            } catch (e) {
+              // eslint-disable-next-line no-console
+              console.error('[PersonalInfo] start over (sign out) failed:', e);
+              Alert.alert(
+                'Sign out failed',
+                (e && e.message) ? e.message : 'Could not sign out. Please try again.'
+              );
+            }
+          },
+        },
+      ]
+    );
+  }
+
   return (
     <OnboardingShell
       step={1}
@@ -47,6 +81,7 @@ export default function PersonalInfoScreen({ navigation }) {
       onBack={handleBack}
       onContinue={handleContinue}
       isContinueDisabled={!isValid}
+      onStartOver={handleStartOver}
     >
       <View style={styles.fieldGroup}>
         <TextInput

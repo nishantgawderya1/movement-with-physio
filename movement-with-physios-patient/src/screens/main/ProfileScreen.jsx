@@ -18,6 +18,7 @@ import { useClerk } from '@clerk/clerk-expo';
 import { usePatient } from '../../context/PatientContext';
 import { updatePatientProfile, BACKEND_BODY_PARTS } from '../../services/auth/patientService';
 import { clearPushToken } from '../../services/notificationService';
+import { hardSignOut } from '../../lib/sessionReset';
 import TabScreenWrapper from '../../components/navigation/TabScreenWrapper';
 
 
@@ -125,9 +126,16 @@ export default function ProfileScreen({ navigation }) {
             // returns null and the PATCH would 401. Fire-and-forget:
             // a transient backend failure must not block sign-out.
             clearPushToken().catch(function () {});
-            await signOut();
+            await hardSignOut(signOut);
           } catch (e) {
-            Alert.alert('Error', 'Could not sign out. Please try again.');
+            // Surface the real failure — a swallowed signOut error leaves the
+            // user silently signed in (looks like "logout did nothing").
+            // eslint-disable-next-line no-console
+            console.error('[ProfileScreen] signOut failed:', e);
+            Alert.alert(
+              'Sign out failed',
+              (e && e.message) ? e.message : 'Could not sign out. Please try again.'
+            );
           }
         },
       },
