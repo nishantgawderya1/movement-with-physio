@@ -1,10 +1,11 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
   Pressable,
   StyleSheet,
   Animated,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,13 +13,45 @@ import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { usePatient } from '../../context/PatientContext';
 import { markPending as markPendingOnboarding } from '../../lib/pendingOnboarding';
+import { apiClient } from '../../lib/apiClient';
+import { tokenProvider } from '../../lib/tokenProvider';
+
+/**
+ * Wait (≤3s) for Clerk to mint a session JWT before the authenticated write.
+ * After setActive() (signup) the token takes a few hundred ms to mint; without
+ * it the POST goes out unauthenticated and 401s. Mirrors ClerkTokenBridge.
+ * @returns {Promise<string|null>}
+ */
+async function awaitToken() {
+  for (var i = 0; i < 15; i++) {
+    var t = await tokenProvider.getToken();
+    if (t) return t;
+    await new Promise(function (r) { setTimeout(r, 200); });
+  }
+  return null;
+}
+
+/**
+ * THE reliable backend write of onboarding completion, called by BOTH the
+ * signup and the already-signed-in paths. Backend initUser backfills
+ * onboardingCompleted on the existing user (idempotent), so this is safe
+ * alongside ClerkTokenBridge's pending-flag write — making that bridge write
+ * a redundant backup rather than the single load-bearing path it used to be.
+ * @returns {Promise<{ success: boolean, status?: number, error?: string }>}
+ */
+async function persistOnboardingComplete() {
+  await awaitToken();
+  return apiClient.post('/auth/me/init', { role: 'patient', onboardingCompleted: true });
+}
 
 /**
  * Onboarding success screen — white bg, sequential mount animations,
  * fade-out transition before handing off to the Main navigator.
  */
 export default function OnboardingCompleteScreen() {
-  var { completeOnboarding } = usePatient();
+  var { completeOnboarding, refresh } = usePatient();
+  var [isSubmitting, setIsSubmitting] = useState(false);
+  var [persistError, setPersistError] = useState(null);
 
   // ── Animation refs ────────────────────────────────────────────
   var screenOpacity = useRef(new Animated.Value(1)).current;
@@ -52,8 +85,9 @@ export default function OnboardingCompleteScreen() {
     ]).start();
   }, []);
 
-  // ── Two-stage exit: content out → full screen white → activate Clerk session ──
-  async function handleNavigate() {
+  // ── Two-stage exit animation (success only): content out → full screen white.
+  // Runs onDone after the fade so the gate swap happens behind the white.
+  function runExitAnimation(onDone) {
     Animated.parallel([
       Animated.timing(textOpacity, { toValue: 0, duration: 250, useNativeDriver: true }),
       Animated.timing(btnOpacity,  { toValue: 0, duration: 250, useNativeDriver: true }),
@@ -63,23 +97,78 @@ export default function OnboardingCompleteScreen() {
         toValue: 0,
         duration: 200,
         useNativeDriver: true,
-      }).start(async function () {
-        // Activate Clerk session → RootNavigator detects isSignedIn=true
-        // and swaps AuthNavigator for MainNavigator automatically.
-        if (global.__pendingClerkSession) {
-          const { setActive, sessionId } = global.__pendingClerkSession;
-          global.__pendingClerkSession = null;
-          // Tell ClerkTokenBridge (mounted outside PatientProvider, so it
-          // can't read context) to include onboardingCompleted:true on the
-          // /auth/me/init it will fire as soon as isSignedIn flips.
-          markPendingOnboarding();
-          await setActive({ session: sessionId });
-        } else {
-          // Fallback for existing users who went through onboarding again
-          completeOnboarding();
-        }
+      }).start(function () {
+        if (onDone) onDone();
       });
     });
+  }
+
+  // Completion handler. Persistence is the FIRST thing we do — and it ALWAYS
+  // runs (both signup and already-signed-in paths) via persistOnboardingComplete.
+  // We only flip the local gate (completeOnboarding) on a SUCCESSFUL write;
+  // a failed write keeps the user here with a retry affordance instead of
+  // faking a dashboard that silently re-traps on relaunch.
+  async function handleNavigate() {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setPersistError(null);
+
+    // Capture before nulling — also tells us whether the screen will unmount
+    // immediately (signup setActive flips isSignedIn → gate swaps away).
+    var pending = global.__pendingClerkSession;
+
+    try {
+      if (pending) {
+        // Signup: the session must activate first so the authenticated write
+        // has a token. markPending() keeps the bridge write as a backup; the
+        // direct POST below is now the load-bearing one.
+        global.__pendingClerkSession = null;
+        markPendingOnboarding();
+        await pending.setActive({ session: pending.sessionId });
+      }
+
+      var res = await persistOnboardingComplete();
+
+      if (!res || !res.success) {
+        // Do NOT flip the local gate — that would show a dashboard backed by
+        // nothing and silently re-trap on relaunch (the exact failure that
+        // made this bug so hard to find). Surface a retryable error.
+        // eslint-disable-next-line no-console
+        console.warn('[OnboardingComplete] persist failed:', res && res.status, res && res.error);
+        setIsSubmitting(false);
+        if (pending) {
+          // Signup: setActive already swapped the gate away from this screen,
+          // so an on-screen banner can't show — surface via Alert. The gate
+          // falls back to the honest backend state (no fake dashboard).
+          Alert.alert('Couldn’t save your details', 'Please try again.');
+        } else {
+          setPersistError("Couldn't save your details. Please try again.");
+        }
+        return;
+      }
+
+      // Success: flip the local gate + re-read the backend so context matches.
+      if (pending) {
+        // Signup: the gate already swapped at setActive; finalize context.
+        completeOnboarding();
+        if (typeof refresh === 'function') refresh();
+      } else {
+        // Already signed in: fade out, then flip the gate behind the white.
+        runExitAnimation(function () {
+          completeOnboarding();
+          if (typeof refresh === 'function') refresh();
+        });
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('[OnboardingComplete] persist threw:', e && e.message);
+      setIsSubmitting(false);
+      if (pending) {
+        Alert.alert('Couldn’t save your details', 'Please try again.');
+      } else {
+        setPersistError("Couldn't save your details. Please try again.");
+      }
+    }
   }
 
 
@@ -130,9 +219,18 @@ export default function OnboardingCompleteScreen() {
             { opacity: btnOpacity, transform: [{ translateY: btnSlide }] },
           ]}
         >
-          <Pressable style={styles.btn} onPress={handleNavigate}>
-            <Text style={styles.btnText}>Go to Dashboard</Text>
+          <Pressable
+            style={[styles.btn, isSubmitting && styles.btnDisabled]}
+            onPress={handleNavigate}
+            disabled={isSubmitting}
+          >
+            <Text style={styles.btnText}>
+              {isSubmitting ? 'Saving…' : (persistError ? 'Try again' : 'Go to Dashboard')}
+            </Text>
           </Pressable>
+          {persistError ? (
+            <Text style={styles.errorText}>{persistError}</Text>
+          ) : null}
         </Animated.View>
       </SafeAreaView>
     </Animated.View>
@@ -247,5 +345,16 @@ var styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textOnPrimary,
     letterSpacing: 0.3,
+  },
+  btnDisabled: {
+    backgroundColor: colors.primaryLight,
+    opacity: 0.7,
+  },
+  errorText: {
+    fontFamily: fonts.body.medium,
+    fontSize: fonts.sm,
+    color: colors.danger,
+    textAlign: 'center',
+    marginTop: 14,
   },
 });
